@@ -1,6 +1,6 @@
 # pwsh
 
-PowerShell 7.6+ module system with zero-ceremony module authoring.
+PowerShell 7.4+ module system with zero-ceremony module authoring.
 
 ## Project structure
 
