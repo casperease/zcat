@@ -159,7 +159,7 @@ function Import-VendorModules {
         $env:PSModulePath = ($env:PSModulePath -split $sep |
             Where-Object {
                 $candidate = Join-Path $_ $dir.Name
-                -not (Test-Path $candidate)
+                -not (Test-Path $candidate -ErrorAction SilentlyContinue)
             }) -join $sep
 
         Write-Verbose "Importing vendor module: $($dir.Name)"
