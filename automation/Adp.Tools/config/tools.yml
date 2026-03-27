@@ -16,6 +16,15 @@ Dotnet:
   VersionCommand: "dotnet --version"
   VersionPattern: "^(?<ver>.+)$"
 
+AzCli:
+  Version: "2.73"
+  Command: az
+  WingetId: "Microsoft.AzureCLI"
+  BrewFormula: "azure-cli"
+  AptPackage: "azure-cli"
+  VersionCommand: "az version --output tsv"
+  VersionPattern: "^(?<ver>[^\t]+)"
+
 Poetry:
   Version: "2.1"
   Command: poetry
