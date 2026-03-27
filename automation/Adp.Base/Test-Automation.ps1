@@ -119,4 +119,7 @@ function Test-Automation {
     if ($PassThru) {
         $result
     }
+    elseif ($result.Result -ne 'Passed') {
+        throw "Test-Automation failed: $($result.FailedCount) test(s) failed"
+    }
 }

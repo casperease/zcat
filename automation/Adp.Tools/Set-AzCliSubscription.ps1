@@ -1,6 +1,8 @@
 <#
 .SYNOPSIS
     Sets the active Azure CLI subscription.
+.DESCRIPTION
+    Skips if the requested subscription is already active.
 .PARAMETER Subscription
     Subscription name or ID.
 .EXAMPLE
@@ -16,5 +18,16 @@ function Set-AzCliSubscription {
     )
 
     Assert-Command az
+
+    # Idempotent: skip if already on the requested subscription
+    $raw = Invoke-CliCommand 'az account show --output json' -PassThru -NoAssert -Silent
+    if ($LASTEXITCODE -eq 0 -and $raw) {
+        $account = $raw | ConvertFrom-Json
+        if ($account.id -eq $Subscription -or $account.name -eq $Subscription) {
+            Write-Verbose "Already on subscription '$Subscription'"
+            return
+        }
+    }
+
     Invoke-CliCommand "az account set --subscription $Subscription"
 }

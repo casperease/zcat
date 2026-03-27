@@ -3,6 +3,7 @@
     Installs a tool using the platform package manager.
 .DESCRIPTION
     Uses winget on Windows, brew on macOS, and apt-get on Linux.
+    Skips installation if the tool is already on PATH.
 .PARAMETER Tool
     The tool name as defined in Get-ToolConfig.
 .PARAMETER Version
@@ -19,6 +20,12 @@ function Install-Tool {
 
     $config = Get-ToolConfig -Tool $Tool
     if (-not $Version) { $Version = $config.Version }
+
+    # Idempotent: skip if already installed
+    if (Test-Command $config.Command) {
+        Write-Verbose "$Tool is already installed"
+        return
+    }
 
     if ($IsWindows) {
         Assert-Command winget

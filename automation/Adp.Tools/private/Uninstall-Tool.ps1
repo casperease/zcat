@@ -3,6 +3,7 @@
     Uninstalls a tool using the platform package manager.
 .DESCRIPTION
     Uses winget on Windows, brew on macOS, and apt-get on Linux.
+    Skips if the tool is not installed.
 .PARAMETER Tool
     The tool name as defined in Get-ToolConfig.
 .PARAMETER Version
@@ -19,6 +20,12 @@ function Uninstall-Tool {
 
     $config = Get-ToolConfig -Tool $Tool
     if (-not $Version) { $Version = $config.Version }
+
+    # Idempotent: skip if not installed
+    if (-not (Test-Command $config.Command)) {
+        Write-Verbose "$Tool is not installed"
+        return
+    }
 
     if ($IsWindows) {
         Assert-Command winget

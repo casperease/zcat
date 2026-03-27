@@ -1,6 +1,7 @@
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingWriteHost', '')]
 param(
-    [switch] $ExportPrivates
+    [switch] $ExportPrivates,
+    [switch] $AllowWarnings
 )
 
 # Detect if called from an interactive prompt or from a script
@@ -19,8 +20,9 @@ Import-Module Microsoft.PowerShell.Utility -ErrorAction SilentlyContinue
 $automationFolder = 'automation'
 $vendorFolder = '.vendor'
 
-# Global error handling
+# Global error handling — fail fast on errors and warnings by default
 $ErrorActionPreference = 'Stop'
+$WarningPreference = if ($AllowWarnings) { 'Continue' } else { 'Stop' }
 $InformationPreference = 'Continue'
 
 # Repository root reference

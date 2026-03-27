@@ -18,7 +18,5 @@ jobs:
       - name: Run tests
         shell: pwsh
         run: |
-          $env:RepositoryRoot = $PWD.Path
           . ./importer.ps1
-          $result = Test-Automation -Output Normal -PassThru
-          exit $(if ($result.Result -eq 'Passed') { 0 } else { 1 })
+          Test-Automation -Level 2 -Output Normal

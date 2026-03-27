@@ -1,6 +1,8 @@
 <#
 .SYNOPSIS
     Logs in to Azure CLI.
+.DESCRIPTION
+    Skips login if already authenticated. Use -Force to re-authenticate.
 .PARAMETER ServicePrincipal
     Login as a service principal. Requires Tenant, ClientId, and ClientSecret.
 .PARAMETER ManagedIdentity
@@ -13,6 +15,8 @@
     Service principal app/client ID. Required for service principal login.
 .PARAMETER ClientSecret
     Service principal secret. Required for service principal login.
+.PARAMETER Force
+    Force re-authentication even if already logged in.
 .EXAMPLE
     Connect-AzCli
 .EXAMPLE
@@ -41,11 +45,31 @@ function Connect-AzCli {
         [string] $ClientId,
 
         [Parameter(ParameterSetName = 'ServicePrincipal', Mandatory)]
-        [string] $ClientSecret
+        [string] $ClientSecret,
+
+        [switch] $Force
     )
 
     Assert-Command az
     Assert-ToolVersion -Tool 'AzCli'
+
+    # Idempotent: skip if already logged in with the correct identity
+    if (-not $Force) {
+        $raw = Invoke-CliCommand 'az account show --output json' -PassThru -NoAssert -Silent
+        if ($LASTEXITCODE -eq 0 -and $raw) {
+            $account = $raw | ConvertFrom-Json
+            $alreadyCorrect = switch ($PSCmdlet.ParameterSetName) {
+                'ServicePrincipal' {
+                    $account.tenantId -eq $Tenant -and $account.user.name -eq $ClientId
+                }
+                default { $true }
+            }
+            if ($alreadyCorrect) {
+                Write-Verbose "Already authenticated as $($account.user.name)"
+                return
+            }
+        }
+    }
 
     switch ($PSCmdlet.ParameterSetName) {
         'ServicePrincipal' {

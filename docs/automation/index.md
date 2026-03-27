@@ -14,6 +14,8 @@ The "why" behind how we write code.
 - [Fail fast with assertions](adr/fail-fast-with-asserts.md) — catch errors at the source, not three layers down
 - [Idempotent state functions](adr/idempotent-state-functions.md) — re-runs are always safe
 - [Sensible defaults](adr/sensible-defaults.md) — the zero-arg call does the right thing
+- [Console output matters](adr/console-output-matters.md) — every line of output is a UX decision
+- [Error handling](adr/error-handling.md) — fail immediately, no warnings, no middle ground
 - [Never depend on $PWD](adr/never-depend-on-pwd.md) — functions work from anywhere
 
 ## Implementation decisions

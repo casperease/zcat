@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Enhanced Write-Host with timestamp and calling function name.
+    Writes a status message with calling function name prefix.
 .PARAMETER Message
     The message text to write.
 .PARAMETER Type
