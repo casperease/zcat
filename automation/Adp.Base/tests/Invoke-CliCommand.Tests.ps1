@@ -9,10 +9,12 @@ Describe 'Invoke-CliCommand' {
     }
 
     It 'throws on non-zero exit code by default' {
-        { Invoke-CliCommand 'cmd /c exit 1' } | Should -Throw
+        $failCmd = if ($IsWindows) { 'cmd /c exit 1' } else { 'bash -c "exit 1"' }
+        { Invoke-CliCommand $failCmd } | Should -Throw
     }
 
     It 'does not throw with -NoAssert' {
-        { Invoke-CliCommand 'cmd /c exit 1' -NoAssert } | Should -Not -Throw
+        $failCmd = if ($IsWindows) { 'cmd /c exit 1' } else { 'bash -c "exit 1"' }
+        { Invoke-CliCommand $failCmd -NoAssert } | Should -Not -Throw
     }
 }
