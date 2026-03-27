@@ -1,6 +1,8 @@
 # adp
 
-**PowerShell 7.6+ automation framework** with zero-ceremony modules, vendored dependencies, and fast imports.
+**Automation toolset for monorepos.** PowerShell 7.6+, zero-ceremony modules, vendored dependencies, fast imports.
+
+Drop the `automation/` folder and `importer.ps1` into the root of any monorepo. No installers, no package managers, no global state — everything is self-contained.
 
 [![CI](../../actions/workflows/ci.yml/badge.svg)](../../actions/workflows/ci.yml)
 
