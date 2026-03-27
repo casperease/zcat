@@ -19,4 +19,4 @@ jobs:
         shell: pwsh
         run: |
           . ./importer.ps1
-          Test-Automation -Level 2 -Output Normal
+          Test-Automation

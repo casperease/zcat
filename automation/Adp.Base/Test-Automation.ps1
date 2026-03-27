@@ -20,7 +20,7 @@ function Test-Automation {
     [CmdletBinding()]
     param(
         [ValidateSet(0, 1, 2)]
-        [int] $Level = 1,
+        [int] $Level = $(if (Test-IsRunningInPipeline) { 2 } else { 1 }),
 
         [ValidateSet('Minimal', 'Normal', 'Detailed', 'Diagnostic')]
         [string] $Output = 'Normal',
