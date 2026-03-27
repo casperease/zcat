@@ -1,0 +1,68 @@
+subscription_types:
+  - prod
+  - nonprod
+
+environments:
+  dev:
+    details: Development
+    subscription_type: nonprod
+  test:
+    details: Test
+    subscription_type: nonprod
+  preprod:
+    details: Pre-Production
+    subscription_type: prod
+  prod:
+    details: Production
+    subscription_type: prod
+
+environment_subtypes:
+  - sub
+  - env
+
+environment_types:
+  customer:
+    core_customer:
+      subtypes: []
+    workspace_sub:
+      subtypes: [sub, env]
+    workspace_bi:
+      subtypes: [sub, env]
+    workspace_ingest:
+      subtypes: [sub, env]
+    workspace_discovery:
+      subtypes: [sub, env]
+    workspace_ml:
+      subtypes: [sub, env]
+    workspace_ml_train:
+      subtypes: [sub, env]
+  shared:
+    orthog:
+      subtypes: []
+
+customers:
+  blue:
+    details: blå kunde
+    environment_types:
+      - core_customer
+      - workspace_bi
+  bold:
+    details: bold kunde
+    environment_types:
+      - core_customer
+  fine:
+    details: fine kunde
+    environment_types:
+      - core_customer
+  cool:
+    details: cool kunde
+    environment_types:
+      - core_customer
+  free:
+    details: free kunde
+    environment_types:
+      - core_customer
+  kind:
+    details: kind kunde
+    environment_types:
+      - core_customer

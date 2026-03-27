@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run tests
+        shell: pwsh
+        run: |
+          $env:RepositoryRoot = $PWD.Path
+          . ./importer.ps1
+          $result = Test-Automation -Output Normal -PassThru
+          exit $(if ($result.Result -eq 'Passed') { 0 } else { 1 })

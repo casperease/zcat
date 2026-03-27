@@ -1,0 +1,24 @@
+Python:
+  Version: "3.11"
+  Command: python
+  WingetId: "Python.Python.{0}"
+  BrewFormula: "python@{0}"
+  AptPackage: "python{0}"
+  VersionCommand: "python --version"
+  VersionPattern: "^Python (?<ver>.+)$"
+
+Dotnet:
+  Version: "10.0"
+  Command: dotnet
+  WingetId: "Microsoft.DotNet.SDK.10"
+  BrewFormula: "dotnet-sdk@{0}"
+  AptPackage: "dotnet-sdk-{0}"
+  VersionCommand: "dotnet --version"
+  VersionPattern: "^(?<ver>.+)$"
+
+Poetry:
+  Version: "2.1"
+  Command: poetry
+  PipPackage: poetry
+  VersionCommand: "poetry --version"
+  VersionPattern: "^Poetry \\(version (?<ver>.+)\\)$"

@@ -1,0 +1,41 @@
+<#
+.SYNOPSIS
+    Runs python with the given arguments.
+.DESCRIPTION
+    Asserts that the installed Python version matches the locked version
+    in Get-ToolConfig before executing the command.
+.PARAMETER Arguments
+    Arguments to pass to python.
+.PARAMETER PassThru
+    Capture and return the output.
+.PARAMETER NoAssert
+    Skip exit code assertion.
+.PARAMETER Silent
+    Suppress the command log line.
+.PARAMETER DryRun
+    Return the command string without executing. Used for testing.
+.EXAMPLE
+    Invoke-Python '--version'
+.EXAMPLE
+    Invoke-Python '--version' -DryRun
+#>
+function Invoke-Python {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory, Position = 0)]
+        [string] $Arguments,
+        [switch] $PassThru,
+        [switch] $NoAssert,
+        [switch] $Silent,
+        [switch] $DryRun
+    )
+
+    Assert-NotNullOrWhitespace $Arguments -ErrorText 'Arguments cannot be empty — Python would enter interactive mode'
+
+    if (-not $DryRun) {
+        Assert-Command python
+        Assert-ToolVersion -Tool 'Python'
+    }
+
+    Invoke-CliCommand "python $Arguments" -PassThru:$PassThru -NoAssert:$NoAssert -Silent:$Silent -DryRun:$DryRun
+}

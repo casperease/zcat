@@ -1,0 +1,34 @@
+{
+  // Markdown settings (built-in preview)
+  "markdown.preview.fontFamily": "Consolas, 'Courier New', monospace",
+  "markdown.styles": [
+    ".vscode/markdown-preview-dark.css"
+  ],
+  "markdown.preview.lineHeight": 1.6,
+  "markdown.preview.fontSize": 14,
+  "markdown.preview.scrollPreviewWithEditor": true,
+  "markdown.preview.scrollEditorWithPreview": true,
+  "markdown.preview.markEditorSelection": true,
+
+  // Markdown Preview Enhanced settings
+  "markdown-preview-enhanced.previewTheme": "one-dark.css",
+  "markdown-preview-enhanced.codeBlockTheme": "one-dark.css",
+
+  // PowerShell: use project PSScriptAnalyzer settings
+  "powershell.scriptAnalysis.settingsPath": "./PSScriptAnalyzerSettings.psd1",
+
+  // Exclude vendored modules from search
+  "search.exclude": {
+    "automation/.vendor": true
+  },
+
+  "[markdown]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.quickSuggestions": {
+      "comments": "on",
+      "strings": "on",
+      "other": "on"
+    },
+    "editor.wordWrap": "off"
+  },
+}
