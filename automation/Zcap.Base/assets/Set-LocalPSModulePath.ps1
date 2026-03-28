@@ -7,7 +7,7 @@
     and Documents\WindowsPowerShell\Modules (WinPS 5.1), causing network
     scans on every module lookup, tab completion, and command discovery.
 
-    This script applies three fixes:
+    This script applies two fixes:
 
     1. User-scope PSModulePath registry value — both PS7 and WinPS 5.1
        check this before using the Documents-based default. When set,
@@ -18,10 +18,7 @@
     2. powershell.config.json in $PSHOME — overrides PS7's user module
        path at the config level, before PSModulePath construction.
 
-    3. Profile symlink — symlinks Documents\PowerShell to a local
-       directory so $PROFILE resolves locally.
-
-    All changes survive reboots and GPO refreshes — they're on the
+    Both changes survive reboots and GPO refreshes — they're on the
     local disk, outside GPO-redirected folders.
 
     Requires Administrator. Run once — permanent until PS reinstall.
@@ -32,9 +29,7 @@
 
 #Requires -RunAsAdministrator
 
-$localPSHome = Join-Path $env:LOCALAPPDATA 'PowerShell'
-$localModulePath = Join-Path $localPSHome 'Modules'
-$networkPSHome = Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'PowerShell'
+$localModulePath = Join-Path $env:LOCALAPPDATA 'PowerShell' 'Modules'
 
 # --- 1. User-scope PSModulePath registry value ---
 # Both PS7 and WinPS 5.1: "if User-scope PSModulePath exists, use it as defined."
@@ -46,7 +41,7 @@ if ($currentUserPath -ne $localModulePath) {
         New-Item -Path $localModulePath -ItemType Directory -Force | Out-Null
     }
     [Environment]::SetEnvironmentVariable('PSModulePath', $localModulePath, 'User')
-    Write-Host "User-scope PSModulePath registry value set to '$localModulePath'" -ForegroundColor Green
+    Write-Host "User-scope PSModulePath set to '$localModulePath'" -ForegroundColor Green
 }
 else {
     Write-Host "User-scope PSModulePath already configured" -ForegroundColor Green
@@ -72,35 +67,12 @@ else {
     Write-Host "powershell.config.json already configured" -ForegroundColor Green
 }
 
-# --- 3. Profile symlink ---
-if ($networkPSHome -notmatch '^\\\\') {
-    Write-Host "Documents folder is local — no symlink needed" -ForegroundColor Green
-    Write-Host ''
-    Write-Host 'Restart PowerShell for changes to take effect.' -ForegroundColor Cyan
-    exit
-}
-
+# --- Cleanup: remove symlink from previous version of this script ---
+$networkPSHome = Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'PowerShell'
 $item = Get-Item $networkPSHome -Force -ErrorAction Ignore
-$alreadySymlinked = $item -and $item.Attributes.HasFlag([IO.FileAttributes]::ReparsePoint)
-
-if ($alreadySymlinked) {
-    Write-Host "Profile symlink already exists: $networkPSHome -> $($item.Target)" -ForegroundColor Green
-}
-else {
-    if (Test-Path $networkPSHome) {
-        Write-Host "Cannot create symlink — '$networkPSHome' already exists." -ForegroundColor Yellow
-        Write-Host "Move or delete it manually, then rerun this script." -ForegroundColor Yellow
-        Write-Host ''
-        Write-Host 'Restart PowerShell for other changes to take effect.' -ForegroundColor Cyan
-        exit
-    }
-
-    if (-not (Test-Path $localPSHome)) {
-        New-Item -Path $localPSHome -ItemType Directory -Force | Out-Null
-    }
-
-    New-Item -ItemType SymbolicLink -Path $networkPSHome -Target $localPSHome | Out-Null
-    Write-Host "Profile symlink created: $networkPSHome -> $localPSHome" -ForegroundColor Green
+if ($item -and $item.Attributes.HasFlag([IO.FileAttributes]::ReparsePoint)) {
+    $item.Delete()
+    Write-Host "Removed old symlink at '$networkPSHome'" -ForegroundColor Yellow
 }
 
 Write-Host ''
