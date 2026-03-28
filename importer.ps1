@@ -38,9 +38,9 @@ $automationFolder = 'automation'
 $vendorFolder = '.vendor'
 
 # Global error handling — fail fast on errors and warnings by default
-$ErrorActionPreference = 'Stop'
-$WarningPreference = if ($AllowWarnings) { 'Continue' } else { 'Stop' }
-$InformationPreference = 'Continue'
+$global:ErrorActionPreference = 'Stop'
+$global:WarningPreference = if ($AllowWarnings) { 'Continue' } else { 'Stop' }
+$global:InformationPreference = 'Continue'
 
 # Repository root reference
 $env:RepositoryRoot = $PSScriptRoot
