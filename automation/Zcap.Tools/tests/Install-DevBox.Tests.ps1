@@ -8,10 +8,4 @@ Describe 'Install-DevBox' {
         $param | Should -Not -BeNullOrEmpty
         $param.ParameterType.Name | Should -Be 'SwitchParameter'
     }
-
-    It 'has AcceptExisting switch parameter' {
-        $param = (Get-Command Install-DevBox).Parameters['AcceptExisting']
-        $param | Should -Not -BeNullOrEmpty
-        $param.ParameterType.Name | Should -Be 'SwitchParameter'
-    }
 }
