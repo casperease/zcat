@@ -32,13 +32,13 @@ function Install-Tool {
         $location = (Get-Command $config.Command).Source
 
         # -NoAssert: non-zero exit means version could not be parsed — falls through to install
-        $raw = Invoke-CliCommand $config.VersionCommand -PassThru -NoAssert -Silent
-        if ($raw -match $config.VersionPattern -and $Matches['ver'].StartsWith($Version)) {
+        $raw = Invoke-CliCommand $config.VersionCommand -PassThru -NoAssert -Silent 2>$null
+        $installed = if ($raw -match $config.VersionPattern) { $Matches['ver'] } else { $null }
+
+        if ($installed -and $installed.StartsWith($Version)) {
             Write-Message "$Tool $Version is already installed"
             return
         }
-
-        $installed = $Matches['ver']
 
         if ($Force) {
             Write-Verbose "$Tool $installed found at '$location' — uninstalling before installing $Version"

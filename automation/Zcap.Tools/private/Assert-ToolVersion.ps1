@@ -25,7 +25,7 @@ function Assert-ToolVersion {
 
     $config = Get-ToolConfig -Tool $Tool
     # -NoAssert: non-zero exit is handled below — we throw our own descriptive error
-    $raw = Invoke-CliCommand $config.VersionCommand -PassThru -NoAssert -Silent
+    $raw = Invoke-CliCommand $config.VersionCommand -PassThru -NoAssert -Silent 2>$null
     if ($raw -match $config.VersionPattern) {
         $installed = $Matches['ver']
         if (-not $installed.StartsWith($config.Version)) {
