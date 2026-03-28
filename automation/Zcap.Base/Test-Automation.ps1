@@ -73,12 +73,21 @@ function Test-Automation {
         $config.Filter.ExcludeTag = $excludeTags
     }
 
+    # Disable module auto-loading during test runs. All our modules are
+    # already loaded by the importer. Auto-loading causes PowerShell to
+    # search the entire PSModulePath (including DFS/UNC paths that GPO
+    # re-adds) for every Get-Command call — "Searching for available
+    # modules [\\dfs\...]" progress bars and network timeouts.
+    $savedAutoLoad = $PSModuleAutoLoadingPreference
+    $global:PSModuleAutoLoadingPreference = 'None'
+
     $global:__PesterRunning = $true
     try {
         $result = Invoke-Pester -Configuration $config
     }
     finally {
         $global:__PesterRunning = $false
+        $global:PSModuleAutoLoadingPreference = $savedAutoLoad
     }
 
     # Validate test durations against level limits
