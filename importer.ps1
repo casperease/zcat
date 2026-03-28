@@ -13,10 +13,14 @@ if ($isConsoleSession) {
 }
 
 # Strip PSModulePath to local system paths only.
-# Enterprise environments often redirect $HOME to DFS, OneDrive, or network shares.
-# The default PSModulePath includes $HOME\Documents\PowerShell\Modules, which causes
-# PowerShell to scan the network on every module lookup, tab completion, and auto-load.
+# Enterprise environments often redirect $HOME\Documents to DFS/UNC shares via GPO.
+# PowerShell includes Documents\PowerShell\Modules in PSModulePath by default,
+# causing every module lookup, tab completion, and auto-load to scan the network.
 # We vendor all dependencies — the user profile module path is never needed.
+#
+# This runtime fix helps the current session. For a permanent fix that survives
+# PS7 internal PSModulePath reconstruction (WinCompat, auto-loading), run
+# the Set-LocalPSModulePath script as Administrator (one-time).
 $sep = [System.IO.Path]::PathSeparator
 $script:CleanPSModulePath = @(
     (Join-Path $PSHOME 'Modules')                                                                 # pwsh built-in modules
@@ -68,13 +72,25 @@ Import-AllModules -ModulesRoot $modulesRoot -ExportPrivates:$ExportPrivates
 Write-Verbose 'Removing Resolver module'
 Remove-Module Resolver -Force -ErrorAction SilentlyContinue
 
-# Re-apply clean PSModulePath. The Windows PowerShell Compatibility layer
-# starts a background WinPS 5.1 process whose PSModulePath includes the
-# user profile path (often a DFS/UNC share in enterprise). PS7 inherits
-# those paths back, polluting what we set above. Strip them again.
-if ($env:PSModulePath -ne $script:CleanPSModulePath) {
-    Write-Verbose 'PSModulePath was polluted during import — re-applying clean paths'
-    $env:PSModulePath = $script:CleanPSModulePath
+# Re-apply clean PSModulePath — imports above can trigger the WinCompat layer
+# which re-adds DFS/UNC user paths. Strip them again.
+$env:PSModulePath = $script:CleanPSModulePath
+
+# Warn if the default user module path points to a network share. This causes
+# PS7 to scan the network during internal PSModulePath reconstruction (WinCompat,
+# auto-loading) even after our runtime strip. The permanent fix is a one-time
+# admin script that redirects the PS7 user module path to a local directory.
+if ($IsWindows) {
+    $userModulePath = [Environment]::GetFolderPath('MyDocuments')
+    if ($userModulePath -match '^\\\\') {
+        $fixScript = Join-Path $PSScriptRoot "$automationFolder/Zcap.Base/assets/Set-LocalPSModulePath.ps1"
+        Write-Host ''
+        Write-Host 'WARNING: Your Documents folder is on a network share.' -ForegroundColor Yellow
+        Write-Host 'PowerShell will be slow — module lookups scan the network.' -ForegroundColor Yellow
+        Write-Host "Run this once as Administrator to fix permanently:" -ForegroundColor Yellow
+        Write-Host "  Start-Process pwsh -Verb RunAs -ArgumentList '-File', '$fixScript'" -ForegroundColor Cyan
+        Write-Host ''
+    }
 }
 
 # Strict mode
