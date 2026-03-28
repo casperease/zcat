@@ -55,8 +55,8 @@ Remove-Module Resolver -Force -ErrorAction SilentlyContinue
 # admin script that redirects the PS7 user module path to a local directory.
 if ($IsWindows) {
     $docsFolder = [Environment]::GetFolderPath('MyDocuments')
-    $configFile = Join-Path $PSHOME 'powershell.config.json'
-    $fixApplied = try { (Test-Path $configFile) -and ((Get-Content $configFile -Raw | ConvertFrom-Json).PSModulePath) } catch { $false }
+    $userRegPath = [Environment]::GetEnvironmentVariable('PSModulePath', 'User')
+    $fixApplied = [bool]$userRegPath -and $userRegPath -notmatch '^\\\\'
 
     if ($docsFolder -match '^\\\\' -and -not $fixApplied) {
         $fixScript = Join-Path $PSScriptRoot "$automationFolder/Zcap.Base/assets/Set-LocalPSModulePath.ps1"
