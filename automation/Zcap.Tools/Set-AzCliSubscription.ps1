@@ -17,7 +17,7 @@ function Set-AzCliSubscription {
         [string] $Subscription
     )
 
-    Assert-Command az
+    Assert-Tool 'AzCli'
 
     # Idempotent: skip if already on the requested subscription
     # -NoAssert: non-zero exit means "not logged in" — falls through to az account set

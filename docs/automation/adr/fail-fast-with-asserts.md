@@ -88,7 +88,7 @@ and other `Assert-*` functions to validate everything that `[Parameter]` attribu
 - **Assert after every external call.** After `Invoke-CliCommand`, `Get-Content`, API calls,
 or any operation that talks to the outside world, assert the result meets expectations before passing it downstream.
 
-- **Assert preconditions, not just inputs.** `Assert-Command` and `Assert-ToolVersion` verify that the environment is in the expected state before doing work.
+- **Assert preconditions, not just inputs.** `Assert-Tool` verifies that a tool is present and at the expected version before doing work.
 This is a precondition assertion, not input validation.
 
 - **Use the `Assert-*` library, do not inline `if/throw`.** The `Assert-*` functions provide consistent error messages, are greppable,

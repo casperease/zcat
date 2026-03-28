@@ -141,7 +141,7 @@ The function's name and purpose is "run poetry," but it silently does something 
 
 ### Rules
 
-- **Assert, don't fix.** If a function needs a prerequisite, assert it with `Assert-Command` or `Assert-ToolVersion`.
+- **Assert, don't fix.** If a function needs a prerequisite, assert it with `Assert-Tool` (or `Assert-Command` for non-tool binaries).
   Never silently install, configure, or repair prerequisites.
   Assertions are guard clauses — part of the function's contract, not a separate concern.
 

@@ -10,7 +10,7 @@ function Disconnect-AzCli {
     [CmdletBinding()]
     param()
 
-    Assert-Command az
+    Assert-Tool 'AzCli'
 
     # Idempotent: skip if not logged in
     # -NoAssert: non-zero exit means "not logged in" — an expected state, not an error

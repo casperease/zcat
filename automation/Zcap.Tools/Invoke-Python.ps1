@@ -33,8 +33,7 @@ function Invoke-Python {
     Assert-NotNullOrWhitespace $Arguments -ErrorText 'Arguments cannot be empty — Python would enter interactive mode'
 
     if (-not $DryRun) {
-        Assert-Command python
-        Assert-ToolVersion -Tool 'Python'
+        Assert-Tool 'Python'
     }
 
     Invoke-CliCommand "python $Arguments" -PassThru:$PassThru -NoAssert:$NoAssert -Silent:$Silent -DryRun:$DryRun

@@ -33,8 +33,7 @@ function Invoke-Dotnet {
     Assert-NotNullOrWhitespace $Arguments -ErrorText 'Arguments cannot be empty'
 
     if (-not $DryRun) {
-        Assert-Command dotnet
-        Assert-ToolVersion -Tool 'Dotnet'
+        Assert-Tool 'Dotnet'
     }
 
     Invoke-CliCommand "dotnet $Arguments" -PassThru:$PassThru -NoAssert:$NoAssert -Silent:$Silent -DryRun:$DryRun

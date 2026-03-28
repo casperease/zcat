@@ -32,8 +32,7 @@ function Invoke-Pip {
     Assert-NotNullOrWhitespace $Arguments -ErrorText 'Arguments cannot be empty'
 
     if (-not $DryRun) {
-        Assert-Command python
-        Assert-ToolVersion -Tool 'Python'
+        Assert-Tool 'Python'
 
         # pip writes to Python's Scripts directory. If Python is machine-wide,
         # that directory is read-only without admin → access denied.

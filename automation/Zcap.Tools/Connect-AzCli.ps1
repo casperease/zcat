@@ -50,8 +50,7 @@ function Connect-AzCli {
         [switch] $Force
     )
 
-    Assert-Command az
-    Assert-ToolVersion -Tool 'AzCli'
+    Assert-Tool 'AzCli'
 
     # Idempotent: skip if already logged in with the correct identity
     # -NoAssert: non-zero exit means "not logged in" — an expected state, not an error

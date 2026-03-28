@@ -35,8 +35,7 @@ function Invoke-AzCli {
     Assert-NotNullOrWhitespace $Arguments -ErrorText 'Arguments cannot be empty'
 
     if (-not $DryRun) {
-        Assert-Command az
-        Assert-ToolVersion -Tool 'AzCli'
+        Assert-Tool 'AzCli'
     }
 
     Invoke-CliCommand "az $Arguments" -PassThru:$PassThru -NoAssert:$NoAssert -Silent:$Silent -DryRun:$DryRun

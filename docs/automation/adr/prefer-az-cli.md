@@ -69,7 +69,7 @@ Use Az CLI (`az`) for all Azure operations by default. Az PowerShell modules are
 
 - **Default to `az` for all Azure operations.** Wrap calls in `Invoke-CliCommand` with `ConvertFrom-Json` to parse the output.
 
-- **Assert `az` availability.** Use `Assert-Command az` and `Assert-ToolVersion -Tool 'AzCli'` at the start of functions that call `az`.
+- **Assert `az` availability.** Use `Assert-Tool 'AzCli'` at the start of functions that call `az`.
 
 - **Do not import Az PowerShell modules in automation code.** No `Import-Module Az.*` in any function.
   If an Az module is needed, the environment must provide it, and the function must assert it with `Assert-PsModule`.

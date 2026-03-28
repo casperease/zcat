@@ -35,8 +35,7 @@ function Invoke-Poetry {
     Assert-NotNullOrWhitespace $Arguments -ErrorText 'Arguments cannot be empty'
 
     if (-not $DryRun) {
-        Assert-Command poetry
-        Assert-ToolVersion -Tool 'Poetry'
+        Assert-Tool 'Poetry'
     }
 
     Invoke-CliCommand "poetry $Arguments" -PassThru:$PassThru -NoAssert:$NoAssert -Silent:$Silent -DryRun:$DryRun

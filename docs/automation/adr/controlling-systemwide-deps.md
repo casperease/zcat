@@ -44,13 +44,13 @@ The installer is idempotent — if the tool is already installed, it returns imm
 
 #### 3. Assert at runtime
 
-Every `Invoke-*` wrapper asserts two things before executing:
+Every `Invoke-*` wrapper asserts the tool is present and at the correct version before executing:
 
 ```powershell
-Assert-Command python              # is the tool on PATH?
-Assert-ToolVersion -Tool 'Python'  # does the version match the lock?
+Assert-Tool 'Python'   # is it on PATH? does the version match the lock?
 ```
 
+`Assert-Tool` looks up the command name from config, calls `Assert-Command`, then `Assert-ToolVersion`.
 If the tool is missing, the error says so. If the version is wrong, the error shows expected vs actual. No silent execution with the wrong version.
 
 Version checks are cached per session — the first `Invoke-Python` call validates, subsequent calls skip the check.
@@ -94,7 +94,7 @@ The platform works without a container runtime on Windows, macOS, and Linux.
 
 - **One `Install-*` / `Invoke-*` / `Uninstall-*` triad per tool.** The installer handles platform differences. The invoker asserts version and presence. The uninstaller cleans up.
 
-- **Assert before every invocation.** `Assert-Command` and `Assert-ToolVersion` run before every external tool call.
+- **Assert before every invocation.** `Assert-Tool` runs before every external tool call (combines `Assert-Command` and `Assert-ToolVersion`).
   Missing or wrong-version tools fail immediately with a clear message.
 
 - **CI and local use the same code path.** No separate CI setup scripts. The same `Install-DevBox` that runs on a developer laptop runs in the pipeline.
