@@ -32,7 +32,11 @@ function Test-Automation {
     if (-not (Get-Module Pester)) {
         $pesterPath = Join-Path $env:RepositoryRoot 'automation/.vendor/Pester'
         Write-Verbose "Lazy-loading Pester from: $pesterPath"
+        # Save PSModulePath — Import-Module can trigger the WinCompat layer
+        # which re-adds DFS/UNC user paths. Restore after import.
+        $savedPath = $env:PSModulePath
         Import-Module $pesterPath -Scope Global -Force
+        $env:PSModulePath = $savedPath
     }
 
     $automationRoot = Join-Path $env:RepositoryRoot 'automation'

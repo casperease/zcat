@@ -18,7 +18,7 @@ if ($isConsoleSession) {
 # PowerShell to scan the network on every module lookup, tab completion, and auto-load.
 # We vendor all dependencies — the user profile module path is never needed.
 $sep = [System.IO.Path]::PathSeparator
-$env:PSModulePath = @(
+$script:CleanPSModulePath = @(
     (Join-Path $PSHOME 'Modules')                                                                 # pwsh built-in modules
     (Join-Path ([Environment]::GetFolderPath('ProgramFiles')) 'PowerShell' 'Modules')             # system-wide PS 7 modules
     # Windows-only modules that don't ship with PS 7 (e.g., Appx, DISM, NetAdapter, Hyper-V)
@@ -27,6 +27,7 @@ $env:PSModulePath = @(
         (Join-Path ([Environment]::GetFolderPath('ProgramFiles')) 'WindowsPowerShell' 'Modules')   # system-wide PS 5.1 modules
     }
 ) -join $sep
+$env:PSModulePath = $script:CleanPSModulePath
 Write-Verbose "PSModulePath set to: $($env:PSModulePath)"
 
 
@@ -66,6 +67,15 @@ Import-AllModules -ModulesRoot $modulesRoot -ExportPrivates:$ExportPrivates
 # Clean up resolver — it has served its purpose
 Write-Verbose 'Removing Resolver module'
 Remove-Module Resolver -Force -ErrorAction SilentlyContinue
+
+# Re-apply clean PSModulePath. The Windows PowerShell Compatibility layer
+# starts a background WinPS 5.1 process whose PSModulePath includes the
+# user profile path (often a DFS/UNC share in enterprise). PS7 inherits
+# those paths back, polluting what we set above. Strip them again.
+if ($env:PSModulePath -ne $script:CleanPSModulePath) {
+    Write-Verbose 'PSModulePath was polluted during import — re-applying clean paths'
+    $env:PSModulePath = $script:CleanPSModulePath
+}
 
 # Strict mode
 Set-StrictMode -Version Latest
