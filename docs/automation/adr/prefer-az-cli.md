@@ -54,7 +54,7 @@ or when you need deep .NET integration (e.g., working with Azure SDK types direc
 
 When they arise, the Az modules must not be vendored or managed by the automation toolset. Instead:
 
-- **Devbox**: configure the devbox definition to install the required Az modules at the correct version during provisioning.
+- **Workstation**: configure the local environment to install the required Az modules at the correct version during provisioning.
 - **CI**: install the required Az modules in the pipeline image or as an explicit pipeline step, pinned to a specific version.
 - **Document the dependency**: the function's comment-based help must state which `Az.*` module it requires and at what version.
 
@@ -75,9 +75,9 @@ Use Az CLI (`az`) for all Azure operations by default. Az PowerShell modules are
   If an Az module is needed, the environment must provide it, and the function must assert it with `Assert-PsModule`.
 
 - **Do not vendor Az modules.** They are too large and their assembly dependencies make in-process versioning unsafe.
-  Manage them through devbox definitions and CI pipeline configuration.
+  Manage them through workstation provisioning and CI pipeline configuration.
 
-- **Pin versions in environment configuration.** When Az modules are required, the devbox or CI config must specify the exact version.
+- **Pin versions in environment configuration.** When Az modules are required, the workstation or CI config must specify the exact version.
   Never rely on "whatever is installed."
 
 - **Document Az module dependencies explicitly.** Any function that requires an Az module must state the module name and minimum version in its `.SYNOPSIS` or `.DESCRIPTION`.

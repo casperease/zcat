@@ -55,12 +55,12 @@ If the tool is missing, the error says so. If the version is wrong, the error sh
 
 Version checks are cached per session — the first `Invoke-Python` call validates, subsequent calls skip the check.
 
-#### 4. Orchestrate with Install-DevBox
+#### 4. Orchestrate with Install-Tools
 
-A single function provisions the entire development environment:
+A single function provisions the entire local development environment:
 
 ```powershell
-function Install-DevBox {
+function Install-Tools {
     Install-Python
     Install-Poetry
     Install-Dotnet
@@ -68,7 +68,7 @@ function Install-DevBox {
 }
 ```
 
-This is idempotent. Run it after every pull, on every new machine, or on a schedule. It converges the environment to the desired state defined in config.
+This is idempotent. Run it after every pull, on every new workstation, or on a schedule. It converges the environment to the desired state defined in config.
 
 #### 5. CI uses the same functions
 
@@ -80,7 +80,7 @@ If a tool works locally, it works in CI — same config, same installer, same as
   shell: pwsh
   run: |
     . ./importer.ps1
-    Install-DevBox
+    Install-Tools
 ```
 
 ## Decision
@@ -97,7 +97,7 @@ The platform works without a container runtime on Windows, macOS, and Linux.
 - **Assert before every invocation.** `Assert-Tool` runs before every external tool call (combines `Assert-Command` and `Assert-ToolVersion`).
   Missing or wrong-version tools fail immediately with a clear message.
 
-- **CI and local use the same code path.** No separate CI setup scripts. The same `Install-DevBox` that runs on a developer laptop runs in the pipeline.
+- **CI and local use the same code path.** No separate CI setup scripts. The same `Install-Tools` that runs on a developer workstation runs in the pipeline.
 
 - **Do not assume tools are pre-installed.** Even on CI runners with pre-installed tools, assert the version. Runner images change without notice.
 
@@ -105,6 +105,6 @@ The platform works without a container runtime on Windows, macOS, and Linux.
 
 - Tool versions are consistent across all developers and CI environments.
 - Version upgrades are pull requests with a one-line config change.
-- New developers run `Install-DevBox` once and have a working environment.
+- New developers run `Install-Tools` once and have a working environment.
 - CI pipelines are self-provisioning — they do not depend on runner image contents.
-- The platform works on bare metal, VMs, devboxes, and CI runners without requiring Docker.
+- The platform works on bare metal, VMs, workstations, and CI runners without requiring Docker.

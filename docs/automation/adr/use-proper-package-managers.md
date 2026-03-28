@@ -54,9 +54,9 @@ Windows tool installation uses `winget`. Chocolatey is not used.
 
 - **Do not introduce Chocolatey as a dependency.** No function should shell out to `choco`, reference a Chocolatey package, or assume Chocolatey is installed.
 
-- **Remove Chocolatey from target machines.** `Uninstall-Chocolatey` removes the Chocolatey installation, its environment variables, and its PATH entries. It is idempotent — safe to run when Chocolatey is not present. `Install-DevBox` calls it as its first step so that environments previously provisioned with Chocolatey are cleaned up automatically.
+- **Remove Chocolatey from target machines.** `Uninstall-Chocolatey` removes the Chocolatey installation, its environment variables, and its PATH entries. It is idempotent — safe to run when Chocolatey is not present. `Install-Tools` calls it as its first step so that environments previously provisioned with Chocolatey are cleaned up automatically.
 
-- **`Get-DevBoxStatus` reports Chocolatey as unwanted.** If `choco` is on PATH, the status output includes a Chocolatey entry with status `Unwanted` and the recommended action `Run Uninstall-Chocolatey`.
+- **`Get-ToolsStatus` reports Chocolatey as unwanted.** If `choco` is on PATH, the status output includes a Chocolatey entry with status `Unwanted` and the recommended action `Run Uninstall-Chocolatey`.
 
 - **Continue using platform-native managers on other platforms.** `brew` on macOS, `apt-get` on Linux. This ADR only constrains the Windows choice.
 
@@ -67,4 +67,4 @@ Windows tool installation uses `winget`. Chocolatey is not used.
 - Windows installations use the same trust model as the OS itself — Microsoft-moderated, hash-verified, no arbitrary script execution.
 - The attack surface from package installation is reduced to signed installer formats rather than arbitrary PowerShell.
 - Tools not yet available in the winget repository must be installed via direct download with checksum verification, or the team must submit a winget manifest upstream.
-- Machines that previously used Chocolatey are cleaned up automatically by `Install-DevBox`. No manual intervention required.
+- Machines that previously used Chocolatey are cleaned up automatically by `Install-Tools`. No manual intervention required.

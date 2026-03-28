@@ -1,17 +1,17 @@
 <#
 .SYNOPSIS
-    Reports the installation status of all registered devbox tools.
+    Reports the installation status of all registered tools.
 .DESCRIPTION
     Reads tool definitions from config/tools.yml and checks each tool's
     presence, version, package manager, and install scope on the current
     machine. Returns status objects for programmatic use and writes a summary.
     Idempotent — safe to run at any time, read-only.
 .EXAMPLE
-    Get-DevBoxStatus
+    Get-ToolsStatus
 .EXAMPLE
-    Get-DevBoxStatus | Where-Object Status -ne 'OK'
+    Get-ToolsStatus | Where-Object Status -ne 'OK'
 #>
-function Get-DevBoxStatus {
+function Get-ToolsStatus {
     [CmdletBinding()]
     param()
 

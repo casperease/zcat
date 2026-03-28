@@ -66,4 +66,4 @@ All PowerShell module dependencies used by the toolset are vendored in `automati
 - Repository size increases by the size of vendored modules. In practice this is small (Pester, PSScriptAnalyzer, powershell-yaml total ~15 MB).
 - No network dependency for module loading. The toolset works offline and in air-gapped environments.
 - Module upgrades show up as explicit diffs in pull requests, making version changes reviewable.
-- Az modules must be managed through other mechanisms (system install, devbox, CI image) — see the prefer-az-cli ADR.
+- Az modules must be managed through other mechanisms (system install, workstation provisioning, CI image) — see the prefer-az-cli ADR.

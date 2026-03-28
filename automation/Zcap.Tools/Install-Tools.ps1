@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Provisions the development environment with all required tools.
+    Provisions the local development environment with all required tools.
 .DESCRIPTION
     Installs all locked tool versions. Idempotent — safe to run
     repeatedly. Skips tools that are already installed at the correct
@@ -9,11 +9,11 @@
 .PARAMETER Force
     Replace existing installations that are at the wrong version.
 .EXAMPLE
-    Install-DevBox
+    Install-Tools
 .EXAMPLE
-    Install-DevBox -Force
+    Install-Tools -Force
 #>
-function Install-DevBox {
+function Install-Tools {
     [CmdletBinding()]
     param(
         [switch] $Force
@@ -24,7 +24,7 @@ function Install-DevBox {
     Uninstall-Chocolatey
 
     # Report tools that work but aren't managed by us — left untouched.
-    $status = Get-DevBoxStatus
+    $status = Get-ToolsStatus
     $usable = @($status | Where-Object { $_.Status -eq 'Usable' })
     foreach ($tool in $usable) {
         Write-Message "Skipping $($tool.Tool) — $($tool.Installed) works, installed outside $($tool.Manager ?? 'expected manager')"

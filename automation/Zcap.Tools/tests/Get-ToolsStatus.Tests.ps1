@@ -1,12 +1,12 @@
-Describe 'Get-DevBoxStatus' {
+Describe 'Get-ToolsStatus' {
     It 'is exported and callable' {
-        Get-Command Get-DevBoxStatus | Should -Not -BeNullOrEmpty
+        Get-Command Get-ToolsStatus | Should -Not -BeNullOrEmpty
     }
 }
 
-Describe 'Get-DevBoxStatus integration' -Tag 'L2' {
+Describe 'Get-ToolsStatus integration' -Tag 'L2' {
     It 'returns objects with expected properties' {
-        $results = Get-DevBoxStatus
+        $results = Get-ToolsStatus
         $results | Should -Not -BeNullOrEmpty
         $first = $results | Select-Object -First 1
         $first.PSObject.Properties.Name | Should -Contain 'Tool'

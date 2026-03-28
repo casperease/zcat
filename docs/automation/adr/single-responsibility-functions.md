@@ -132,8 +132,8 @@ That is one cohesive outcome, not three concerns bundled together.
 Every function must have one _reason to change_.
 Functions that compose steps toward a single goal are fine —
 including orchestration functions whose stated purpose is to chain a known sequence
-(like `Install-DevBox` calling `Install-Python`, `Install-Poetry`, `Install-Dotnet`).
-The responsibility there IS the orchestration: "make the devbox ready."
+(like `Install-Tools` calling `Install-Python`, `Install-Poetry`, `Install-Dotnet`).
+The responsibility there IS the orchestration: "make the workstation ready."
 
 The problem is when a function does things the caller did not ask for and cannot opt out of.
 `Invoke-Poetry` that secretly installs Poetry is not an orchestration function — it is a command runner with a hidden side effect.
@@ -147,12 +147,12 @@ The function's name and purpose is "run poetry," but it silently does something 
 
 - **The function name is the contract.** A function named `Get-Config` must not modify state.
   A function named `Invoke-Poetry` must not install Poetry.
-  A function named `Install-DevBox` absolutely should install things — that is what it says on the tin.
+  A function named `Install-Tools` absolutely should install things — that is what it says on the tin.
   If the name does not cover what the function does, either rename the function or remove the behavior.
 
 - **Orchestration functions are explicit.** Higher-level functions that chain a sequence of steps are fine
   when the function's name and purpose make the composition obvious.
-  `Install-DevBox`, `Publish-Module`, `Initialize-Pipeline` — these tell the caller exactly what to expect.
+  `Install-Tools`, `Publish-Module`, `Initialize-Pipeline` — these tell the caller exactly what to expect.
 
 - **Hidden bundling is the anti-pattern.** The problem is not composition itself but composition that surprises the caller.
   If the caller has to read the implementation to discover what the function actually does, the function is doing too much for its name.

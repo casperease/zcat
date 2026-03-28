@@ -5,14 +5,13 @@ CLI tool management with version locking, idempotent installation, and cross-pla
 ## Quick start
 
 ```powershell
-Install-DevBox                  # install all tools at locked versions
-Install-DevBox -Force           # replace wrong versions automatically
-Install-DevBox -AcceptExisting  # accept correct-version tools regardless of scope/manager
+Install-Tools          # install all tools at locked versions
+Install-Tools -Force   # replace wrong versions automatically
 ```
 
 ## Tools
 
-Each tool has `Install-`, `Invoke-`, and `Uninstall-` functions. Versions are locked in `config/tools.yml`.
+Each tool has `Install-`, `Invoke-`, and `Uninstall-` functions. Versions are locked in `assets/config/tools.yml`.
 
 | Tool      | Command  | Functions                                             |
 | --------- | -------- | ----------------------------------------------------- |
@@ -36,7 +35,7 @@ All Az functions are idempotent — `Connect-AzCli` skips if already authenticat
 
 ## How it works
 
-`Invoke-*` functions assert the installed version matches `config/tools.yml` before every execution (checked once per session, cached). `Install-*` functions skip if the correct version is already on PATH. With `-Force`, wrong versions are uninstalled first.
+`Invoke-*` functions assert the installed version matches `assets/config/tools.yml` before every execution (checked once per session, cached). `Install-*` functions skip if the correct version is already on PATH. With `-Force`, wrong versions are uninstalled first.
 
 ### User-space installation
 
@@ -54,16 +53,14 @@ A tool may have multiple fields (e.g., `BrewFormula` for macOS + `PipPackage` fo
 
 ### Scope enforcement
 
-By default, `Install-DevBox` blocks tools installed machine-wide or by an unexpected manager. Use `-AcceptExisting` to relax this — accepting any correct-version install regardless of scope or manager.
-
-`Get-DevBoxStatus` reports each tool's `Status`, `Manager`, and `Scope` for diagnostics.
+Tools at the correct version but installed outside the expected manager are reported as `Usable` and left untouched. `Get-ToolsStatus` reports each tool's `Status`, `Manager`, and `Scope` for diagnostics.
 
 ## Adding a new tool
 
-1. Add an entry to `config/tools.yml` with version, command, platform-specific package IDs, and version detection pattern.
+1. Add an entry to `assets/config/tools.yml` with version, command, platform-specific package IDs, and version detection pattern.
 2. Create `Install-<Tool>.ps1`, `Invoke-<Tool>.ps1`, `Uninstall-<Tool>.ps1`.
-3. Add to `Install-DevBox`.
-4. For tools that need vendored install scripts, place them in `scripts/`.
+3. Add to `Install-Tools`.
+4. For tools that need vendored install scripts, place them in `assets/`.
 
 ## Enterprise / air-gapped environments
 
