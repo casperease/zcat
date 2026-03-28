@@ -8,4 +8,10 @@ Describe 'Install-Python' {
         $param | Should -Not -BeNullOrEmpty
         $param.ParameterType.Name | Should -Be 'String'
     }
+
+    It 'has Force switch parameter' {
+        $param = (Get-Command Install-Python).Parameters['Force']
+        $param | Should -Not -BeNullOrEmpty
+        $param.ParameterType.Name | Should -Be 'SwitchParameter'
+    }
 }

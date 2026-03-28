@@ -3,8 +3,8 @@
     Reports the installation status of all registered devbox tools.
 .DESCRIPTION
     Reads tool definitions from config/tools.yml and checks each tool's
-    presence, version, and package manager on the current machine.
-    Returns status objects for programmatic use and writes a summary.
+    presence, version, package manager, and install scope on the current
+    machine. Returns status objects for programmatic use and writes a summary.
     Idempotent — safe to run at any time, read-only.
 .EXAMPLE
     Get-DevBoxStatus
@@ -22,11 +22,62 @@ function Get-DevBoxStatus {
     $results = foreach ($toolName in $allTools.Keys) {
         $config = $allTools[$toolName]
 
-        $expectedMgr = if ($config.PipPackage) { 'pip' }
-                       elseif ($IsWindows) { 'winget' }
-                       elseif ($IsMacOS) { 'brew' }
-                       elseif ($IsLinux) { 'apt' }
+        # Mirror Test-ExpectedPackageManager check order:
+        # UserInstallDir → platform-specific → pip → unknown
+        $expectedMgr = if ($config.UserInstallDir) { 'script' }
+                       elseif ($IsWindows -and $config.WingetId) { 'winget' }
+                       elseif ($IsMacOS -and $config.BrewFormula) { 'brew' }
+                       elseif ($IsLinux -and $config.AptPackage) { 'apt' }
+                       elseif ($config.PipPackage) { 'pip' }
                        else { 'unknown' }
+
+        # UserInstallDir tools (e.g., Dotnet) install side-by-side into their
+        # own directory. A system-wide install from VS or a package manager is
+        # irrelevant — it doesn't conflict and doesn't block our install.
+        # Check our specific install directory instead of the system PATH.
+        if ($config.UserInstallDir) {
+            $root = if ($IsWindows -and $config.WindowsInstallRoot) { $config.WindowsInstallRoot } else { $HOME }
+            $dirName = if ($IsWindows -and $config.WindowsInstallDir) { $config.WindowsInstallDir } else { $config.UserInstallDir }
+            $ourDir = Join-Path $root $dirName
+            $ourBinary = if ($IsWindows) { Join-Path $ourDir "$($config.Command).exe" } else { Join-Path $ourDir $config.Command }
+
+            if (-not (Test-Path $ourBinary)) {
+                [PSCustomObject]@{
+                    Tool      = $toolName
+                    Locked    = "$($config.Version).x"
+                    Installed = $null
+                    Status    = 'Missing'
+                    Location  = $null
+                    Manager   = $expectedMgr
+                    Scope     = $null
+                    Action    = "Run Install-$toolName"
+                }
+                continue
+            }
+
+            # Check version from our install dir specifically
+            $raw = Invoke-CliCommand "$ourBinary --version" -PassThru -NoAssert -Silent
+            $installed = $null
+            if ($raw -match $config.VersionPattern) {
+                $installed = $Matches['ver']
+            }
+
+            $versionOk = $installed -and $installed.StartsWith($config.Version)
+            $status = if ($versionOk) { 'OK' } else { 'WrongVersion' }
+            $action = if (-not $versionOk) { "Run Install-$toolName -Force" } else { $null }
+
+            [PSCustomObject]@{
+                Tool      = $toolName
+                Locked    = "$($config.Version).x"
+                Installed = $installed
+                Status    = $status
+                Location  = $ourBinary
+                Manager   = $expectedMgr
+                Scope     = 'user'
+                Action    = $action
+            }
+            continue
+        }
 
         # Tool not on PATH — nothing more to check
         if (-not (Test-Command $config.Command)) {
@@ -37,6 +88,7 @@ function Get-DevBoxStatus {
                 Status    = 'Missing'
                 Location  = $null
                 Manager   = $null
+                Scope     = $null
                 Action    = "Run Install-$toolName"
             }
             continue
@@ -55,11 +107,14 @@ function Get-DevBoxStatus {
         $versionOk = $installed -and $installed.StartsWith($config.Version)
         $managedByExpected = Test-ExpectedPackageManager -Config $config
         $manager = if ($managedByExpected) { $expectedMgr } else { 'other' }
+        $scope = Get-InstallScope -Config $config -Location $location
 
         $status = $null
         $action = $null
 
         if ($versionOk -and $managedByExpected) {
+            # Right version, right manager — scope doesn't matter. If winget
+            # installed Python machine-wide, it works and we control it.
             $status = 'OK'
         }
         elseif ($versionOk) {
@@ -73,9 +128,11 @@ function Get-DevBoxStatus {
             $action = "Run Install-$toolName -Force"
         }
         else {
-            # Wrong version AND installed outside our manager
+            # Wrong version AND installed outside our manager. Installing via
+            # $expectedMgr would succeed but the existing binary on Machine PATH
+            # would shadow it — the user would still run the old version.
             $status = 'WrongVersion'
-            $action = "Not managed by $expectedMgr. Uninstall from '$location', then Install-$toolName"
+            $action = "Installed outside $expectedMgr at '$location' — this binary shadows any new install. Uninstall it first, then Install-$toolName"
         }
 
         [PSCustomObject]@{
@@ -85,21 +142,25 @@ function Get-DevBoxStatus {
             Status    = $status
             Location  = $location
             Manager   = $manager
+            Scope     = $scope
             Action    = $action
         }
     }
 
     # Chocolatey check — not a tools.yml tool, but a package manager
     # that should not be present (see ADR: use-proper-package-managers).
-    $chocoInstalled = $IsWindows -and (Test-Command choco)
-    $results += [PSCustomObject]@{
-        Tool      = 'Chocolatey'
-        Locked    = $null
-        Installed = if ($chocoInstalled) { 'present' } else { $null }
-        Status    = if ($chocoInstalled) { 'Unwanted' } else { 'OK' }
-        Location  = if ($chocoInstalled) { (Get-Command choco).Source } else { $null }
-        Manager   = $null
-        Action    = if ($chocoInstalled) { 'Run Uninstall-Chocolatey' } else { $null }
+    # Only report if actually found — no noise when absent.
+    if ($IsWindows -and (Test-Command choco)) {
+        $results += [PSCustomObject]@{
+            Tool      = 'Chocolatey'
+            Locked    = $null
+            Installed = 'present'
+            Status    = 'Unwanted'
+            Location  = (Get-Command choco).Source
+            Manager   = $null
+            Scope     = $null
+            Action    = 'Run Uninstall-Chocolatey'
+        }
     }
 
     # One-line summary via Write-Message

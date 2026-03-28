@@ -5,10 +5,10 @@ param(
     [switch] $IncludeWindowsPowerShell
 )
 
-# Detect if called from an interactive prompt or from a script
-$isInteractive = -not $MyInvocation.ScriptName
+# Detect if running in a direct console session or from a script
+$isConsoleSession = -not $MyInvocation.ScriptName
 
-if ($isInteractive) {
+if ($isConsoleSession) {
     $sw = [Diagnostics.Stopwatch]::StartNew()
 }
 
@@ -69,23 +69,41 @@ Remove-Module Resolver -Force -ErrorAction SilentlyContinue
 # Strict mode
 Set-StrictMode -Version Latest
 
-# Interactive-only: prompt hook and load timer
+# Console session: prompt hook and load timer.
 # In scripts, authors add `trap { Write-Exception $_; break }` after the importer.
-if ($isInteractive) {
-    # Switch to CategoryView (minimal three-liner) because our prompt
-    # hook replaces it with a full stack trace via Write-Exception.
-    $global:ErrorView = 'CategoryView'
+if ($isConsoleSession) {
+    # Default ConciseView handles external errors natively. The prompt hook adds
+    # Write-Exception with full stack trace for errors from our modules only.
     function global:prompt {
-        # Only show diagnostics when the last command failed ($? is $false)
-        # Skip errors caught by Pester's Should -Throw (expected throws during testing)
+        # The prompt must never throw — a crashing prompt destroys the console session.
         if (-not $? -and $global:Error.Count -gt 0) {
-            $trace = $global:Error[0].ScriptStackTrace
-            if ($trace -notmatch 'Should-Throw,.+Pester\.psm1') {
-                if (Get-Command Write-Exception -ErrorAction Ignore) {
-                    Write-Exception $global:Error[0]
-                } else {
-                    Write-Host $global:Error[0].Exception.Message
+            try {
+                $err = $global:Error[0]
+                $record = if ($err -is [System.Management.Automation.ErrorRecord]) { $err } else { $null }
+                $trace = if ($record -and $record.psobject.Properties['ScriptStackTrace']) { $record.ScriptStackTrace } else { '' }
+
+                $isOurError = $trace -and $trace -match [regex]::Escape($env:RepositoryRoot)
+                $isPesterExpected = $trace -and $trace -match 'Should-Throw,.+Pester\.psm1'
+
+                if ($isOurError -and -not $isPesterExpected) {
+                    Write-Host ('─' * 60) -ForegroundColor DarkGray
+                    $traceLines = $trace -split "`n"
+                    $formatted = $traceLines | ForEach-Object {
+                        if ($_ -match 'at <ScriptBlock>, <No file>: line \d+') {
+                            $lastCmd = (Get-History -Count 1).CommandLine
+                            if ($lastCmd) {
+                                $lastCmd = ($lastCmd -replace '[\r\n]+', ' ').Trim()
+                                if ($lastCmd.Length -gt 30) { $lastCmd = $lastCmd.Substring(0, 30) + '...' }
+                                "at $lastCmd"
+                            } else { 'at <prompt>' }
+                        }
+                        else { $_ }
+                    }
+                    Write-Host ($formatted -join "`n") -ForegroundColor Red
                 }
+            }
+            catch {
+                try { Write-Host $global:Error[0].Message -ForegroundColor Red } catch { }
             }
         }
         "PS $($executionContext.SessionState.Path.CurrentLocation)> "

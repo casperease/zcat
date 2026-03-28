@@ -28,16 +28,23 @@ function Uninstall-Tool {
     }
 
     if ($IsWindows) {
+        Assert-NotNullOrWhitespace $config.WingetId -ErrorText "$Tool has no WingetId — use Uninstall-$Tool directly"
+        if ($config.WingetScope -ne 'user') {
+            Assert-IsAdministrator -ErrorText "Uninstall-$Tool on Windows requires Administrator (winget machine-scope). Run as Administrator or uninstall $Tool manually."
+        }
         Assert-Command winget
         $packageId = $config.WingetId -f $Version
         Invoke-CliCommand "winget uninstall --id $packageId --silent"
     }
     elseif ($IsMacOS) {
+        Assert-NotNullOrWhitespace $config.BrewFormula -ErrorText "$Tool has no BrewFormula — use Uninstall-$Tool directly"
         Assert-Command brew
         $formula = $config.BrewFormula -f $Version
         Invoke-CliCommand "brew uninstall $formula"
     }
     elseif ($IsLinux) {
+        Assert-NotNullOrWhitespace $config.AptPackage -ErrorText "$Tool has no AptPackage — use Uninstall-$Tool directly"
+        Assert-IsAdministrator -ErrorText "Uninstall-$Tool on Linux requires root (apt-get). Run as root or uninstall $Tool manually."
         Assert-Command apt-get
         $package = $config.AptPackage -f $Version
         Invoke-CliCommand "sudo apt-get remove -y $package"

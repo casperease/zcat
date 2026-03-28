@@ -8,4 +8,10 @@ Describe 'Install-AzCli' {
         $param | Should -Not -BeNullOrEmpty
         $param.ParameterType.Name | Should -Be 'String'
     }
+
+    It 'has Force switch parameter' {
+        $param = (Get-Command Install-AzCli).Parameters['Force']
+        $param | Should -Not -BeNullOrEmpty
+        $param.ParameterType.Name | Should -Be 'SwitchParameter'
+    }
 }

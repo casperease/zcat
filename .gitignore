@@ -7,3 +7,4 @@ out/*
 # Auto-generated module manifests (created by importer)
 automation/**/*.psd1
 !automation/.vendor/**/*.psd1
+bash.exe.stackdump

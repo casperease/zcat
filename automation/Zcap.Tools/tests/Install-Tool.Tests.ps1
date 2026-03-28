@@ -17,4 +17,11 @@ Describe 'Install-Tool' {
         $param | Should -Not -BeNullOrEmpty
         $param.ParameterType.Name | Should -Be 'String'
     }
+
+    It 'has Force switch parameter' {
+        $cmd = & (Get-Module Zcap.Tools) { Get-Command Install-Tool }
+        $param = $cmd.Parameters['Force']
+        $param | Should -Not -BeNullOrEmpty
+        $param.ParameterType.Name | Should -Be 'SwitchParameter'
+    }
 }

@@ -5,8 +5,9 @@ CLI tool management with version locking, idempotent installation, and cross-pla
 ## Quick start
 
 ```powershell
-Install-DevBox          # install all tools at locked versions
-Install-DevBox -Force   # replace wrong versions automatically
+Install-DevBox                  # install all tools at locked versions
+Install-DevBox -Force           # replace wrong versions automatically
+Install-DevBox -AcceptExisting  # accept correct-version tools regardless of scope/manager
 ```
 
 ## Tools
@@ -37,35 +38,33 @@ All Az functions are idempotent — `Connect-AzCli` skips if already authenticat
 
 `Invoke-*` functions assert the installed version matches `config/tools.yml` before every execution (checked once per session, cached). `Install-*` functions skip if the correct version is already on PATH. With `-Force`, wrong versions are uninstalled first.
 
-## Platform package managers
+### User-space installation
 
-Installation uses the native package manager per platform:
+Tools prefer user-space installation to avoid admin requirements. The installation method for each tool is determined by config fields in `tools.yml`:
 
-| Platform | Manager  | Config key    |
-| -------- | -------- | ------------- |
-| Windows  | winget   | `WingetId`    |
-| macOS    | Homebrew | `BrewFormula` |
-| Linux    | apt-get  | `AptPackage`  |
+| Config field          | Mechanism                                                              |
+| --------------------- | ---------------------------------------------------------------------- |
+| `WingetId`            | winget (Windows). `WingetScope: user` adds `--scope user`.            |
+| `BrewFormula`         | Homebrew (macOS, always user-space).                                   |
+| `AptPackage`          | apt-get (Linux, requires root — asserted up front).                    |
+| `PipPackage`          | pip (cross-platform, user-space). Used as fallback on Windows/Linux.   |
+| `UserInstallDir`      | Vendored install script (no package manager). User-space on all platforms. |
+| `WindowsInstallRoot`  | Overrides `$HOME` as base for `UserInstallDir` on Windows (avoids OneDrive). |
 
-Poetry is the exception — installed via pip on all platforms.
+A tool may have multiple fields (e.g., `BrewFormula` for macOS + `PipPackage` for Windows/Linux). The most specific match for the current platform wins.
+
+### Scope enforcement
+
+By default, `Install-DevBox` blocks tools installed machine-wide or by an unexpected manager. Use `-AcceptExisting` to relax this — accepting any correct-version install regardless of scope or manager.
+
+`Get-DevBoxStatus` reports each tool's `Status`, `Manager`, and `Scope` for diagnostics.
 
 ## Adding a new tool
 
-1. Add an entry to `config/tools.yml`:
-
-    ```yaml
-    Terraform:
-        Version: "1.9"
-        Command: terraform
-        WingetId: "Hashicorp.Terraform"
-        BrewFormula: "terraform"
-        AptPackage: "terraform"
-        VersionCommand: "terraform --version"
-        VersionPattern: "^Terraform v(?<ver>.+)$"
-    ```
-
-2. Create `Install-Terraform.ps1`, `Invoke-Terraform.ps1`, `Uninstall-Terraform.ps1`
-3. Add to `Install-DevBox`
+1. Add an entry to `config/tools.yml` with version, command, platform-specific package IDs, and version detection pattern.
+2. Create `Install-<Tool>.ps1`, `Invoke-<Tool>.ps1`, `Uninstall-<Tool>.ps1`.
+3. Add to `Install-DevBox`.
+4. For tools that need vendored install scripts, place them in `scripts/`.
 
 ## Enterprise / air-gapped environments
 

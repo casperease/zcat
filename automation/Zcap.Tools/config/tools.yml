@@ -2,6 +2,11 @@ Python:
   Version: "3.11"
   Command: python
   WingetId: "Python.Python.{0}"
+  # Enables --scope user on winget. Note: Python 3.11's burn installer may
+  # still trigger UAC. Two paths to eliminate remaining admin requirements:
+  #   Option A: Vendor uv (astral.sh/uv) — user-space Python on all platforms.
+  #   Option B: Upgrade to 3.12+ — fixes the burn installer UAC issue.
+  WingetScope: user
   BrewFormula: "python@{0}"
   AptPackage: "python{0}"
   VersionCommand: "python --version"
@@ -10,18 +15,27 @@ Python:
 Dotnet:
   Version: "10.0"
   Command: dotnet
-  WingetId: "Microsoft.DotNet.SDK.10"
-  BrewFormula: "dotnet-sdk@{0}"
-  AptPackage: "dotnet-sdk-{0}"
+  # Installed via official Microsoft dotnet-install scripts (user-space,
+  # no admin). Not using winget/brew/apt — those all require elevation.
+  # UserInstallDir tells Test-ExpectedPackageManager and Get-DevBoxStatus
+  # how to detect whether dotnet was installed by us vs by Visual Studio,
+  # system package manager, or other means.
+  # Windows: C:\tools\dotnet (WindowsInstallRoot + WindowsInstallDir).
+  #   $HOME is OneDrive/DST-redirected — unusable for binaries.
+  # Unix: ~/.dotnet (UserInstallDir under $HOME) — Microsoft convention.
+  UserInstallDir: ".dotnet"
+  WindowsInstallRoot: "C:\\tools"
+  WindowsInstallDir: "dotnet"
   VersionCommand: "dotnet --version"
   VersionPattern: "^(?<ver>.+)$"
 
 AzCli:
   Version: "2.84"
   Command: az
-  WingetId: "Microsoft.AzureCLI"
+  # macOS: Homebrew (user-space). Windows/Linux: pip (user-space).
+  # winget MSI and apt-get both require admin — pip avoids that.
   BrewFormula: "azure-cli"
-  AptPackage: "azure-cli"
+  PipPackage: azure-cli
   VersionCommand: "az version --output tsv"
   VersionPattern: "^(?<ver>[^\t]+)"
 
