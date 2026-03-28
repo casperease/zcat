@@ -46,6 +46,7 @@ function Get-DevBoxStatus {
 
         # Parse installed version
         $installed = $null
+        # -NoAssert: non-zero exit means version unavailable — reported as status, not error
         $raw = Invoke-CliCommand $config.VersionCommand -PassThru -NoAssert -Silent
         if ($raw -match $config.VersionPattern) {
             $installed = $Matches['ver']
@@ -88,6 +89,19 @@ function Get-DevBoxStatus {
         }
     }
 
+    # Chocolatey check — not a tools.yml tool, but a package manager
+    # that should not be present (see ADR: use-proper-package-managers).
+    $chocoInstalled = $IsWindows -and (Test-Command choco)
+    $results += [PSCustomObject]@{
+        Tool      = 'Chocolatey'
+        Locked    = $null
+        Installed = if ($chocoInstalled) { 'present' } else { $null }
+        Status    = if ($chocoInstalled) { 'Unwanted' } else { 'OK' }
+        Location  = if ($chocoInstalled) { (Get-Command choco).Source } else { $null }
+        Manager   = $null
+        Action    = if ($chocoInstalled) { 'Run Uninstall-Chocolatey' } else { $null }
+    }
+
     # One-line summary via Write-Message
     $summary = ($results | ForEach-Object {
         $label = switch ($_.Status) {
@@ -95,6 +109,7 @@ function Get-DevBoxStatus {
             'Usable'       { 'usable' }
             'WrongVersion' { 'wrong version' }
             'Missing'      { 'missing' }
+            'Unwanted'     { 'unwanted' }
         }
         "$($_.Tool) $label"
     }) -join ', '

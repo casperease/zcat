@@ -18,9 +18,13 @@ function Assert-ToolVersion {
         $script:ToolVersionCache = @{}
     }
 
-    if ($script:ToolVersionCache[$Tool]) { return }
+    if ($script:ToolVersionCache[$Tool]) {
+        Write-Verbose "Version check cached for $Tool — skipping"
+        return
+    }
 
     $config = Get-ToolConfig -Tool $Tool
+    # -NoAssert: non-zero exit is handled below — we throw our own descriptive error
     $raw = Invoke-CliCommand $config.VersionCommand -PassThru -NoAssert -Silent
     if ($raw -match $config.VersionPattern) {
         $installed = $Matches['ver']
@@ -33,5 +37,6 @@ function Assert-ToolVersion {
         throw "Could not parse $Tool version from: $raw"
     }
 
+    Write-Verbose "$Tool version $installed verified"
     $script:ToolVersionCache[$Tool] = $true
 }

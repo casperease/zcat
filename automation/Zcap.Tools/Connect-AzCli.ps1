@@ -54,6 +54,7 @@ function Connect-AzCli {
     Assert-ToolVersion -Tool 'AzCli'
 
     # Idempotent: skip if already logged in with the correct identity
+    # -NoAssert: non-zero exit means "not logged in" — an expected state, not an error
     if (-not $Force) {
         $raw = Invoke-CliCommand 'az account show --output json' -PassThru -NoAssert -Silent
         if ($LASTEXITCODE -eq 0 -and $raw) {
@@ -65,12 +66,13 @@ function Connect-AzCli {
                 default { $true }
             }
             if ($alreadyCorrect) {
-                Write-Verbose "Already authenticated as $($account.user.name)"
+                Write-Message "Already authenticated as $($account.user.name)"
                 return
             }
         }
     }
 
+    Write-Verbose "Authenticating via $($PSCmdlet.ParameterSetName)"
     switch ($PSCmdlet.ParameterSetName) {
         'ServicePrincipal' {
             Invoke-CliCommand "az login --service-principal --tenant $Tenant --username $ClientId --password $ClientSecret"
@@ -85,4 +87,6 @@ function Connect-AzCli {
             Invoke-CliCommand 'az login'
         }
     }
+
+    Write-Message "Authenticated via $($PSCmdlet.ParameterSetName)"
 }

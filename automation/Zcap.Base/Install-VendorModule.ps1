@@ -32,6 +32,7 @@ function Install-VendorModule {
     $vendorRoot = Join-Path $env:RepositoryRoot 'automation/.vendor'
 
     if (-not (Test-Path $vendorRoot)) {
+        Write-Verbose "Creating vendor directory: $vendorRoot"
         New-Item -Path $vendorRoot -ItemType Directory -Force | Out-Null
     }
 
@@ -45,6 +46,7 @@ function Install-VendorModule {
         $saveParams.RequiredVersion = $RequiredVersion
     }
 
+    Write-Verbose "Downloading $Name from PowerShell Gallery$(if ($RequiredVersion) { " (v$RequiredVersion)" })"
     Save-Module @saveParams
 
     # Clean up legacy .NET Framework folders — we only target PS 7+ / .NET 6+
@@ -58,5 +60,5 @@ function Install-VendorModule {
             Write-Information "Removed legacy folder: $($_.FullName.Substring($vendorRoot.Length + 1))"
         }
 
-    Write-Information "Installed vendor module: $Name$(if ($RequiredVersion) { " v$RequiredVersion" })"
+    Write-Message "Installed vendor module: $Name$(if ($RequiredVersion) { " v$RequiredVersion" })"
 }

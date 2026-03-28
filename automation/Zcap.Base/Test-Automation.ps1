@@ -31,6 +31,7 @@ function Test-Automation {
     # Lazy-load Pester — deferred at import time for speed
     if (-not (Get-Module Pester)) {
         $pesterPath = Join-Path $env:RepositoryRoot 'automation/.vendor/Pester'
+        Write-Verbose "Lazy-loading Pester from: $pesterPath"
         Import-Module $pesterPath -Scope Global -Force
     }
 

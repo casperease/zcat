@@ -29,9 +29,10 @@ function Install-Tool {
 
     # Idempotent: skip if already installed at the correct version
     if (Test-Command $config.Command) {
+        # -NoAssert: non-zero exit means version could not be parsed — falls through to install
         $raw = Invoke-CliCommand $config.VersionCommand -PassThru -NoAssert -Silent
         if ($raw -match $config.VersionPattern -and $Matches['ver'].StartsWith($Version)) {
-            Write-Verbose "$Tool $Version is already installed"
+            Write-Message "$Tool $Version is already installed"
             return
         }
 

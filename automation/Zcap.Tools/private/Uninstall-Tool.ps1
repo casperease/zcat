@@ -23,7 +23,7 @@ function Uninstall-Tool {
 
     # Idempotent: skip if not installed
     if (-not (Test-Command $config.Command)) {
-        Write-Verbose "$Tool is not installed"
+        Write-Message "$Tool is not installed — nothing to do"
         return
     }
 

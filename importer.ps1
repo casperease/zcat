@@ -27,6 +27,7 @@ $env:PSModulePath = @(
         (Join-Path ([Environment]::GetFolderPath('ProgramFiles')) 'WindowsPowerShell' 'Modules')   # system-wide PS 5.1 modules
     }
 ) -join $sep
+Write-Verbose "PSModulePath set to: $($env:PSModulePath)"
 
 # Bootstrap base modules
 Import-Module Microsoft.PowerShell.Management -ErrorAction SilentlyContinue
@@ -44,20 +45,25 @@ $global:InformationPreference = 'Continue'
 
 # Repository root reference
 $env:RepositoryRoot = $PSScriptRoot
+Write-Verbose "RepositoryRoot set to: $($env:RepositoryRoot)"
 
 # Load resolver
 $resolverModule = Join-Path $PSScriptRoot "$automationFolder/.resolver/Resolver.psm1"
+Write-Verbose "Loading resolver from: $resolverModule"
 Import-Module $resolverModule -Scope Global -Force
 
 # Load vendored dependencies first
 $vendorRoot = Join-Path $PSScriptRoot "$automationFolder/$vendorFolder"
+Write-Verbose "Loading vendor modules from: $vendorRoot"
 Import-VendorModules -VendorRoot $vendorRoot -Lazy 'Pester', 'PSScriptAnalyzer'
 
 # Discover and import all modules
 $modulesRoot = Join-Path $PSScriptRoot $automationFolder
+Write-Verbose "Discovering modules in: $modulesRoot"
 Import-AllModules -ModulesRoot $modulesRoot -ExportPrivates:$ExportPrivates
 
 # Clean up resolver — it has served its purpose
+Write-Verbose 'Removing Resolver module'
 Remove-Module Resolver -Force -ErrorAction SilentlyContinue
 
 # Strict mode

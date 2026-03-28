@@ -19,6 +19,7 @@ function Get-MetaConfiguration {
     $config = Get-Content $configPath -Raw | ConvertFrom-Yaml -Ordered
     Assert-MetaConfiguration $config
 
+    Write-Verbose "Loading meta configuration from: $configPath"
     $script:MetaConfigCache = $config
     $script:MetaConfigCache
 }
