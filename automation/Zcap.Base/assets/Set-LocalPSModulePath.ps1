@@ -67,13 +67,5 @@ else {
     Write-Host "powershell.config.json already configured" -ForegroundColor Green
 }
 
-# --- Cleanup: remove symlink from previous version of this script ---
-$networkPSHome = Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'PowerShell'
-$item = Get-Item $networkPSHome -Force -ErrorAction Ignore
-if ($item -and $item.Attributes.HasFlag([IO.FileAttributes]::ReparsePoint)) {
-    $item.Delete()
-    Write-Host "Removed old symlink at '$networkPSHome'" -ForegroundColor Yellow
-}
-
 Write-Host ''
 Write-Host 'Restart PowerShell for changes to take effect.' -ForegroundColor Cyan
