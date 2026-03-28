@@ -1,0 +1,12 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Module",
+      "type": "PowerShell",
+      "request": "launch",
+      "script": "${workspaceFolder}/importer.ps1",
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}

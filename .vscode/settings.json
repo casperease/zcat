@@ -14,6 +14,9 @@
   "markdown-preview-enhanced.previewTheme": "one-dark.css",
   "markdown-preview-enhanced.codeBlockTheme": "one-dark.css",
 
+  // PowerShell: use pwsh 7 for the Integrated Console
+  "powershell.powerShellDefaultVersion": "PowerShell (x64)",
+
   // PowerShell: use project PSScriptAnalyzer settings
   "powershell.scriptAnalysis.settingsPath": "./PSScriptAnalyzerSettings.psd1",
 
