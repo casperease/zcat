@@ -131,9 +131,23 @@ reading source code. "'Python' is not installed" is good.
 error messages by convention.
 
 **Use color sparingly and consistently.** Color draws the eye — use it
-only for information that deserves attention. Errors in red. Warnings in
-yellow. Everything else in the default color. Do not colorize normal
-output for decoration.
+only for information that deserves attention. Both GitHub Actions and
+Azure DevOps render ANSI colors in their log viewers, so color choices
+matter everywhere, not just in local terminals.
+
+| Color   | Meaning                                      |
+| ------- | -------------------------------------------- |
+| Red     | Errors — something failed                    |
+| Yellow  | Warnings — something needs attention         |
+| Green   | Success confirmations (use sparingly)        |
+| Cyan    | Headers and section dividers                 |
+| Default | Everything else — normal informational output |
+
+Consistent color creates a visual language the human eye learns to scan.
+In a 200-line CI log, a single red line jumps out immediately. If half
+the output is colorized for decoration, that signal is lost. Do not
+colorize normal output for emphasis — the default color _is_ the signal
+that nothing is wrong.
 
 **No side borders or box drawing.** Never wrap output in decorative
 frames:

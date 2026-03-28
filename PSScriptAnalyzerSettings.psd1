@@ -5,6 +5,7 @@
         'automation/.scriptanalyzer/VariableCasing.psm1'
         'automation/.scriptanalyzer/NeverDependOnPwd.psm1'
         'automation/.scriptanalyzer/FunctionLength.psm1'
+        'automation/.scriptanalyzer/NoWriteErrorOrWarning.psm1'
     )
 
     ExcludeRules = @(
@@ -42,10 +43,10 @@
 
         # Warns when a function shadows a built-in cmdlet name.
         # PowerShellVersion scopes which built-ins to check against.
-        # PSAvoidOverwritingBuiltInCmdlets = @{
-        #     Enable           = $true
-        #     PowerShellVersion = @()
-        # }
+        PSAvoidOverwritingBuiltInCmdlets = @{
+            Enable            = $true
+            PowerShellVersion = @('core-6.1.0-windows', 'core-6.1.0-linux', 'core-6.1.0-macos')
+        }
 
         # Flags use of aliases (like % instead of ForEach-Object) in scripts.
         # allowlist permits specific aliases you want to keep.

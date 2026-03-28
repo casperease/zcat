@@ -25,7 +25,7 @@ function New-DynamicManifest {
     $allFiles = @($privateFiles) + @($publicFiles) | Where-Object { $_ }
 
     if ($allFiles.Count -eq 0) {
-        Write-Warning "No .ps1 files found in '$ModulePath'"
+        Write-Verbose "No .ps1 files found in '$ModulePath'"
         return $null
     }
 

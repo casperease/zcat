@@ -11,6 +11,21 @@ if ($isInteractive) {
     $sw = [Diagnostics.Stopwatch]::StartNew()
 }
 
+# Strip PSModulePath to local system paths only.
+# Enterprise environments often redirect $HOME to DFS, OneDrive, or network shares.
+# The default PSModulePath includes $HOME\Documents\PowerShell\Modules, which causes
+# PowerShell to scan the network on every module lookup, tab completion, and auto-load.
+# We vendor all dependencies — the user profile module path is never needed.
+$sep = [System.IO.Path]::PathSeparator
+$env:PSModulePath = @(
+    (Join-Path $PSHOME 'Modules')                                                       # pwsh built-in modules
+    (Join-Path ([Environment]::GetFolderPath('ProgramFiles')) 'PowerShell' 'Modules')    # system-wide PS 7 modules
+    if ($IsWindows) {
+        (Join-Path $env:SystemRoot 'system32' 'WindowsPowerShell' 'v1.0' 'Modules')     # Windows built-in modules
+        (Join-Path ([Environment]::GetFolderPath('ProgramFiles')) 'WindowsPowerShell' 'Modules')
+    }
+) -join $sep
+
 # Bootstrap base modules
 Import-Module Microsoft.PowerShell.Management -ErrorAction SilentlyContinue
 Import-Module Microsoft.PowerShell.Security -ErrorAction SilentlyContinue

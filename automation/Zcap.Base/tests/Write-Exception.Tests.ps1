@@ -22,11 +22,11 @@ Describe 'Write-Exception' {
         $text | Should -Match 'fallback error'
     }
 
-    It 'warns when no error exists' {
+    It 'produces no output when no error exists' {
         $savedErrors = $global:Error.Clone()
         $global:Error.Clear()
-        Write-Exception -GlobalErrorIndex 0 -WarningVariable w -WarningAction SilentlyContinue -InformationAction SilentlyContinue
-        $w | Should -Not -BeNullOrEmpty
+        Write-Exception -GlobalErrorIndex 0 -InformationVariable iv -InformationAction SilentlyContinue 6>&1 | Out-Null
+        $iv | Should -BeNullOrEmpty
         $savedErrors | ForEach-Object { $global:Error.Add($_) }
     }
 }

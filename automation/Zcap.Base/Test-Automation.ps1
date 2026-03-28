@@ -51,7 +51,7 @@ function Test-Automation {
     )
 
     if (-not $testPaths) {
-        Write-Warning 'No test folders found'
+        throw 'No test folders found'
         return
     }
 

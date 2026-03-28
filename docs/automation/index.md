@@ -29,6 +29,7 @@ The "how" that makes the principles concrete.
 - [Log before invoke](adr/log-before-invoke.md) — automatic, not opt-in
 - [Vendor dependencies](adr/vendor-toolset-dependencies.md) — determinism without a restore step
 - [Controlling system-wide deps](adr/controlling-systemwide-deps.md) — version-locked, platform-aware, no container required
+- [Effective in enterprises](adr/effective-in-enterprises.md) — no network paths, no gallery, no profile dependency
 - [Prefer Az CLI](adr/prefer-az-cli.md) — avoids assembly hell, no module ceremony
 
 ## Other docs

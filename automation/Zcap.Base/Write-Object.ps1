@@ -15,7 +15,7 @@
 .PARAMETER ForegroundColor
     Color for the output. Defaults to DarkGray.
 .EXAMPLE
-    Get-Process | Select-Object -First 3 | Write-Object
+    Get-Process | Select-Object Name, Id, CPU -First 3 | Write-Object
 .EXAMPLE
     $config | Write-Object -Name 'App config'
 .EXAMPLE
@@ -83,7 +83,20 @@ function Write-Object {
             } | Select-Object -First 1
 
             if ($hasComplex) {
-                Write-InformationColored ($items | ConvertTo-Yaml).TrimEnd() -ForegroundColor $ForegroundColor
+                $safe = $items | ForEach-Object {
+                    if ($_ -is [System.Collections.IDictionary] -or $_ -is [string] -or $_ -is [ValueType]) { $_ }
+                    else {
+                        $bag = [ordered]@{}
+                        foreach ($p in $_.PSObject.Properties) {
+                            $v = try { $p.Value } catch { $null }
+                            if ($null -eq $v) { $bag[$p.Name] = $null }
+                            elseif ($v -is [string] -or $v -is [ValueType]) { $bag[$p.Name] = $v }
+                            else { $bag[$p.Name] = "$v" }
+                        }
+                        $bag
+                    }
+                }
+                Write-InformationColored ($safe | ConvertTo-Yaml).TrimEnd() -ForegroundColor $ForegroundColor
             }
             else {
                 foreach ($item in $items) {
@@ -93,8 +106,21 @@ function Write-Object {
 
         }
         else {
-            # PSCustomObject, complex .NET objects — YAML
-            Write-InformationColored ($Object | ConvertTo-Yaml).TrimEnd() -ForegroundColor $ForegroundColor
+            # PSCustomObject, complex .NET objects — extract scalar properties for safe serialization
+            $props = [ordered]@{}
+            foreach ($p in $Object.PSObject.Properties) {
+                $v = try { $p.Value } catch { $null }
+                if ($null -eq $v) {
+                    $props[$p.Name] = $null
+                }
+                elseif ($v -is [string] -or $v -is [ValueType]) {
+                    $props[$p.Name] = $v
+                }
+                else {
+                    $props[$p.Name] = "$v"
+                }
+            }
+            Write-InformationColored ($props | ConvertTo-Yaml).TrimEnd() -ForegroundColor $ForegroundColor
         }
     }
 }

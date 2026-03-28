@@ -171,44 +171,15 @@ Describe 'Copy-Object' {
         }
     }
 
-    Context 'AcceptWarnings' {
-        It 'emits warning when cloning PSCustomObject without -AcceptWarnings' {
-            $original = [PSCustomObject]@{ A = 1 }
-            $clone = Copy-Object $original -WarningVariable w -WarningAction SilentlyContinue
-            $w | Should -Not -BeNullOrEmpty
-            "$w" | Should -Match 'Only copying note properties'
+    Context 'PSCustomObject verbose' {
+        It 'emits verbose when cloning PSCustomObject' {
+            $output = Copy-Object ([PSCustomObject]@{ A = 1 }) -Verbose 4>&1 | Out-String
+            $output | Should -Match 'Only copying note properties'
         }
 
-        It 'suppresses warning with -AcceptWarnings' {
-            $original = [PSCustomObject]@{ A = 1 }
-            $clone = Copy-Object $original -AcceptWarnings -WarningVariable w -WarningAction SilentlyContinue
-            $w | Should -BeNullOrEmpty
-        }
-
-        It 'emits warning only once for multiple PSCustomObjects in one call' {
-            $original = @(
-                [PSCustomObject]@{ X = 1 }
-                [PSCustomObject]@{ X = 2 }
-            )
-            $clone = Copy-Object $original -WarningVariable w -WarningAction SilentlyContinue
-            @($w).Count | Should -Be 1
-        }
-
-        It 'no warning for non-PSCustomObject types' {
-            Copy-Object @{ a = 1 } -WarningVariable w -WarningAction SilentlyContinue
-            $w | Should -BeNullOrEmpty
-        }
-
-        It 'emits warning when PSCustomObject is nested inside hashtable' {
-            $original = @{ child = [PSCustomObject]@{ A = 1 } }
-            $clone = Copy-Object $original -WarningVariable w -WarningAction SilentlyContinue
-            $w | Should -Not -BeNullOrEmpty
-        }
-
-        It 'suppresses nested PSCustomObject warning with -AcceptWarnings' {
-            $original = @{ child = [PSCustomObject]@{ A = 1 } }
-            $clone = Copy-Object $original -AcceptWarnings -WarningVariable w -WarningAction SilentlyContinue
-            $w | Should -BeNullOrEmpty
+        It 'no verbose for non-PSCustomObject types' {
+            $verbose = Copy-Object @{ a = 1 } -Verbose 4>&1 | Where-Object { $_ -is [System.Management.Automation.VerboseRecord] }
+            $verbose | Should -BeNullOrEmpty
         }
     }
 

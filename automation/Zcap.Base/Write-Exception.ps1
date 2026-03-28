@@ -24,12 +24,11 @@ function Write-Exception {
     )
 
     if (-not $ErrorRecord) {
-        Write-Information 'Writing last global error'
         $ErrorRecord = $global:Error[$GlobalErrorIndex]
     }
 
     if (-not $ErrorRecord) {
-        Write-Warning 'No error to display'
+        Write-Verbose 'No error to display'
         return
     }
 

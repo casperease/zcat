@@ -12,7 +12,7 @@ function Get-LastExitCode {
     $exitVar = Get-Variable LASTEXITCODE -Scope Global -ErrorAction Ignore
 
     if (-not $exitVar) {
-        Write-Warning 'No LASTEXITCODE exists'
+        Write-Verbose 'No LASTEXITCODE exists'
         return
     }
 

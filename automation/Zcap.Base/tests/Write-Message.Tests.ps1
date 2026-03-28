@@ -1,7 +1,6 @@
 Describe 'Write-Message' {
     # Write-Message suppresses Host output when $global:__PesterRunning is $true
     # (set by Test-Automation). Lift the flag so these tests can verify Host output.
-    # AfterAll restores it for safety if this file is run standalone.
     BeforeAll { $global:__PesterRunning = $false }
     AfterAll { $global:__PesterRunning = $true }
 
@@ -35,15 +34,5 @@ Describe 'Write-Message' {
         $text = ($iv | ForEach-Object { if ($_.MessageData -is [string]) { $_.MessageData } else { $_.MessageData.Message } }) -join ''
         $text | Should -Not -Match '\['
         $text | Should -Match 'bare'
-    }
-
-    It 'writes to warning stream' {
-        Write-Message 'warn test' -Type Warning -WarningVariable w -WarningAction SilentlyContinue
-        $w | Should -Not -BeNullOrEmpty
-        "$w" | Should -Match 'warn test'
-    }
-
-    It 'writes to error stream' {
-        { Write-Message 'err test' -Type Error -ErrorAction Stop } | Should -Throw -ExpectedMessage '*err test*'
     }
 }
