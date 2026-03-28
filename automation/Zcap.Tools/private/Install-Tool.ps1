@@ -92,6 +92,15 @@ function Install-Tool {
         throw "Unsupported platform for tool installation"
     }
 
+    # Refresh PATH from registry — installers modify the persisted PATH but the
+    # current process still has the stale value.
+    if ($IsWindows) {
+        $machinePath = [System.Environment]::GetEnvironmentVariable('PATH', 'Machine')
+        $userPath = [System.Environment]::GetEnvironmentVariable('PATH', 'User')
+        $env:PATH = "$userPath;$machinePath"
+        Write-Verbose 'Refreshed PATH from registry'
+    }
+
     Assert-Command $config.Command -ErrorText "$Tool was installed but '$($config.Command)' is not on PATH. You may need to restart your shell."
     Write-Information "$Tool $Version installed successfully"
 }
