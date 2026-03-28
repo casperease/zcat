@@ -21,13 +21,11 @@
     3. User-scope PSModulePath registry value — prevents WinPS 5.1
        (used by the WinCompat layer) from using the DFS-based default.
 
-    Requires Administrator (writes to $PSHOME). Run once.
+    No admin required for user-scope fixes. If running as Administrator,
+    also writes the AllUsers config to $PSHOME. Run once.
 .EXAMPLE
-    # Open PowerShell as Administrator, then:
     & 'C:\projects\zcap\automation\Zcap.Base\assets\Set-LocalPSModulePath.ps1'
 #>
-
-#Requires -RunAsAdministrator
 
 $localModulePath = Join-Path $env:LOCALAPPDATA 'PowerShell' 'Modules'
 
@@ -61,24 +59,31 @@ else {
     Write-Host "User-scope config already set" -ForegroundColor Green
 }
 
-# --- 2. AllUsers powershell.config.json in $PSHOME ---
-$systemConfigFile = Join-Path $PSHOME 'powershell.config.json'
+# --- 2. AllUsers powershell.config.json in $PSHOME (admin only) ---
+$isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
-if (Test-Path $systemConfigFile) {
-    $systemConfig = Get-Content $systemConfigFile -Raw | ConvertFrom-Json
+if ($isAdmin) {
+    $systemConfigFile = Join-Path $PSHOME 'powershell.config.json'
+
+    if (Test-Path $systemConfigFile) {
+        $systemConfig = Get-Content $systemConfigFile -Raw | ConvertFrom-Json
+    }
+    else {
+        $systemConfig = [PSCustomObject]@{}
+    }
+
+    if ($systemConfig.PSModulePath -ne $localModulePath) {
+        $systemConfig | Add-Member -NotePropertyName 'PSModulePath' -NotePropertyValue $localModulePath -Force
+        $systemConfig | ConvertTo-Json -Depth 10 | Set-Content $systemConfigFile -Encoding UTF8
+        Write-Host "AllUsers config: PSModulePath = '$localModulePath'" -ForegroundColor Green
+        Write-Host "  File: $systemConfigFile" -ForegroundColor Gray
+    }
+    else {
+        Write-Host "AllUsers config already set" -ForegroundColor Green
+    }
 }
 else {
-    $systemConfig = [PSCustomObject]@{}
-}
-
-if ($systemConfig.PSModulePath -ne $localModulePath) {
-    $systemConfig | Add-Member -NotePropertyName 'PSModulePath' -NotePropertyValue $localModulePath -Force
-    $systemConfig | ConvertTo-Json -Depth 10 | Set-Content $systemConfigFile -Encoding UTF8
-    Write-Host "AllUsers config: PSModulePath = '$localModulePath'" -ForegroundColor Green
-    Write-Host "  File: $systemConfigFile" -ForegroundColor Gray
-}
-else {
-    Write-Host "AllUsers config already set" -ForegroundColor Green
+    Write-Host "Skipping AllUsers config (not admin). Run as Administrator to apply." -ForegroundColor Yellow
 }
 
 # --- 3. User-scope PSModulePath registry value (for WinPS 5.1 / WinCompat) ---
