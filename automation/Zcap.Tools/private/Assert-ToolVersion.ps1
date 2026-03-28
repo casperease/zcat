@@ -24,8 +24,10 @@ function Assert-ToolVersion {
     $raw = Invoke-CliCommand $config.VersionCommand -PassThru -NoAssert -Silent
     if ($raw -match $config.VersionPattern) {
         $installed = $Matches['ver']
-        Assert-True ($installed.StartsWith($config.Version)) `
-            -ErrorText "$Tool version mismatch: expected $($config.Version).x, found $installed"
+        if (-not $installed.StartsWith($config.Version)) {
+            $location = (Get-Command $config.Command).Source
+            throw "$Tool version mismatch: expected $($config.Version).x, found $installed at '$location'. Run Install-$Tool or uninstall the conflicting version."
+        }
     }
     else {
         throw "Could not parse $Tool version from: $raw"
