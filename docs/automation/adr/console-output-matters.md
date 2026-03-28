@@ -179,7 +179,7 @@ special handling needed.
 
 **Timestamps are opt-in.** `Write-Message` includes a caller name prefix
 by default (`[Invoke-CliCommand] poetry install`). Timestamps can be
-enabled via `$env:ADP_MESSAGE_TIMESTAMPS` for local debugging. CI
+enabled via `$env:ZCAP_MESSAGE_TIMESTAMPS` for local debugging. CI
 platforms (ADO, GitHub Actions) already timestamp every log line
 natively, so this is never needed there.
 
@@ -201,7 +201,7 @@ nothing meaningful to say.
   includes the calling function name automatically
   (`[Invoke-CliCommand] poetry install`), so the user always knows
   which function produced the output. Timestamps can be enabled via
-  `$env:ADP_MESSAGE_TIMESTAMPS` for local debugging — CI platforms
+  `$env:ZCAP_MESSAGE_TIMESTAMPS` for local debugging — CI platforms
   (ADO, GitHub Actions) already timestamp every log line natively.
   Console output is suppressed during Pester runs so test output stays
   clean.

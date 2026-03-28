@@ -44,7 +44,7 @@ function Write-Message {
         $callerName = if ($callerName -eq '<ScriptBlock>') { ' prompt' } else { " $callerName" }
     }
 
-    $header = if ($env:ADP_MESSAGE_TIMESTAMPS) {
+    $header = if ($env:ZCAP_MESSAGE_TIMESTAMPS) {
         $ts = Get-Date -Format 'HH:mm:ss:fff'
         "[$ts$callerName]"
     } else {

@@ -12,15 +12,15 @@ Describe 'Write-Message' {
         $text | Should -Match 'hello'
     }
 
-    It 'includes timestamp when ADP_MESSAGE_TIMESTAMPS is set' {
-        $env:ADP_MESSAGE_TIMESTAMPS = '1'
+    It 'includes timestamp when ZCAP_MESSAGE_TIMESTAMPS is set' {
+        $env:ZCAP_MESSAGE_TIMESTAMPS = '1'
         try {
             Write-Message 'hello' -InformationVariable iv -InformationAction SilentlyContinue 6>&1 | Out-Null
             $text = ($iv | ForEach-Object { if ($_.MessageData -is [string]) { $_.MessageData } else { $_.MessageData.Message } }) -join ''
             $text | Should -Match '\[\d{2}[.:]\d{2}[.:]\d{2}[.:]\d{3}'
         }
         finally {
-            Remove-Item env:ADP_MESSAGE_TIMESTAMPS
+            Remove-Item env:ZCAP_MESSAGE_TIMESTAMPS
         }
     }
 
