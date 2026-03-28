@@ -7,19 +7,15 @@
     and Documents\WindowsPowerShell\Modules (WinPS 5.1), causing network
     scans on every module lookup, tab completion, and command discovery.
 
-    This script applies two fixes:
+    This script writes a user-scope powershell.config.json in the PS7
+    user config directory (Documents\PowerShell, even if on DFS). PS7
+    reads this single file at startup to override the CurrentUser module
+    path. One file read is fast — the slowness comes from recursive
+    module scanning, not reading a config file.
 
-    1. User-scope powershell.config.json — placed in the PS7 user config
-       directory (Documents\PowerShell, even if on DFS). PS7 reads this
-       single file at startup to override the CurrentUser module path.
-       One file read is fast — the slowness comes from recursive module
-       scanning, not reading a config file.
-
-    2. AllUsers powershell.config.json in $PSHOME — overrides the AllUsers
-       module path (requires admin).
-
-    Also cleans up any User-scope PSModulePath registry value, which
-    causes PS7 to skip appending $PSHOME\Modules (breaks core modules).
+    Also cleans up damage from previous versions of this script:
+    removes PSModulePath from $PSHOME config and User-scope registry
+    (both break core module discovery).
 
     No admin required for user-scope fixes. If running as Administrator,
     also writes the AllUsers config to $PSHOME. Run once.
@@ -59,31 +55,26 @@ else {
     Write-Host "User-scope config already set" -ForegroundColor Green
 }
 
-# --- 2. AllUsers powershell.config.json in $PSHOME (admin only) ---
+# --- 2. Clean up AllUsers config from previous version of this script ---
+# Setting PSModulePath in $PSHOME overrides AllUsers paths including
+# $PSHOME\Modules, which breaks core PS7 modules. Remove it.
 $isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+$systemConfigFile = Join-Path $PSHOME 'powershell.config.json'
 
-if ($isAdmin) {
-    $systemConfigFile = Join-Path $PSHOME 'powershell.config.json'
-
-    if (Test-Path $systemConfigFile) {
-        $systemConfig = Get-Content $systemConfigFile -Raw | ConvertFrom-Json
+if ($isAdmin -and (Test-Path $systemConfigFile)) {
+    $systemConfig = Get-Content $systemConfigFile -Raw | ConvertFrom-Json
+    if ($systemConfig.PSModulePath) {
+        $systemConfig.PSObject.Properties.Remove('PSModulePath')
+        $remaining = $systemConfig.PSObject.Properties | Measure-Object
+        if ($remaining.Count -eq 0) {
+            Remove-Item $systemConfigFile -Force
+            Write-Host "Removed $systemConfigFile (was only PSModulePath)" -ForegroundColor Yellow
+        }
+        else {
+            $systemConfig | ConvertTo-Json -Depth 10 | Set-Content $systemConfigFile -Encoding UTF8
+            Write-Host "Removed PSModulePath from $systemConfigFile" -ForegroundColor Yellow
+        }
     }
-    else {
-        $systemConfig = [PSCustomObject]@{}
-    }
-
-    if ($systemConfig.PSModulePath -ne $localModulePath) {
-        $systemConfig | Add-Member -NotePropertyName 'PSModulePath' -NotePropertyValue $localModulePath -Force
-        $systemConfig | ConvertTo-Json -Depth 10 | Set-Content $systemConfigFile -Encoding UTF8
-        Write-Host "AllUsers config: PSModulePath = '$localModulePath'" -ForegroundColor Green
-        Write-Host "  File: $systemConfigFile" -ForegroundColor Gray
-    }
-    else {
-        Write-Host "AllUsers config already set" -ForegroundColor Green
-    }
-}
-else {
-    Write-Host "Skipping AllUsers config (not admin). Run as Administrator to apply." -ForegroundColor Yellow
 }
 
 # --- 3. Clean up User-scope PSModulePath registry value ---
