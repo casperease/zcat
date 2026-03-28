@@ -13,9 +13,13 @@ function Uninstall-Poetry {
 
     $config = Get-ToolConfig -Tool 'Poetry'
 
-    # Idempotent: skip if poetry is not installed
+    # Idempotent: skip if poetry or python is not installed
     if (-not (Test-Command $config.Command)) {
         Write-Message "Poetry is not installed — nothing to do"
+        return
+    }
+    if (-not (Test-Command python)) {
+        Write-Message "Python is not available — pip packages already gone"
         return
     }
 
