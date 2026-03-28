@@ -81,8 +81,11 @@ $env:PSModulePath = $script:CleanPSModulePath
 # auto-loading) even after our runtime strip. The permanent fix is a one-time
 # admin script that redirects the PS7 user module path to a local directory.
 if ($IsWindows) {
-    $userModulePath = [Environment]::GetFolderPath('MyDocuments')
-    if ($userModulePath -match '^\\\\') {
+    $docsFolder = [Environment]::GetFolderPath('MyDocuments')
+    $configFile = Join-Path $PSHOME 'powershell.config.json'
+    $fixApplied = try { (Test-Path $configFile) -and ((Get-Content $configFile -Raw | ConvertFrom-Json).PSModulePath) } catch { $false }
+
+    if ($docsFolder -match '^\\\\' -and -not $fixApplied) {
         $fixScript = Join-Path $PSScriptRoot "$automationFolder/Zcap.Base/assets/Set-LocalPSModulePath.ps1"
         Write-Host ''
         Write-Host 'WARNING: Your Documents folder is on a network share.' -ForegroundColor Yellow
