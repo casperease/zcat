@@ -21,7 +21,7 @@ Drop the `automation/` folder and `importer.ps1` into the root of any monorepo. 
 Drop a `Verb-Noun.ps1` into any module folder. Re-run the importer. Done.
 
 ```powershell
-# automation/Adp.Base/Get-Something.ps1
+# automation/Zcap.Base/Get-Something.ps1
 function Get-Something {
     [CmdletBinding()]
     param(

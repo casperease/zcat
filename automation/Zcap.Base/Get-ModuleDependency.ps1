@@ -9,7 +9,7 @@
 .EXAMPLE
     Get-FunctionDependency | Get-ModuleDependency
 .EXAMPLE
-    Get-FunctionDependency | Get-ModuleDependency | Where-Object { $_.From -eq 'Adp.Tools' }
+    Get-FunctionDependency | Get-ModuleDependency | Where-Object { $_.From -eq 'Zcap.Tools' }
 #>
 function Get-ModuleDependency {
     [CmdletBinding()]
