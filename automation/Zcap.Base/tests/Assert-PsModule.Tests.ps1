@@ -1,6 +1,6 @@
 Describe 'Assert-PsModule' {
     It 'passes for an available module' {
-        { Assert-PsModule 'Microsoft.PowerShell.Utility' } | Should -Not -Throw
+        { Assert-PsModule 'Pester' } | Should -Not -Throw
     }
 
     It 'throws for a missing module' {

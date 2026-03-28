@@ -7,7 +7,7 @@
     and Documents\WindowsPowerShell\Modules (WinPS 5.1), causing network
     scans on every module lookup, tab completion, and command discovery.
 
-    This script applies three fixes:
+    This script applies two fixes:
 
     1. User-scope powershell.config.json — placed in the PS7 user config
        directory (Documents\PowerShell, even if on DFS). PS7 reads this
@@ -16,10 +16,10 @@
        scanning, not reading a config file.
 
     2. AllUsers powershell.config.json in $PSHOME — overrides the AllUsers
-       module path as a belt-and-suspenders measure.
+       module path (requires admin).
 
-    3. User-scope PSModulePath registry value — prevents WinPS 5.1
-       (used by the WinCompat layer) from using the DFS-based default.
+    Also cleans up any User-scope PSModulePath registry value, which
+    causes PS7 to skip appending $PSHOME\Modules (breaks core modules).
 
     No admin required for user-scope fixes. If running as Administrator,
     also writes the AllUsers config to $PSHOME. Run once.
@@ -86,14 +86,16 @@ else {
     Write-Host "Skipping AllUsers config (not admin). Run as Administrator to apply." -ForegroundColor Yellow
 }
 
-# --- 3. User-scope PSModulePath registry value (for WinPS 5.1 / WinCompat) ---
+# --- 3. Clean up User-scope PSModulePath registry value ---
+# Setting this causes PS7 to skip appending $PSHOME\Modules (core modules).
+# The user-scope powershell.config.json handles our needs without this side effect.
 $currentUserPath = [Environment]::GetEnvironmentVariable('PSModulePath', 'User')
-if ($currentUserPath -ne $localModulePath) {
-    [Environment]::SetEnvironmentVariable('PSModulePath', $localModulePath, 'User')
-    Write-Host "User-scope registry PSModulePath set to '$localModulePath'" -ForegroundColor Green
+if ($currentUserPath) {
+    [Environment]::SetEnvironmentVariable('PSModulePath', $null, 'User')
+    Write-Host "Removed User-scope registry PSModulePath (was: '$currentUserPath')" -ForegroundColor Yellow
 }
 else {
-    Write-Host "User-scope registry PSModulePath already set" -ForegroundColor Green
+    Write-Host "User-scope registry PSModulePath clean" -ForegroundColor Green
 }
 
 Write-Host ''
