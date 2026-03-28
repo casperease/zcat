@@ -31,22 +31,7 @@ function Invoke-Pip {
     Assert-NotNullOrWhitespace $Arguments -ErrorText 'Arguments cannot be empty'
 
     if (-not $DryRun) {
-        Assert-Command python
-
-        if ($Arguments -match '^install\b') {
-            Assert-ToolVersion -Tool 'Python'
-
-            # pip writes to Python's Scripts directory. If Python is machine-wide,
-            # that directory is read-only without admin → access denied.
-            $pythonConfig = Get-ToolConfig -Tool 'Python'
-            $pythonLocation = (Get-Command python).Source
-            $scope = Get-InstallScope -Config $pythonConfig -Location $pythonLocation
-            if ($scope -eq 'machine' -and -not (Test-IsAdministrator)) {
-                throw "Python is installed machine-wide at '$pythonLocation'. " +
-                      "pip cannot write to its Scripts directory without admin. " +
-                      "Either run as Administrator, or uninstall Python and run Install-Python to install user-scope."
-            }
-        }
+        Assert-Tool 'Python'
     }
 
     Invoke-CliCommand "python -m pip $Arguments" -PassThru:$PassThru -NoAssert:$NoAssert -DryRun:$DryRun

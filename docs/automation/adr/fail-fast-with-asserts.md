@@ -89,6 +89,7 @@ and other `Assert-*` functions to validate everything that `[Parameter]` attribu
 or any operation that talks to the outside world, assert the result meets expectations before passing it downstream.
 
 - **Assert preconditions, not just inputs.** `Assert-Tool` verifies that a tool is present and at the expected version before doing work.
+It checks `DependsOn` from config first, so errors name the root cause ("Poetry requires Python") not the symptom ("Could not parse Poetry version").
 This is a precondition assertion, not input validation.
 
 - **Use the `Assert-*` library, do not inline `if/throw`.** The `Assert-*` functions provide consistent error messages, are greppable,

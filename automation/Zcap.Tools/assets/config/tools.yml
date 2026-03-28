@@ -26,6 +26,7 @@ Dotnet:
 AzCli:
   Version: "2.84"
   Command: az
+  DependsOn: Python
   # macOS: Homebrew (user-space). Windows/Linux: pip (user-space).
   # winget MSI and apt-get both require admin — pip avoids that.
   BrewFormula: "azure-cli"
@@ -36,6 +37,7 @@ AzCli:
 Poetry:
   Version: "1.7"
   Command: poetry
+  DependsOn: Python
   PipPackage: poetry
   VersionCommand: "poetry --version"
   VersionPattern: "^Poetry \\(version (?<ver>.+)\\)$"

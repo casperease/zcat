@@ -50,10 +50,26 @@ Every `Invoke-*` wrapper asserts the tool is present and at the correct version 
 Assert-Tool 'Python'   # is it on PATH? does the version match the lock?
 ```
 
-`Assert-Tool` looks up the command name from config, calls `Assert-Command`, then `Assert-ToolVersion`.
-If the tool is missing, the error says so. If the version is wrong, the error shows expected vs actual. No silent execution with the wrong version.
+`Assert-Tool` looks up the command name from config, checks `DependsOn` first, then calls `Assert-Command` and `Assert-ToolVersion`.
+If a dependency is missing, the error names the root cause: "Poetry requires Python (python) — run Install-Python."
+If the tool itself is missing or at the wrong version, the error says so directly.
 
 Version checks are cached per session — the first `Invoke-Python` call validates, subsequent calls skip the check.
+
+#### 3b. Declare tool dependencies in config
+
+Some tools depend on other tools — Poetry and Azure CLI require Python because they are installed and managed via pip.
+These dependencies are declared in `config/tools.yml`:
+
+```yaml
+Poetry:
+  DependsOn: Python
+  PipPackage: poetry
+```
+
+`Assert-Tool` checks the dependency before checking the tool itself, so errors name the root cause rather than the symptom.
+Pip-based tools share install and uninstall logic through `Install-PipTool` and `Uninstall-PipTool`,
+which parallel `Install-Tool` and `Uninstall-Tool` for platform package managers.
 
 #### 4. Orchestrate with Install-Tools
 
@@ -94,8 +110,10 @@ The platform works without a container runtime on Windows, macOS, and Linux.
 
 - **One `Install-*` / `Invoke-*` / `Uninstall-*` triad per tool.** The installer handles platform differences. The invoker asserts version and presence. The uninstaller cleans up.
 
-- **Assert before every invocation.** `Assert-Tool` runs before every external tool call (combines `Assert-Command` and `Assert-ToolVersion`).
+- **Assert before every invocation.** `Assert-Tool` runs before every external tool call. It checks `DependsOn`, `Assert-Command`, and `Assert-ToolVersion`.
   Missing or wrong-version tools fail immediately with a clear message.
+
+- **Declare tool dependencies in config.** If a tool requires another tool at runtime or install time, add `DependsOn` to its entry in `tools.yml`. `Assert-Tool` checks dependencies automatically.
 
 - **CI and local use the same code path.** No separate CI setup scripts. The same `Install-Tools` that runs on a developer workstation runs in the pipeline.
 
