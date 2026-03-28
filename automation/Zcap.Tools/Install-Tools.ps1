@@ -27,7 +27,7 @@ function Install-Tools {
     $status = Get-ToolsStatus
     $usable = @($status | Where-Object { $_.Status -eq 'Usable' })
     foreach ($tool in $usable) {
-        Write-Message "Skipping $($tool.Tool) — $($tool.Installed) works, installed outside $($tool.Manager ?? 'expected manager')"
+        Write-Message "Skipping $($tool.Tool) — $($tool.Installed) already installed, not managed by tools system"
     }
 
     Install-Python -Force:$Force

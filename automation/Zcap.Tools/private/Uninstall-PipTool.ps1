@@ -30,6 +30,6 @@ function Uninstall-PipTool {
         return
     }
 
-    Invoke-Pip "uninstall $($config.PipPackage) -y"
+    Invoke-Pip "uninstall $($config.PipPackage) -y" 2>$null
     Write-Message "$Tool uninstalled"
 }
