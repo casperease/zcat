@@ -32,11 +32,7 @@ function Test-Automation {
     if (-not (Get-Module Pester)) {
         $pesterPath = Join-Path $env:RepositoryRoot 'automation/.vendor/Pester'
         Write-Verbose "Lazy-loading Pester from: $pesterPath"
-        # Save PSModulePath — Import-Module can trigger the WinCompat layer
-        # which re-adds DFS/UNC user paths. Restore after import.
-        $savedPath = $env:PSModulePath
         Import-Module $pesterPath -Scope Global -Force
-        $env:PSModulePath = $savedPath
     }
 
     $automationRoot = Join-Path $env:RepositoryRoot 'automation'
@@ -73,21 +69,12 @@ function Test-Automation {
         $config.Filter.ExcludeTag = $excludeTags
     }
 
-    # Disable module auto-loading during test runs. All our modules are
-    # already loaded by the importer. Auto-loading causes PowerShell to
-    # search the entire PSModulePath (including DFS/UNC paths that GPO
-    # re-adds) for every Get-Command call — "Searching for available
-    # modules [\\dfs\...]" progress bars and network timeouts.
-    $savedAutoLoad = $PSModuleAutoLoadingPreference
-    $global:PSModuleAutoLoadingPreference = 'None'
-
     $global:__PesterRunning = $true
     try {
         $result = Invoke-Pester -Configuration $config
     }
     finally {
         $global:__PesterRunning = $false
-        $global:PSModuleAutoLoadingPreference = $savedAutoLoad
     }
 
     # Validate test durations against level limits

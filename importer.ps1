@@ -12,29 +12,6 @@ if ($isConsoleSession) {
     $sw = [Diagnostics.Stopwatch]::StartNew()
 }
 
-# Strip PSModulePath to local system paths only.
-# Enterprise environments often redirect $HOME\Documents to DFS/UNC shares via GPO.
-# PowerShell includes Documents\PowerShell\Modules in PSModulePath by default,
-# causing every module lookup, tab completion, and auto-load to scan the network.
-# We vendor all dependencies — the user profile module path is never needed.
-#
-# This runtime fix helps the current session. For a permanent fix that survives
-# PS7 internal PSModulePath reconstruction (WinCompat, auto-loading), run
-# the Set-LocalPSModulePath script as Administrator (one-time).
-$sep = [System.IO.Path]::PathSeparator
-$script:CleanPSModulePath = @(
-    (Join-Path $PSHOME 'Modules')                                                                 # pwsh built-in modules
-    (Join-Path ([Environment]::GetFolderPath('ProgramFiles')) 'PowerShell' 'Modules')             # system-wide PS 7 modules
-    # Windows-only modules that don't ship with PS 7 (e.g., Appx, DISM, NetAdapter, Hyper-V)
-    if ($IncludeWindowsPowerShell -and $IsWindows) {
-        (Join-Path $env:SystemRoot 'system32' 'WindowsPowerShell' 'v1.0' 'Modules')               # Windows built-in modules
-        (Join-Path ([Environment]::GetFolderPath('ProgramFiles')) 'WindowsPowerShell' 'Modules')   # system-wide PS 5.1 modules
-    }
-) -join $sep
-$env:PSModulePath = $script:CleanPSModulePath
-Write-Verbose "PSModulePath set to: $($env:PSModulePath)"
-
-
 # Bootstrap base modules
 Import-Module Microsoft.PowerShell.Management -ErrorAction SilentlyContinue
 Import-Module Microsoft.PowerShell.Security -ErrorAction SilentlyContinue
@@ -71,10 +48,6 @@ Import-AllModules -ModulesRoot $modulesRoot -ExportPrivates:$ExportPrivates
 # Clean up resolver — it has served its purpose
 Write-Verbose 'Removing Resolver module'
 Remove-Module Resolver -Force -ErrorAction SilentlyContinue
-
-# Re-apply clean PSModulePath — imports above can trigger the WinCompat layer
-# which re-adds DFS/UNC user paths. Strip them again.
-$env:PSModulePath = $script:CleanPSModulePath
 
 # Warn if the default user module path points to a network share. This causes
 # PS7 to scan the network during internal PSModulePath reconstruction (WinCompat,

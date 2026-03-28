@@ -2,6 +2,12 @@ BeforeDiscovery {
     $automationRoot = Join-Path $env:RepositoryRoot 'automation'
     $settingsPath = Join-Path $env:RepositoryRoot 'PSScriptAnalyzerSettings.psd1'
 
+    # PSScriptAnalyzer is lazy-loaded — import before use
+    if (-not (Get-Module PSScriptAnalyzer)) {
+        $analyzerPath = Join-Path $env:RepositoryRoot 'automation/.vendor/PSScriptAnalyzer'
+        Import-Module $analyzerPath -Force
+    }
+
     # Discover module directories (excludes dot-prefixed: .vendor, .scriptanalyzer, .resolver)
     $modules = Get-ChildItem -Path $automationRoot -Directory |
         Where-Object { $_.Name -notmatch '^\.' }
