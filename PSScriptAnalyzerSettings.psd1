@@ -6,6 +6,7 @@
         'automation/.scriptanalyzer/NeverDependOnPwd.psm1'
         'automation/.scriptanalyzer/FunctionLength.psm1'
         'automation/.scriptanalyzer/NoWriteErrorOrWarning.psm1'
+        'automation/.scriptanalyzer/NoAzModuleNaming.psm1'
     )
 
     ExcludeRules = @(
@@ -50,36 +51,39 @@
 
         # Flags use of aliases (like % instead of ForEach-Object) in scripts.
         # allowlist permits specific aliases you want to keep.
-        # PSAvoidUsingCmdletAliases = @{
-        #     Enable    = $true
-        #     allowlist = @()
-        # }
+        PSAvoidUsingCmdletAliases = @{
+            Enable    = $true
+            allowlist = @()
+        }
 
         # Checks that cmdlets used in your code exist in the target PowerShell version.
         # compatibility lists platform profiles to validate against.
-        # PSUseCompatibleCmdlets = @{
-        #     Enable        = $true
-        #     compatibility = @()
-        # }
+        PSUseCompatibleCmdlets = @{
+            Enable        = $true
+            compatibility = @(
+                'win-4_x64_10.0.18362.0_7.0.0_x64_3.1.2_core'
+                'ubuntu_x64_18.04_7.0.0_x64_3.1.2_core'
+            )
+        }
 
         # ── Disabled by default (opt-in) ────────────────────────────
         # Uncomment and set Enable = $true to activate.
 
         # Aligns assignment operators (=) vertically in consecutive assignments
         # and hashtable entries for visual consistency.
-        # PSAlignAssignmentStatement = @{
-        #     Enable                                  = $true
-        #     CheckHashtable                          = $true
-        #     AlignHashtableKvpWithInterveningComment = $true
-        #     CheckEnum                               = $true
-        #     AlignEnumMemberWithInterveningComment   = $true
-        #     IncludeValuelessEnumMembers             = $true
-        # }
+        PSAlignAssignmentStatement = @{
+            Enable                                  = $true
+            CheckHashtable                          = $true
+            AlignHashtableKvpWithInterveningComment = $true
+            CheckEnum                               = $true
+            AlignEnumMemberWithInterveningComment   = $true
+            IncludeValuelessEnumMembers             = $true
+        }
 
         # Flags use of the ! operator — prefers -not for readability.
-        # PSAvoidExclaimOperator = @{
-        #     Enable = $true
-        # }
+        PSAvoidExclaimOperator = @{
+            Enable = $true
+        }
 
         # Warns when a line exceeds MaximumLineLength characters.
         # PSAvoidLongLines = @{
@@ -88,23 +92,23 @@
         # }
 
         # Flags semicolons used as line terminators — PowerShell doesn't need them.
-        # PSAvoidSemicolonsAsLineTerminators = @{
-        #     Enable = $true
-        # }
+        PSAvoidSemicolonsAsLineTerminators = @{
+            Enable = $true
+        }
 
         # Flags double-quoted strings that contain no variable expansion or escapes,
         # suggesting single quotes instead.
-        # PSAvoidUsingDoubleQuotesForConstantString = @{
-        #     Enable = $true
-        # }
+        PSAvoidUsingDoubleQuotesForConstantString = @{
+            Enable = $true
+        }
 
         # Enforces consistent placement of closing braces (}).
-        # PSPlaceCloseBrace = @{
-        #     Enable             = $true
-        #     NoEmptyLineBefore  = $false
-        #     IgnoreOneLineBlock = $true
-        #     NewLineAfter       = $true
-        # }
+        PSPlaceCloseBrace = @{
+            Enable             = $true
+            NoEmptyLineBefore  = $false
+            IgnoreOneLineBlock = $true
+            NewLineAfter       = $true
+        }
 
         # Enforces consistent placement of opening braces ({).
         # OnSameLine = K&R style, $false = Allman style.
@@ -131,20 +135,23 @@
         # }
 
         # Checks that .NET types used exist in target PowerShell profiles.
-        # PSUseCompatibleTypes = @{
-        #     Enable         = $true
-        #     TargetProfiles = @()
-        #     IgnoreTypes    = @()
-        # }
+        PSUseCompatibleTypes = @{
+            Enable         = $true
+            TargetProfiles = @(
+                'win-4_x64_10.0.18362.0_7.0.0_x64_3.1.2_core'
+                'ubuntu_x64_18.04_7.0.0_x64_3.1.2_core'
+            )
+            IgnoreTypes    = @()
+        }
 
         # Enforces consistent indentation (spaces vs tabs, indent size).
         # PipelineIndentation controls how continuation lines in pipelines indent.
-        # PSUseConsistentIndentation = @{
-        #     Enable              = $true
-        #     IndentationSize     = 4
-        #     PipelineIndentation = 'IncreaseIndentationForFirstPipeline'
-        #     Kind                = 'space'
-        # }
+        PSUseConsistentIndentation = @{
+            Enable              = $true
+            IndentationSize     = 4
+            PipelineIndentation = 'IncreaseIndentationForFirstPipeline'
+            Kind                = 'space'
+        }
 
         # Warns when the same parameter set name appears in multiple functions,
         # which can cause confusion.
@@ -154,25 +161,25 @@
 
         # Enforces that all parameters use either param() blocks or function(args)
         # style consistently.
-        # PSUseConsistentParametersKind = @{
-        #     Enable         = $true
-        #     ParametersKind = 'ParamBlock'
-        # }
+        PSUseConsistentParametersKind = @{
+            Enable         = $true
+            ParametersKind = 'ParamBlock'
+        }
 
         # Enforces consistent whitespace around braces, parens, operators, pipes,
         # and separators.
-        # PSUseConsistentWhitespace = @{
-        #     Enable                                  = $true
-        #     CheckInnerBrace                         = $true
-        #     CheckOpenBrace                          = $true
-        #     CheckOpenParen                          = $true
-        #     CheckOperator                           = $true
-        #     CheckPipe                               = $true
-        #     CheckPipeForRedundantWhitespace         = $false
-        #     CheckSeparator                          = $true
-        #     CheckParameter                          = $false
-        #     IgnoreAssignmentOperatorInsideHashTable  = $false
-        # }
+        PSUseConsistentWhitespace = @{
+            Enable                                  = $true
+            CheckInnerBrace                         = $true
+            CheckOpenBrace                          = $true
+            CheckOpenParen                          = $true
+            CheckOperator                           = $true
+            CheckPipe                               = $true
+            CheckPipeForRedundantWhitespace         = $false
+            CheckSeparator                          = $true
+            CheckParameter                          = $false
+            IgnoreAssignmentOperatorInsideHashTable  = $false
+        }
 
         # Warns when code doesn't run under Constrained Language Mode (CLM),
         # used in locked-down environments like AppLocker/WDAC.
@@ -183,17 +190,17 @@
 
         # Fixes casing of commands, keywords, and operators to match their
         # canonical definitions (e.g., ForEach-Object not foreach-object).
-        # PSUseCorrectCasing = @{
-        #     Enable        = $true
-        #     CheckCommands = $true
-        #     CheckKeyword  = $true
-        #     CheckOperator = $true
-        # }
+        PSUseCorrectCasing = @{
+            Enable        = $true
+            CheckCommands = $true
+            CheckKeyword  = $true
+            CheckOperator = $true
+        }
 
         # Warns when a pipeline parameter accepts an array — suggests accepting
         # single values and using the pipeline for collections instead.
-        # PSUseSingleValueFromPipelineParameter = @{
-        #     Enable = $true
-        # }
+        PSUseSingleValueFromPipelineParameter = @{
+            Enable = $true
+        }
     }
 }

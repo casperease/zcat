@@ -31,4 +31,9 @@
     },
     "editor.wordWrap": "off"
   },
+
+  // Treat LICENSE files as plain text so markdownlint ignores them
+  "files.associations": {
+    "**/LICENSE": "plaintext"
+  },
 }

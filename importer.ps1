@@ -1,7 +1,8 @@
-[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingWriteHost', '')]
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingWriteHost', '', Justification = 'Bootstrapper uses Write-Host for visible console output before module system is loaded')]
 param(
     [switch] $ExportPrivates,
-    [switch] $AllowWarnings
+    [switch] $AllowWarnings,
+    [switch] $IncludeWindowsPowerShell
 )
 
 # Detect if called from an interactive prompt or from a script
@@ -18,11 +19,12 @@ if ($isInteractive) {
 # We vendor all dependencies — the user profile module path is never needed.
 $sep = [System.IO.Path]::PathSeparator
 $env:PSModulePath = @(
-    (Join-Path $PSHOME 'Modules')                                                       # pwsh built-in modules
-    (Join-Path ([Environment]::GetFolderPath('ProgramFiles')) 'PowerShell' 'Modules')    # system-wide PS 7 modules
-    if ($IsWindows) {
-        (Join-Path $env:SystemRoot 'system32' 'WindowsPowerShell' 'v1.0' 'Modules')     # Windows built-in modules
-        (Join-Path ([Environment]::GetFolderPath('ProgramFiles')) 'WindowsPowerShell' 'Modules')
+    (Join-Path $PSHOME 'Modules')                                                                 # pwsh built-in modules
+    (Join-Path ([Environment]::GetFolderPath('ProgramFiles')) 'PowerShell' 'Modules')             # system-wide PS 7 modules
+    # Windows-only modules that don't ship with PS 7 (e.g., Appx, DISM, NetAdapter, Hyper-V)
+    if ($IncludeWindowsPowerShell -and $IsWindows) {
+        (Join-Path $env:SystemRoot 'system32' 'WindowsPowerShell' 'v1.0' 'Modules')               # Windows built-in modules
+        (Join-Path ([Environment]::GetFolderPath('ProgramFiles')) 'WindowsPowerShell' 'Modules')   # system-wide PS 5.1 modules
     }
 ) -join $sep
 

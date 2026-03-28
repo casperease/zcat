@@ -2,23 +2,19 @@
 
 ## Context
 
-PowerShell has a curated list of approved verbs (`Get-Verb`), organized
-into groups (Common, Communications, Data, Diagnostic, Lifecycle, Security)
-with precise definitions for each. This is not a suggestion — it is a
-deliberate design decision by the PowerShell team, and it is one of the
-language's true strengths.
+PowerShell has a curated list of approved verbs (`Get-Verb`),
+organized into groups (Common, Communications, Data, Diagnostic, Lifecycle, Security) with precise definitions for each.
+This is not a suggestion — it is a deliberate design decision by the PowerShell team, and it is one of the language's true strengths.
 
 ### Why this matters
 
-**Verbs are a shared vocabulary.** When a user sees `Get-`, they know it
-reads without modifying. When they see `Set-`, they know it writes. When
-they see `Test-`, they know it returns a boolean. When they see `Assert-`,
-they know it throws on failure. This contract is universal across every
-PowerShell module, every vendor, every team. A user who has never seen your
-code can predict what `Get-MetaConfiguration` does from the verb alone.
+**Verbs are a shared vocabulary.** When a user sees `Get-`, they know it reads without modifying.
+When they see `Set-`, they know it writes.
+When they see `Test-`, they know it returns a boolean. When they see `Assert-`, they know it throws on failure.
+This contract is universal across every PowerShell module, every vendor, every team.
+A user who has never seen your code can predict what `Get-MetaConfiguration` does from the verb alone.
 
-**Verbs encode behavior guarantees.** The approved verbs are not just
-naming conventions — they carry semantic promises:
+**Verbs encode behavior guarantees.** The approved verbs are not just naming conventions — they carry semantic promises:
 
 | Verb                                       | Guarantee                                          | Will not                   |
 | ------------------------------------------ | -------------------------------------------------- | -------------------------- |
@@ -34,22 +30,16 @@ naming conventions — they carry semantic promises:
 | `Build-`                                   | Creates an artifact from input files               |                            |
 | `Convert-` / `ConvertTo-` / `ConvertFrom-` | Transforms data between representations            |                            |
 
-**`New-` not `Create-`.** `Create` is not an approved verb. Use `New-`
-for all resource creation. This is the single most common mistake.
+**`New-` not `Create-`.** `Create` is not an approved verb. Use `New-` for all resource creation. This is the single most common mistake.
 
-When every function in the codebase respects these guarantees, a user can
-reason about behavior from the function name without reading the
-implementation. This is an extraordinary advantage that most languages do
-not offer.
+When every function in the codebase respects these guarantees,
+a user can reason about behavior from the function name without reading the implementation. This is an extraordinary advantage that most languages do not offer.
 
-**Discovery works.** `Get-Command -Verb Install` shows every install
-function. `Get-Command -Noun Poetry` shows every poetry function. This
-only works when verbs are consistent. A function named `Setup-Poetry`
-would not appear in either search.
+**Discovery works.** `Get-Command -Verb Install` shows every install function. `Get-Command -Noun Poetry` shows every poetry function.
+This only works when verbs are consistent. A function named `Setup-Poetry` would not appear in either search.
 
-**Tab completion works.** Users type `Get-` and tab through all getters.
-They type `Install-` and see all installable tools. Non-standard verbs
-break this workflow and hide functions from discovery.
+**Tab completion works.** Users type `Get-` and tab through all getters. They type `Install-` and see all installable tools.
+Non-standard verbs break this workflow and hide functions from discovery.
 
 ### The approved verb groups
 
@@ -153,43 +143,27 @@ All functions must use approved PowerShell verbs. No exceptions.
 
 ### Rules
 
-- **Use only verbs from `Get-Verb`.** If the verb you want is not in the
-  list, find the approved verb that matches the semantics. The table above
-  and the common mistakes section cover the most frequent cases.
+- **Use only verbs from `Get-Verb`.** If the verb you want is not in the list, find the approved verb that matches the semantics. The table above and the common mistakes section cover the most frequent cases.
 
-- **Respect the semantic contract.** A `Get-` function must not modify
-  state. A `Test-` function must return `[bool]`. An `Assert-` function
-  must throw on failure. The verb is a promise to the caller.
+- **Respect the semantic contract.** A `Get-` function must not modify state. A `Test-` function must return `[bool]`. An `Assert-` function must throw on failure. The verb is a promise to the caller.
 
-- **Use `Test-` for boolean queries, `Assert-` for preconditions.** Both
-  verify state, but `Test-` returns true/false for the caller to decide
-  what to do, while `Assert-` throws immediately if the condition is not
-  met. A function should never be named `Test-` and throw, or named
-  `Assert-` and return false.
+- **Use `Test-` for boolean queries, `Assert-` for preconditions.** Both verify state, but `Test-` returns true/false for the caller to decide what to do,
+  while `Assert-` throws immediately if the condition is not met.
+  A function should never be named `Test-` and throw, or named `Assert-` and return false.
 
-- **Use `Invoke-` for transparent command wrappers.** `Invoke-Python`,
-  `Invoke-Poetry`, `Invoke-Dotnet` — these run the underlying tool. They
-  do not decide what to run or handle the output semantically. The caller
-  controls the command; the function provides the invocation plumbing.
+- **Use `Invoke-` for transparent command wrappers.** `Invoke-Python`, `Invoke-Poetry`, `Invoke-Dotnet` — these run the underlying tool.
+  They do not decide what to run or handle the output semantically. The caller controls the command; the function provides the invocation plumbing.
 
-- **Use `ConvertTo-`/`ConvertFrom-` for format transformations.** Not
-  `Parse-`, `Serialize-`, `Transform-`, or `Format-` (which means
-  "arranges for display," not "converts").
+- **Use `ConvertTo-`/`ConvertFrom-` for format transformations.** Not `Parse-`, `Serialize-`, `Transform-`, or `Format-` (which means "arranges for display," not "converts").
 
 ### How this is enforced
 
-- **PSScriptAnalyzer rule `PSUseApprovedVerbs`** (built-in, enabled) —
-  warns on any function that uses a verb not in the `Get-Verb` list.
-  Runs as part of the L2 test suite via `Test-ScriptAnalyzer.Tests.ps1`.
+- **PSScriptAnalyzer rule `PSUseApprovedVerbs`** (built-in, enabled) — warns on any function that uses a verb not in the `Get-Verb` list. Runs as part of the L2 test suite via `Test-ScriptAnalyzer.Tests.ps1`.
 
 ## Consequences
 
-- Every function is discoverable via `Get-Command -Verb` and
-  `Get-Command -Noun`.
+- Every function is discoverable via `Get-Command -Verb` and `Get-Command -Noun`.
 - Users can predict function behavior from the name without reading code.
-- Code reads as natural language: `Assert-Command python`, `Install-Poetry`,
-  `Get-MetaConfiguration`, `Test-IsAdministrator`.
-- PSScriptAnalyzer warns on unapproved verbs, catching mistakes before
-  code review.
-- New team members familiar with any PowerShell module can immediately
-  navigate the codebase because the vocabulary is shared.
+- Code reads as natural language: `Assert-Command python`, `Install-Poetry`, `Get-MetaConfiguration`, `Test-IsAdministrator`.
+- PSScriptAnalyzer warns on unapproved verbs, catching mistakes before code review.
+- New team members familiar with any PowerShell module can immediately navigate the codebase because the vocabulary is shared.

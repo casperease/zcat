@@ -10,6 +10,10 @@ PowerShell 7.4+ module system with zero-ceremony module authoring.
 - `automation/.vendor/` — third-party modules (checked in)
 - `docs/automation/` — ADRs, FAQ, and other automation docs
 
+## ADRs
+
+Architecture Decision Records live in `docs/automation/adr/`. **Read all ADRs at the start of every session** — they define the design principles behind this codebase and must be followed when writing or reviewing code.
+
 ## Rules
 
 - **One function per file** (`Verb-Noun.ps1`): `Get-Foo.ps1` must contain exactly `function Get-Foo`

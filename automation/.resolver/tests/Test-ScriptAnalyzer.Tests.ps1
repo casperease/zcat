@@ -2,22 +2,48 @@ BeforeDiscovery {
     $automationRoot = Join-Path $env:RepositoryRoot 'automation'
     $settingsPath = Join-Path $env:RepositoryRoot 'PSScriptAnalyzerSettings.psd1'
 
-    $allFiles = @()
+    # Discover module directories (excludes dot-prefixed: .vendor, .scriptanalyzer, .resolver)
     $modules = Get-ChildItem -Path $automationRoot -Directory |
         Where-Object { $_.Name -notmatch '^\.' }
 
+    # Run PSScriptAnalyzer once per module instead of once per file.
+    # Profiles are cached after the first call; the bottleneck is Zcap.Base's file count.
+    # Parallel is not possible (PSScriptAnalyzer Helper.Initialize is not thread-safe).
+    $allDiagnostics = @()
+    foreach ($moduleDir in $modules) {
+        $allDiagnostics += Invoke-ScriptAnalyzer -Path $moduleDir.FullName -Recurse -Settings $settingsPath
+    }
+
+    $resolverPath = Join-Path $automationRoot '.resolver/Resolver.psm1'
+    if (Test-Path $resolverPath) {
+        $allDiagnostics += Invoke-ScriptAnalyzer -Path $resolverPath -Settings $settingsPath
+    }
+
+    # Index diagnostics as strings by file path.
+    # DiagnosticRecord objects don't survive Pester's -ForEach serialization,
+    # so convert to readable strings during discovery.
+    $diagnosticsByFile = @{}
+    foreach ($d in $allDiagnostics) {
+        if (-not $diagnosticsByFile.ContainsKey($d.ScriptPath)) {
+            $diagnosticsByFile[$d.ScriptPath] = [System.Collections.Generic.List[string]]::new()
+        }
+        $diagnosticsByFile[$d.ScriptPath].Add("$($d.RuleName): $($d.Message) (line $($d.Line))")
+    }
+
+    # Build per-file test cases
+    $allFiles = @()
     foreach ($moduleDir in $modules) {
         $publicFiles = Get-ChildItem -Path $moduleDir.FullName -Filter '*.ps1' -File -ErrorAction SilentlyContinue |
             Where-Object { $_.Name -notlike '*.Tests.ps1' }
         foreach ($f in $publicFiles) {
-            $allFiles += @{ Module = $moduleDir.Name; File = $f; Settings = $settingsPath }
+            $allFiles += @{ Module = $moduleDir.Name; File = $f; Diagnostics = $diagnosticsByFile[$f.FullName] }
         }
 
         $privatePath = Join-Path $moduleDir.FullName 'private'
         if (Test-Path $privatePath) {
             $privateFiles = Get-ChildItem -Path $privatePath -Filter '*.ps1' -File -ErrorAction SilentlyContinue
             foreach ($f in $privateFiles) {
-                $allFiles += @{ Module = $moduleDir.Name; File = $f; Settings = $settingsPath }
+                $allFiles += @{ Module = $moduleDir.Name; File = $f; Diagnostics = $diagnosticsByFile[$f.FullName] }
             }
         }
 
@@ -25,23 +51,19 @@ BeforeDiscovery {
         if (Test-Path $testsPath) {
             $testFiles = Get-ChildItem -Path $testsPath -Filter '*.Tests.ps1' -File -ErrorAction SilentlyContinue
             foreach ($f in $testFiles) {
-                $allFiles += @{ Module = "$($moduleDir.Name)/tests"; File = $f; Settings = $settingsPath }
+                $allFiles += @{ Module = "$($moduleDir.Name)/tests"; File = $f; Diagnostics = $diagnosticsByFile[$f.FullName] }
             }
         }
     }
 
-    # Also include Resolver.psm1
     $resolver = Get-Item (Join-Path $automationRoot '.resolver/Resolver.psm1') -ErrorAction SilentlyContinue
     if ($resolver) {
-        $allFiles += @{ Module = 'Resolver'; File = $resolver; Settings = $settingsPath }
+        $allFiles += @{ Module = 'Resolver'; File = $resolver; Diagnostics = $diagnosticsByFile[$resolver.FullName] }
     }
 }
 
 Describe 'PSScriptAnalyzer: <Module>/<File>' -Tag 'L2' -ForEach $allFiles {
     It 'has no PSScriptAnalyzer violations' {
-        $diagnostics = Invoke-ScriptAnalyzer -Path $File.FullName -Settings $Settings
-        $diagnostics | ForEach-Object {
-            "$($_.RuleName): $($_.Message) (line $($_.Line))"
-        } | Should -BeNullOrEmpty
+        $Diagnostics | Should -BeNullOrEmpty
     }
 }

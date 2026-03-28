@@ -19,6 +19,8 @@ max_line_length = 120
 [*.md]
 # Markdown trailing spaces can be significant (line breaks)
 trim_trailing_whitespace = false
+# Prose target — tables are exempt (no wrapping)
+max_line_length = 140
 
 [*.{yml,yaml}]
 indent_size = 2

@@ -1,6 +1,16 @@
 {
   "recommendations": [
     "redhat.vscode-yaml",
-    "DavidAnson.vscode-markdownlint"
+    "DavidAnson.vscode-markdownlint",
+    "rosshamish.kuskus-kusto-syntax-highlighting",
+    "ms-azure-devops.azure-pipelines",
+    "ms-azuretools.vscode-azureresourcegroups",
+    "streetsidesoftware.code-spell-checker",
+    "editorconfig.editorconfig",
+    "shd101wyy.markdown-preview-enhanced",
+    "ibm.output-colorizer",
+    "ms-vscode.powershell",
+    "esbenp.prettier-vscode",
+    "tomoki1207.pdf"
   ]
 }

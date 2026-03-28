@@ -111,7 +111,7 @@ function Import-AllModules {
     Path to the vendor directory. Skips silently if the path does not exist.
 #>
 function Import-VendorModules {
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingWriteHost', '')]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingWriteHost', '', Justification = 'Resolver runs before Write-Message is available')]
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]

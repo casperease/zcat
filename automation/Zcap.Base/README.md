@@ -14,7 +14,7 @@ Foundation module — the things PowerShell should have had built in.
 
 **YAML validation** — `Assert-YmlNaming` enforces snake_case on all property keys in parsed YAML structures.
 
-**Formatted output** — `Write-Message`, `Write-Object`, `Write-Header`, `Write-Hashtable`, `Write-Array`, `Write-Exception`, and `Write-InformationColored`. Consistent console output with caller prefixes, opt-in timestamps (`$env:ZCAP_MESSAGE_TIMESTAMPS`), and proper color usage.
+**Formatted output** — `Write-Message`, `Write-Object`, `Write-Header`, `Write-Exception`, and `Write-InformationColored`. Consistent console output with caller prefixes, opt-in timestamps (`$env:ZCAP_MESSAGE_TIMESTAMPS`), and proper color usage.
 
 **Dependency analysis** — `Get-FunctionDependency` and `Get-ModuleDependency` use AST parsing to map function-to-function and module-to-module call graphs across the codebase.
 

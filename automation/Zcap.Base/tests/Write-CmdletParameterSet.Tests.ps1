@@ -1,8 +1,7 @@
 Describe 'Write-CmdletParameterSet' {
     BeforeAll {
-        # Params are used via $MyInvocation, not directly
         function Test-DummyFunc {
-            [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
+            [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '', Justification = 'Params are used via $MyInvocation, not directly')]
             param([string]$Name, [string]$Secret, [switch]$Force)
             Write-CmdletParameterSet $MyInvocation -HiddenKeys 'Secret' -InformationVariable iv -InformationAction SilentlyContinue 6>&1 | Out-Null
             $iv

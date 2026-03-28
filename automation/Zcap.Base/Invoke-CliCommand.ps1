@@ -26,8 +26,8 @@
 # writes to the host (not capturable) and we need the command string returned
 # via Write-Output for testability. -Confirm is not needed for CLI commands.
 function Invoke-CliCommand {
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingInvokeExpression', '')] # by design — runs CLI commands
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseOutputTypeCorrectly', '')] # returns string only in -DryRun mode
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingInvokeExpression', '', Justification = 'By design — executes CLI commands')]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseOutputTypeCorrectly', '', Justification = 'Returns string only in -DryRun mode')]
     [CmdletBinding()]
     param(
         [Parameter(Mandatory, Position = 0)]
