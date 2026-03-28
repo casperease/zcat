@@ -36,7 +36,9 @@ if (-not (Test-Path $localModulePath)) {
 }
 
 # --- 1. User-scope powershell.config.json (CurrentUser module path) ---
-$userConfigDir = Split-Path $PROFILE.CurrentUserCurrentHost
+# Use GetFolderPath, not $PROFILE — admin sessions resolve $PROFILE to a
+# different (local) path than the normal user session (DFS).
+$userConfigDir = Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'PowerShell'
 if (-not (Test-Path $userConfigDir)) {
     New-Item -Path $userConfigDir -ItemType Directory -Force | Out-Null
 }
