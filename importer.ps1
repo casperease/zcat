@@ -49,16 +49,14 @@ Remove-Module Resolver -Force -ErrorAction SilentlyContinue
 # auto-loading) even after our runtime strip. The permanent fix is a one-time
 # admin script that redirects the PS7 user module path to a local directory.
 if ($IsWindows) {
-    $docsFolder = [Environment]::GetFolderPath('MyDocuments')
-    $userRegPath = [Environment]::GetEnvironmentVariable('PSModulePath', 'User')
-    $fixApplied = [bool]$userRegPath -and $userRegPath -notmatch '^\\\\'
+    $hasUncModulePath = ($env:PSModulePath -split [IO.Path]::PathSeparator) -match '^\\\\' | Select-Object -First 1
 
-    if ($docsFolder -match '^\\\\' -and -not $fixApplied) {
+    if ($hasUncModulePath) {
         $fixScript = Join-Path $PSScriptRoot "$automationFolder/Zcap.Base/assets/Set-LocalPSModulePath.ps1"
         Write-Host ''
-        Write-Host 'WARNING: Your Documents folder is on a network share.' -ForegroundColor Yellow
+        Write-Host 'WARNING: PSModulePath contains a network share.' -ForegroundColor Yellow
         Write-Host 'PowerShell will be slow — module lookups scan the network.' -ForegroundColor Yellow
-        Write-Host "Open PowerShell as Administrator and run:" -ForegroundColor Yellow
+        Write-Host "Run this once to fix:" -ForegroundColor Yellow
         Write-Host "  & '$fixScript'" -ForegroundColor Cyan
         Write-Host ''
     }
