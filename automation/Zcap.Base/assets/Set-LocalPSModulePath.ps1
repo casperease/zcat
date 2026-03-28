@@ -15,7 +15,7 @@
     2. Profile symlink — creates a directory symlink from the DFS-based
        Documents\PowerShell to a local directory. $PROFILE, profile scripts,
        and any code using the Documents\PowerShell path transparently resolve
-       to the local directory. Existing content is migrated.
+       to the local directory.
 
     Both changes survive reboots and GPO refreshes — $PSHOME and the symlink
     are on the local disk, outside GPO-redirected folders.
@@ -63,7 +63,7 @@ if ($networkPSHome -notmatch '^\\\\') {
     Write-Host "Documents folder is local — no symlink needed" -ForegroundColor Green
     Write-Host ''
     Write-Host 'Restart PowerShell for changes to take effect.' -ForegroundColor Cyan
-    return
+    exit
 }
 
 $item = Get-Item $networkPSHome -Force -ErrorAction Ignore
@@ -73,24 +73,18 @@ if ($alreadySymlinked) {
     Write-Host "Profile symlink already exists: $networkPSHome -> $($item.Target)" -ForegroundColor Green
 }
 else {
+    # Can't create a symlink if the directory already exists
+    if (Test-Path $networkPSHome) {
+        Write-Host "Cannot create symlink — '$networkPSHome' already exists." -ForegroundColor Yellow
+        Write-Host "Move or delete it manually, then rerun this script." -ForegroundColor Yellow
+        Write-Host ''
+        Write-Host 'Restart PowerShell for the PSModulePath change to take effect.' -ForegroundColor Cyan
+        exit
+    }
+
     # Ensure local directory exists
     if (-not (Test-Path $localPSHome)) {
         New-Item -Path $localPSHome -ItemType Directory -Force | Out-Null
-    }
-
-    # Migrate existing content from network to local
-    if (Test-Path $networkPSHome) {
-        $existingFiles = Get-ChildItem $networkPSHome -Force -ErrorAction Ignore
-        if ($existingFiles) {
-            Write-Host "Migrating existing files from '$networkPSHome' to '$localPSHome'" -ForegroundColor Yellow
-            foreach ($f in $existingFiles) {
-                $dest = Join-Path $localPSHome $f.Name
-                if (-not (Test-Path $dest)) {
-                    Move-Item $f.FullName $dest -Force
-                }
-            }
-        }
-        Remove-Item $networkPSHome -Force -Recurse
     }
 
     # Create symlink: Documents\PowerShell -> LOCALAPPDATA\PowerShell

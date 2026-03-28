@@ -88,7 +88,7 @@ if ($IsWindows) {
         Write-Host 'WARNING: Your Documents folder is on a network share.' -ForegroundColor Yellow
         Write-Host 'PowerShell will be slow — module lookups scan the network.' -ForegroundColor Yellow
         Write-Host "Run this once as Administrator to fix permanently:" -ForegroundColor Yellow
-        Write-Host "  Start-Process pwsh -Verb RunAs -ArgumentList '-File', '$fixScript'" -ForegroundColor Cyan
+        Write-Host "  Start-Process pwsh -Verb RunAs -ArgumentList '-NoProfile', '-File', '$fixScript'" -ForegroundColor Cyan
         Write-Host ''
     }
 }
