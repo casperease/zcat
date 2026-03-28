@@ -51,14 +51,14 @@ Each line earns its place:
 
 PowerShell has built-in output streams. Use them correctly:
 
-| Stream              | When to use                                                                       | Visible by default |
-| ------------------- | --------------------------------------------------------------------------------- | ------------------ |
-| `Write-Message`     | One-liner status with caller prefix — command execution, completion, short results | Yes                |
-| `Write-Information` | Multiline or headerless output — results, tables, formatted data                  | Yes                |
-| `throw` / `Assert-*`| Something is wrong — execution stops                                              | Yes                |
-| `Write-Verbose`     | Detail that helps debugging but clutters normal output — skip reasons, cache hits  | No (`-Verbose`)    |
-| `Write-Debug`       | Internal state dumps for development — variable values, branch decisions          | No (`-Debug`)      |
-| `Write-Output`      | Function return values. **Never** use for status messages — it pollutes the pipeline | Captured        |
+| Stream               | When to use                                                                          | Visible by default |
+| -------------------- | ------------------------------------------------------------------------------------ | ------------------ |
+| `Write-Message`      | One-liner status with caller prefix — command execution, completion, short results   | Yes                |
+| `Write-Information`  | Multiline or headerless output — results, tables, formatted data                     | Yes                |
+| `throw` / `Assert-*` | Something is wrong — execution stops                                                 | Yes                |
+| `Write-Verbose`      | Detail that helps debugging but clutters normal output — skip reasons, cache hits    | No (`-Verbose`)    |
+| `Write-Debug`        | Internal state dumps for development — variable values, branch decisions             | No (`-Debug`)      |
+| `Write-Output`       | Function return values. **Never** use for status messages — it pollutes the pipeline | Captured           |
 
 `Write-Message` is built on `Write-Information` — it adds a
 `[CallerName]` prefix and routes through the information stream, not
@@ -138,7 +138,7 @@ output for decoration.
 **No side borders or box drawing.** Never wrap output in decorative
 frames:
 
-```
+```text
 # WRONG — cannot copy-paste the content without editing out the borders
 | Deploying to prod   |
 | 3 services updated  |
