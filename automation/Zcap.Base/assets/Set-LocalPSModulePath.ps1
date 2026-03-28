@@ -7,21 +7,21 @@
     and Documents\WindowsPowerShell\Modules (WinPS 5.1), causing network
     scans on every module lookup, tab completion, and command discovery.
 
-    This script applies two fixes:
+    This script applies three fixes:
 
-    1. User-scope PSModulePath registry value — both PS7 and WinPS 5.1
-       check this before using the Documents-based default. When set,
-       the DFS path is never used. This also prevents the WinCompat
-       layer (which starts a WinPS 5.1 background process) from
-       re-introducing the DFS path into PS7's PSModulePath.
+    1. User-scope powershell.config.json — placed in the PS7 user config
+       directory (Documents\PowerShell, even if on DFS). PS7 reads this
+       single file at startup to override the CurrentUser module path.
+       One file read is fast — the slowness comes from recursive module
+       scanning, not reading a config file.
 
-    2. powershell.config.json in $PSHOME — overrides PS7's user module
-       path at the config level, before PSModulePath construction.
+    2. AllUsers powershell.config.json in $PSHOME — overrides the AllUsers
+       module path as a belt-and-suspenders measure.
 
-    Both changes survive reboots and GPO refreshes — they're on the
-    local disk, outside GPO-redirected folders.
+    3. User-scope PSModulePath registry value — prevents WinPS 5.1
+       (used by the WinCompat layer) from using the DFS-based default.
 
-    Requires Administrator. Run once — permanent until PS reinstall.
+    Requires Administrator (writes to $PSHOME). Run once.
 .EXAMPLE
     # Open PowerShell as Administrator, then:
     & 'C:\projects\zcap\automation\Zcap.Base\assets\Set-LocalPSModulePath.ps1'
@@ -31,40 +31,62 @@
 
 $localModulePath = Join-Path $env:LOCALAPPDATA 'PowerShell' 'Modules'
 
-# --- 1. User-scope PSModulePath registry value ---
-# Both PS7 and WinPS 5.1: "if User-scope PSModulePath exists, use it as defined."
-# This prevents the Documents-based default AND stops the WinCompat layer's
-# background WinPS 5.1 process from re-adding the DFS path.
+if (-not (Test-Path $localModulePath)) {
+    New-Item -Path $localModulePath -ItemType Directory -Force | Out-Null
+}
+
+# --- 1. User-scope powershell.config.json (CurrentUser module path) ---
+$userConfigDir = Split-Path $PROFILE.CurrentUserCurrentHost
+if (-not (Test-Path $userConfigDir)) {
+    New-Item -Path $userConfigDir -ItemType Directory -Force | Out-Null
+}
+$userConfigFile = Join-Path $userConfigDir 'powershell.config.json'
+
+if (Test-Path $userConfigFile) {
+    $userConfig = Get-Content $userConfigFile -Raw | ConvertFrom-Json
+}
+else {
+    $userConfig = [PSCustomObject]@{}
+}
+
+if ($userConfig.PSModulePath -ne $localModulePath) {
+    $userConfig | Add-Member -NotePropertyName 'PSModulePath' -NotePropertyValue $localModulePath -Force
+    $userConfig | ConvertTo-Json -Depth 10 | Set-Content $userConfigFile -Encoding UTF8
+    Write-Host "User-scope config: PSModulePath = '$localModulePath'" -ForegroundColor Green
+    Write-Host "  File: $userConfigFile" -ForegroundColor Gray
+}
+else {
+    Write-Host "User-scope config already set" -ForegroundColor Green
+}
+
+# --- 2. AllUsers powershell.config.json in $PSHOME ---
+$systemConfigFile = Join-Path $PSHOME 'powershell.config.json'
+
+if (Test-Path $systemConfigFile) {
+    $systemConfig = Get-Content $systemConfigFile -Raw | ConvertFrom-Json
+}
+else {
+    $systemConfig = [PSCustomObject]@{}
+}
+
+if ($systemConfig.PSModulePath -ne $localModulePath) {
+    $systemConfig | Add-Member -NotePropertyName 'PSModulePath' -NotePropertyValue $localModulePath -Force
+    $systemConfig | ConvertTo-Json -Depth 10 | Set-Content $systemConfigFile -Encoding UTF8
+    Write-Host "AllUsers config: PSModulePath = '$localModulePath'" -ForegroundColor Green
+    Write-Host "  File: $systemConfigFile" -ForegroundColor Gray
+}
+else {
+    Write-Host "AllUsers config already set" -ForegroundColor Green
+}
+
+# --- 3. User-scope PSModulePath registry value (for WinPS 5.1 / WinCompat) ---
 $currentUserPath = [Environment]::GetEnvironmentVariable('PSModulePath', 'User')
 if ($currentUserPath -ne $localModulePath) {
-    if (-not (Test-Path $localModulePath)) {
-        New-Item -Path $localModulePath -ItemType Directory -Force | Out-Null
-    }
     [Environment]::SetEnvironmentVariable('PSModulePath', $localModulePath, 'User')
-    Write-Host "User-scope PSModulePath set to '$localModulePath'" -ForegroundColor Green
+    Write-Host "User-scope registry PSModulePath set to '$localModulePath'" -ForegroundColor Green
 }
 else {
-    Write-Host "User-scope PSModulePath already configured" -ForegroundColor Green
-}
-
-# --- 2. powershell.config.json in $PSHOME ---
-$configFile = Join-Path $PSHOME 'powershell.config.json'
-
-if (Test-Path $configFile) {
-    $config = Get-Content $configFile -Raw | ConvertFrom-Json
-}
-else {
-    $config = [PSCustomObject]@{}
-}
-
-if ($config.PSModulePath -ne $localModulePath) {
-    $config | Add-Member -NotePropertyName 'PSModulePath' -NotePropertyValue $localModulePath -Force
-    $config | ConvertTo-Json -Depth 10 | Set-Content $configFile -Encoding UTF8
-    Write-Host "powershell.config.json updated: PSModulePath = '$localModulePath'" -ForegroundColor Green
-    Write-Host "  Config: $configFile" -ForegroundColor Gray
-}
-else {
-    Write-Host "powershell.config.json already configured" -ForegroundColor Green
+    Write-Host "User-scope registry PSModulePath already set" -ForegroundColor Green
 }
 
 Write-Host ''
