@@ -4,7 +4,7 @@
 .DESCRIPTION
     Returns $true if the command is found via Get-Command and is a real
     executable. Returns $false for Windows Store app execution alias stubs
-    (0-byte reparse points in WindowsApps that redirect to the Store).
+    (reparse points in WindowsApps that redirect to the Store).
 .PARAMETER Command
     The command name to check.
 .EXAMPLE
@@ -21,11 +21,15 @@ function Test-Command {
     $cmd = Get-Command $Command -ErrorAction Ignore
     if (-not $cmd) { return $false }
 
-    # Windows Store app execution alias stubs are 0-byte reparse points.
-    # Real installs (including winget apps in WindowsApps) have file size > 0.
+    # Windows Store app execution alias stubs are reparse points with zero
+    # length inside WindowsApps. Detect via both attributes: the file must
+    # be a ReparsePoint AND 0 bytes (real executables installed via winget
+    # into WindowsApps are not reparse points).
     if ($IsWindows -and $cmd.Source) {
-        $file = Get-Item $cmd.Source -ErrorAction Ignore
-        if ($file -and $file.Length -eq 0) { return $false }
+        $file = Get-Item $cmd.Source -Force -ErrorAction Ignore
+        if ($file -and $file.Attributes.HasFlag([IO.FileAttributes]::ReparsePoint) -and $file.Length -eq 0) {
+            return $false
+        }
     }
 
     $true
