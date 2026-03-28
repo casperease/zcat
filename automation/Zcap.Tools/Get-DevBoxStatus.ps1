@@ -99,7 +99,8 @@ function Get-DevBoxStatus {
         # Parse installed version
         $installed = $null
         # -NoAssert: non-zero exit means version unavailable — reported as status, not error
-        $raw = Invoke-CliCommand $config.VersionCommand -PassThru -NoAssert -Silent
+        # Stderr suppressed: version probes can trigger noisy output (Store stubs, launcher errors)
+        $raw = Invoke-CliCommand $config.VersionCommand -PassThru -NoAssert -Silent 2>$null
         if ($raw -match $config.VersionPattern) {
             $installed = $Matches['ver']
         }

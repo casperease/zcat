@@ -29,6 +29,7 @@ $env:PSModulePath = @(
 ) -join $sep
 Write-Verbose "PSModulePath set to: $($env:PSModulePath)"
 
+
 # Bootstrap base modules
 Import-Module Microsoft.PowerShell.Management -ErrorAction SilentlyContinue
 Import-Module Microsoft.PowerShell.Security -ErrorAction SilentlyContinue
