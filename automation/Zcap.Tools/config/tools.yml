@@ -17,7 +17,7 @@ Dotnet:
   VersionPattern: "^(?<ver>.+)$"
 
 AzCli:
-  Version: "2.73"
+  Version: "2.84"
   Command: az
   WingetId: "Microsoft.AzureCLI"
   BrewFormula: "azure-cli"
@@ -26,7 +26,7 @@ AzCli:
   VersionPattern: "^(?<ver>[^\t]+)"
 
 Poetry:
-  Version: "2.1"
+  Version: "1.7"
   Command: poetry
   PipPackage: poetry
   VersionCommand: "poetry --version"
