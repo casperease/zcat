@@ -1,21 +1,24 @@
 <#
 .SYNOPSIS
     Uninstalls Poetry via pip.
-.PARAMETER Version
-    Poetry version to uninstall. Defaults to the locked version in Get-ToolConfig.
+.DESCRIPTION
+    Idempotent — skips if Poetry is not installed or if Python is
+    not available (nothing to pip-uninstall).
 .EXAMPLE
     Uninstall-Poetry
 #>
 function Uninstall-Poetry {
     [CmdletBinding()]
-    param(
-        [string] $Version
-    )
+    param()
 
     $config = Get-ToolConfig -Tool 'Poetry'
-    if (-not $Version) { $Version = $config.Version }
+
+    # Idempotent: skip if poetry is not installed
+    if (-not (Test-Command $config.Command)) {
+        Write-Message "Poetry is not installed — nothing to do"
+        return
+    }
 
     Invoke-Pip "uninstall $($config.PipPackage) -y"
-
-    Write-Message "Poetry $Version uninstalled"
+    Write-Message "Poetry uninstalled"
 }
