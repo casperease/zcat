@@ -91,7 +91,8 @@ if ($isConsoleSession) {
                                 $lastCmd = ($lastCmd -replace '[\r\n]+', ' ').Trim()
                                 if ($lastCmd.Length -gt 30) { $lastCmd = $lastCmd.Substring(0, 30) + '...' }
                                 "at $lastCmd"
-                            } else { 'at <prompt>' }
+                            }
+                            else { 'at <prompt>' }
                         }
                         else { $_ }
                     }
