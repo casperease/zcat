@@ -34,7 +34,7 @@ function Assert-ToolVersion {
         }
     }
     else {
-        throw "Could not parse $Tool version from: $raw"
+        throw "$Tool is not functional — '$($config.VersionCommand)' did not return a valid version. Run Install-$Tool."
     }
 
     Write-Verbose "$Tool version $installed verified"
