@@ -17,7 +17,7 @@ function Get-ToolConfig {
     )
 
     if (-not $script:ToolConfigCache) {
-        $configPath = Join-Path $PSScriptRoot '../config/tools.yml'
+        $configPath = Join-Path $PSScriptRoot '../assets/config/tools.yml'
         Assert-PathExist $configPath
         Write-Verbose "Loading tool config from: $configPath"
         $script:ToolConfigCache = Get-Content $configPath -Raw | ConvertFrom-Yaml

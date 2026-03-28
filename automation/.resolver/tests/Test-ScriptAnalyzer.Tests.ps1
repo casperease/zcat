@@ -6,12 +6,23 @@ BeforeDiscovery {
     $modules = Get-ChildItem -Path $automationRoot -Directory |
         Where-Object { $_.Name -notmatch '^\.' }
 
-    # Run PSScriptAnalyzer once per module instead of once per file.
-    # Profiles are cached after the first call; the bottleneck is Zcap.Base's file count.
+    # Run PSScriptAnalyzer on module code only (root, private/, tests/).
+    # assets/ is excluded — it contains vendored or external files we do not control.
     # Parallel is not possible (PSScriptAnalyzer Helper.Initialize is not thread-safe).
     $allDiagnostics = @()
     foreach ($moduleDir in $modules) {
-        $allDiagnostics += Invoke-ScriptAnalyzer -Path $moduleDir.FullName -Recurse -Settings $settingsPath
+        # Module root (public functions)
+        $allDiagnostics += Invoke-ScriptAnalyzer -Path $moduleDir.FullName -Settings $settingsPath
+        # Private helpers
+        $privatePath = Join-Path $moduleDir.FullName 'private'
+        if (Test-Path $privatePath) {
+            $allDiagnostics += Invoke-ScriptAnalyzer -Path $privatePath -Settings $settingsPath
+        }
+        # Test files
+        $testsPath = Join-Path $moduleDir.FullName 'tests'
+        if (Test-Path $testsPath) {
+            $allDiagnostics += Invoke-ScriptAnalyzer -Path $testsPath -Settings $settingsPath
+        }
     }
 
     $resolverPath = Join-Path $automationRoot '.resolver/Resolver.psm1'

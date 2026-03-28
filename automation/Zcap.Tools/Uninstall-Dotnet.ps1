@@ -14,13 +14,7 @@ function Uninstall-Dotnet {
 
     $config = Get-ToolConfig -Tool 'Dotnet'
 
-    # Windows: C:\tools\dotnet — matches Install-Dotnet (avoids OneDrive $HOME).
-    # Unix: ~/.dotnet — standard Microsoft convention.
-    $installDir = if ($IsWindows -and $config.WindowsInstallRoot) {
-        Join-Path $config.WindowsInstallRoot ($config.WindowsInstallDir ?? $config.UserInstallDir)
-    } else {
-        Join-Path $HOME $config.UserInstallDir
-    }
+    $installDir = Get-ScriptInstallDir -Config $config
 
     # Idempotent: skip if directory does not exist
     if (-not (Test-Path $installDir)) {
@@ -59,5 +53,5 @@ function Uninstall-Dotnet {
         }
     }
 
-    Write-Message "Dotnet uninstalled"
+    Write-Message "Dotnet uninstalled from '$installDir'"
 }

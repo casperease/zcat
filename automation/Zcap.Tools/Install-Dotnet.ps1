@@ -3,12 +3,11 @@
     Installs the .NET SDK via official Microsoft install scripts (user-space).
 .DESCRIPTION
     Uses vendored dotnet-install scripts instead of package managers.
-    Windows: installs to C:\tools\dotnet (avoids OneDrive-redirected $HOME).
-    Unix: installs to ~/.dotnet.
+    Install directory resolved by Get-ScriptInstallDir (LOCALAPPDATA on
+    Windows, HOME on Unix — overridable in tools.yml).
     No admin required. Persists DOTNET_ROOT and PATH for future sessions.
-    Idempotent — skips if already installed at the correct version.
-    Dotnet supports side-by-side installs, so a system-wide dotnet (e.g.,
-    from Visual Studio) does not conflict and is not blocked.
+    Idempotent — if the correct version is already on PATH (regardless of
+    how it was installed), skips with a message.
 .PARAMETER Version
     .NET SDK version to install. Defaults to the locked version in Get-ToolConfig.
 .PARAMETER Force
@@ -28,44 +27,51 @@ function Install-Dotnet {
     $config = Get-ToolConfig -Tool 'Dotnet'
     if (-not $Version) { $Version = $config.Version }
 
-    # Windows: C:\tools\dotnet — avoids OneDrive/DST-redirected $HOME.
-    # Unix: ~/.dotnet — standard Microsoft convention.
-    $installDir = if ($IsWindows -and $config.WindowsInstallRoot) {
-        Join-Path $config.WindowsInstallRoot ($config.WindowsInstallDir ?? $config.UserInstallDir)
-    } else {
-        Join-Path $HOME $config.UserInstallDir
+    # Same rule as all other tools: if the correct version is on PATH, skip.
+    if (Test-Command $config.Command) {
+        $raw = Invoke-CliCommand $config.VersionCommand -PassThru -NoAssert -Silent 2>$null
+        $installed = if ($raw -match $config.VersionPattern) { $Matches['ver'] } else { $null }
+
+        if ($installed -and $installed.StartsWith($Version)) {
+            Write-Message "Dotnet $Version is already installed"
+            return
+        }
+
+        # Wrong version on PATH — only matters if it's from our install dir.
+        # A system-wide dotnet at a different version doesn't block us since
+        # we install side-by-side and prepend our dir to PATH.
     }
+
+    $installDir = Get-ScriptInstallDir -Config $config
     $ourBinary = if ($IsWindows) { Join-Path $installDir 'dotnet.exe' } else { Join-Path $installDir 'dotnet' }
 
-    # Idempotent: check OUR install directory specifically, not the system PATH.
-    # Dotnet supports side-by-side — a VS-installed or system dotnet at
-    # C:\Program Files\dotnet\ is irrelevant; it doesn't block our install.
+    # Check our install dir for wrong-version scenario
     if (Test-Path $ourBinary) {
         $raw = Invoke-CliCommand "$ourBinary --version" -PassThru -NoAssert -Silent
-        if ($raw -match $config.VersionPattern -and $Matches['ver'].StartsWith($Version)) {
+        $ourInstalled = if ($raw -match $config.VersionPattern) { $Matches['ver'] } else { $null }
+
+        if ($ourInstalled -and $ourInstalled.StartsWith($Version)) {
             Write-Message "Dotnet $Version is already installed at '$installDir'"
             return
         }
 
-        $installed = $Matches['ver']
-
         if ($Force) {
-            Write-Verbose "Dotnet $installed found at '$installDir' — reinstalling $Version"
+            Write-Verbose "Dotnet $ourInstalled found at '$installDir' — reinstalling $Version"
         }
         else {
-            throw "Dotnet version mismatch: expected $Version.x, found $installed at '$installDir'. Run Install-Dotnet -Force to replace."
+            throw "Dotnet version mismatch: expected $Version.x, found $ourInstalled at '$installDir'. Run Install-Dotnet -Force to replace."
         }
     }
 
     # Resolve vendored install script
     if ($IsWindows) {
-        $scriptPath = Join-Path $PSScriptRoot 'scripts' 'dotnet-install.ps1'
+        $scriptPath = Join-Path $PSScriptRoot 'assets' 'scripts' 'dotnet-install.ps1'
         Assert-PathExist $scriptPath
         Write-Message "Installing .NET SDK $Version to '$installDir'"
         & $scriptPath -Channel $Version -InstallDir $installDir -Quality ga
     }
     else {
-        $scriptPath = Join-Path $PSScriptRoot 'scripts' 'dotnet-install.sh'
+        $scriptPath = Join-Path $PSScriptRoot 'assets' 'scripts' 'dotnet-install.sh'
         Assert-PathExist $scriptPath
         Write-Message "Installing .NET SDK $Version to '$installDir'"
         Invoke-CliCommand "bash '$scriptPath' --channel $Version --install-dir $installDir --quality ga"

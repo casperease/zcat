@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Loads and caches the meta configuration from config/meta.yml.
+    Loads and caches the meta configuration from assets/config/meta.yml.
 .EXAMPLE
     $config = Get-MetaConfiguration
     $config.Customers
@@ -13,7 +13,7 @@ function Get-MetaConfiguration {
         return $script:MetaConfigCache
     }
 
-    $configPath = Join-Path $PSScriptRoot 'config/meta.yml'
+    $configPath = Join-Path $PSScriptRoot 'assets/config/meta.yml'
     Assert-PathExist $configPath
 
     $config = Get-Content $configPath -Raw | ConvertFrom-Yaml -Ordered

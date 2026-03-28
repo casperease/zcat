@@ -15,7 +15,7 @@ function Get-DevBoxStatus {
     [CmdletBinding()]
     param()
 
-    $configPath = Join-Path $PSScriptRoot 'config' 'tools.yml'
+    $configPath = Join-Path $PSScriptRoot 'assets' 'config' 'tools.yml'
     Assert-PathExist $configPath
     $allTools = Get-Content $configPath -Raw | ConvertFrom-Yaml
 
@@ -23,61 +23,13 @@ function Get-DevBoxStatus {
         $config = $allTools[$toolName]
 
         # Mirror Test-ExpectedPackageManager check order:
-        # UserInstallDir → platform-specific → pip → unknown
-        $expectedMgr = if ($config.UserInstallDir) { 'script' }
+        # ScriptInstall → platform-specific → pip → unknown
+        $expectedMgr = if ($config.ScriptInstall) { 'script' }
                        elseif ($IsWindows -and $config.WingetId) { 'winget' }
                        elseif ($IsMacOS -and $config.BrewFormula) { 'brew' }
                        elseif ($IsLinux -and $config.AptPackage) { 'apt' }
                        elseif ($config.PipPackage) { 'pip' }
                        else { 'unknown' }
-
-        # UserInstallDir tools (e.g., Dotnet) install side-by-side into their
-        # own directory. A system-wide install from VS or a package manager is
-        # irrelevant — it doesn't conflict and doesn't block our install.
-        # Check our specific install directory instead of the system PATH.
-        if ($config.UserInstallDir) {
-            $root = if ($IsWindows -and $config.WindowsInstallRoot) { $config.WindowsInstallRoot } else { $HOME }
-            $dirName = if ($IsWindows -and $config.WindowsInstallDir) { $config.WindowsInstallDir } else { $config.UserInstallDir }
-            $ourDir = Join-Path $root $dirName
-            $ourBinary = if ($IsWindows) { Join-Path $ourDir "$($config.Command).exe" } else { Join-Path $ourDir $config.Command }
-
-            if (-not (Test-Path $ourBinary)) {
-                [PSCustomObject]@{
-                    Tool      = $toolName
-                    Locked    = "$($config.Version).x"
-                    Installed = $null
-                    Status    = 'Missing'
-                    Location  = $null
-                    Manager   = $expectedMgr
-                    Scope     = $null
-                    Action    = "Run Install-$toolName"
-                }
-                continue
-            }
-
-            # Check version from our install dir specifically
-            $raw = Invoke-CliCommand "$ourBinary --version" -PassThru -NoAssert -Silent
-            $installed = $null
-            if ($raw -match $config.VersionPattern) {
-                $installed = $Matches['ver']
-            }
-
-            $versionOk = $installed -and $installed.StartsWith($config.Version)
-            $status = if ($versionOk) { 'OK' } else { 'WrongVersion' }
-            $action = if (-not $versionOk) { "Run Install-$toolName -Force" } else { $null }
-
-            [PSCustomObject]@{
-                Tool      = $toolName
-                Locked    = "$($config.Version).x"
-                Installed = $installed
-                Status    = $status
-                Location  = $ourBinary
-                Manager   = $expectedMgr
-                Scope     = 'user'
-                Action    = $action
-            }
-            continue
-        }
 
         # Tool not on PATH — nothing more to check
         if (-not (Test-Command $config.Command)) {

@@ -16,7 +16,7 @@ Describe 'Get-ToolConfig' {
         $config | Should -Not -BeNullOrEmpty
         $config.Version | Should -Not -BeNullOrEmpty
         $config.Command | Should -Be 'dotnet'
-        $config.UserInstallDir | Should -Be '.dotnet'
+        $config.ScriptInstall | Should -BeTrue
         $config.VersionCommand | Should -Not -BeNullOrEmpty
         $config.VersionPattern | Should -Not -BeNullOrEmpty
     }

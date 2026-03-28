@@ -18,14 +18,10 @@ function Test-ExpectedPackageManager {
     )
 
     # 1. Script-installed tools (e.g., Dotnet via dotnet-install scripts).
-    #    On Windows, $HOME may be OneDrive-redirected, so WindowsInstallRoot
-    #    provides a stable local path. Unix uses $HOME.
-    if ($Config.UserInstallDir) {
+    if ($Config.ScriptInstall) {
         if (-not (Test-Command $Config.Command)) { return $false }
         $location = (Get-Command $Config.Command).Source
-        $root = if ($IsWindows -and $Config.WindowsInstallRoot) { $Config.WindowsInstallRoot } else { $HOME }
-        $dirName = if ($IsWindows -and $Config.WindowsInstallDir) { $Config.WindowsInstallDir } else { $Config.UserInstallDir }
-        $expectedDir = Join-Path $root $dirName
+        $expectedDir = Get-ScriptInstallDir -Config $Config
         return $location -like "$expectedDir*"
     }
 

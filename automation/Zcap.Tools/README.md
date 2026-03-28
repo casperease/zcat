@@ -48,8 +48,7 @@ Tools prefer user-space installation to avoid admin requirements. The installati
 | `BrewFormula`         | Homebrew (macOS, always user-space).                                   |
 | `AptPackage`          | apt-get (Linux, requires root — asserted up front).                    |
 | `PipPackage`          | pip (cross-platform, user-space). Used as fallback on Windows/Linux.   |
-| `UserInstallDir`      | Vendored install script (no package manager). User-space on all platforms. |
-| `WindowsInstallRoot`  | Overrides `$HOME` as base for `UserInstallDir` on Windows (avoids OneDrive). |
+| `ScriptInstall`       | Vendored install script (no package manager). User-space on all platforms. |
 
 A tool may have multiple fields (e.g., `BrewFormula` for macOS + `PipPackage` for Windows/Linux). The most specific match for the current platform wins.
 

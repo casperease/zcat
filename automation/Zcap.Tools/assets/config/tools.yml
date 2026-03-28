@@ -15,17 +15,11 @@ Python:
 Dotnet:
   Version: "10.0"
   Command: dotnet
-  # Installed via official Microsoft dotnet-install scripts (user-space,
-  # no admin). Not using winget/brew/apt — those all require elevation.
-  # UserInstallDir tells Test-ExpectedPackageManager and Get-DevBoxStatus
-  # how to detect whether dotnet was installed by us vs by Visual Studio,
-  # system package manager, or other means.
-  # Windows: C:\tools\dotnet (WindowsInstallRoot + WindowsInstallDir).
-  #   $HOME is OneDrive/DST-redirected — unusable for binaries.
-  # Unix: ~/.dotnet (UserInstallDir under $HOME) — Microsoft convention.
-  UserInstallDir: ".dotnet"
-  WindowsInstallRoot: "C:\\tools"
-  WindowsInstallDir: "dotnet"
+  # Installed via vendored install scripts — no package manager, no admin.
+  # Install dir defaults: Windows = LOCALAPPDATA\<Command>, Unix = HOME/.<Command>.
+  # Override per platform with WindowsInstallDir / UnixInstallDir if needed.
+  ScriptInstall: true
+  WindowsInstallDir: "Microsoft\\dotnet"
   VersionCommand: "dotnet --version"
   VersionPattern: "^(?<ver>.+)$"
 

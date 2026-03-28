@@ -21,12 +21,8 @@ function Get-InstallScope {
     )
 
     # Script-installed tools (e.g., Dotnet via dotnet-install scripts).
-    # On Windows, $HOME may be OneDrive-redirected, so WindowsInstallRoot
-    # provides a stable local path (e.g., C:\tools). Unix uses $HOME.
-    if ($Config.UserInstallDir) {
-        $root = if ($IsWindows -and $Config.WindowsInstallRoot) { $Config.WindowsInstallRoot } else { $HOME }
-        $dirName = if ($IsWindows -and $Config.WindowsInstallDir) { $Config.WindowsInstallDir } else { $Config.UserInstallDir }
-        $userDir = Join-Path $root $dirName
+    if ($Config.ScriptInstall) {
+        $userDir = Get-ScriptInstallDir -Config $Config
         if ($Location -like "$userDir*") {
             return 'user'
         }
@@ -34,8 +30,8 @@ function Get-InstallScope {
     }
 
     if ($IsWindows) {
-        # User-space installs go under LOCALAPPDATA, APPDATA, or C:\tools
-        foreach ($root in @($env:LOCALAPPDATA, $env:APPDATA, 'C:\tools') | Where-Object { $_ }) {
+        # User-space installs go under LOCALAPPDATA, APPDATA, or USERPROFILE
+        foreach ($root in @($env:LOCALAPPDATA, $env:APPDATA, $env:USERPROFILE) | Where-Object { $_ }) {
             if ($Location -like "$root*") {
                 return 'user'
             }
