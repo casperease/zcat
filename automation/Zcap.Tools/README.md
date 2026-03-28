@@ -5,8 +5,8 @@ CLI tool management with version locking, idempotent installation, and cross-pla
 ## Quick start
 
 ```powershell
-Install-Tools          # install all tools at locked versions
-Install-Tools -Force   # replace wrong versions automatically
+Install-WorkstationTools          # install all tools at locked versions
+Install-WorkstationTools -Force   # replace wrong versions automatically
 ```
 
 ## Tools
@@ -53,13 +53,13 @@ A tool may have multiple fields (e.g., `BrewFormula` for macOS + `PipPackage` fo
 
 ### Scope enforcement
 
-Tools at the correct version but installed outside the expected manager are reported as `Usable` and left untouched. `Get-ToolsStatus` reports each tool's `Status`, `Manager`, and `Scope` for diagnostics.
+Tools at the correct version but installed outside the expected manager are reported as `Usable` and left untouched. `Get-WorkstationToolsStatus` reports each tool's `Status`, `Manager`, and `Scope` for diagnostics.
 
 ## Adding a new tool
 
 1. Add an entry to `assets/config/tools.yml` with version, command, platform-specific package IDs, and version detection pattern.
 2. Create `Install-<Tool>.ps1`, `Invoke-<Tool>.ps1`, `Uninstall-<Tool>.ps1`.
-3. Add to `Install-Tools`.
+3. Add to `Install-WorkstationTools`.
 4. For tools that need vendored install scripts, place them in `assets/`.
 
 ## Enterprise / air-gapped environments

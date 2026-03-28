@@ -126,7 +126,7 @@ Non-standard verbs break this workflow and hide functions from discovery.
 
 | Wrong                  | Right                              | Why                                                                     |
 | ---------------------- | ---------------------------------- | ----------------------------------------------------------------------- |
-| `Setup-Tools`          | `Install-Tools`                    | `Setup` is not an approved verb; `Install` means "place and initialize" |
+| `Setup-Tools`          | `Install-WorkstationTools`                    | `Setup` is not an approved verb; `Install` means "place and initialize" |
 | `Create-ResourceGroup` | `New-ResourceGroup`                | `Create` is not approved; `New` means "creates a resource"              |
 | `Delete-Config`        | `Remove-Config`                    | `Delete` is not approved; `Remove` means "deletes from a container"     |
 | `Run-Pipeline`         | `Invoke-Pipeline`                  | `Run` is not approved; `Invoke` means "performs an action"              |

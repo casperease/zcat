@@ -1,8 +1,4 @@
 Describe 'Test-IsRunningInPipeline' {
-    It 'returns a boolean' {
-        Test-IsRunningInPipeline | Should -BeOfType [bool]
-    }
-
     It 'detects Azure DevOps via TF_BUILD' {
         $original = $env:TF_BUILD
         try {

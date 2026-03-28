@@ -71,12 +71,12 @@ Poetry:
 Pip-based tools share install and uninstall logic through `Install-PipTool` and `Uninstall-PipTool`,
 which parallel `Install-Tool` and `Uninstall-Tool` for platform package managers.
 
-#### 4. Orchestrate with Install-Tools
+#### 4. Orchestrate with Install-WorkstationTools
 
 A single function provisions the entire local development environment:
 
 ```powershell
-function Install-Tools {
+function Install-WorkstationTools {
     Install-Python
     Install-Poetry
     Install-Dotnet
@@ -96,7 +96,7 @@ If a tool works locally, it works in CI — same config, same installer, same as
   shell: pwsh
   run: |
     . ./importer.ps1
-    Install-Tools
+    Install-WorkstationTools
 ```
 
 ## Decision
@@ -115,7 +115,7 @@ The platform works without a container runtime on Windows, macOS, and Linux.
 
 - **Declare tool dependencies in config.** If a tool requires another tool at runtime or install time, add `DependsOn` to its entry in `tools.yml`. `Assert-Tool` checks dependencies automatically.
 
-- **CI and local use the same code path.** No separate CI setup scripts. The same `Install-Tools` that runs on a developer workstation runs in the pipeline.
+- **CI and local use the same code path.** No separate CI setup scripts. The same `Install-WorkstationTools` that runs on a developer workstation runs in the pipeline.
 
 - **Do not assume tools are pre-installed.** Even on CI runners with pre-installed tools, assert the version. Runner images change without notice.
 
@@ -123,6 +123,6 @@ The platform works without a container runtime on Windows, macOS, and Linux.
 
 - Tool versions are consistent across all developers and CI environments.
 - Version upgrades are pull requests with a one-line config change.
-- New developers run `Install-Tools` once and have a working environment.
+- New developers run `Install-WorkstationTools` once and have a working environment.
 - CI pipelines are self-provisioning — they do not depend on runner image contents.
 - The platform works on bare metal, VMs, workstations, and CI runners without requiring Docker.

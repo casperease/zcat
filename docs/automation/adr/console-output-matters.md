@@ -176,5 +176,5 @@ Console output is suppressed during Pester runs so test output stays clean.
 - Users can read CI logs top-to-bottom and understand what happened without re-running.
 - Interactive sessions are clean — output is signal, not noise.
 - Copy-paste debugging works — commands are logged exactly as executed.
-- The output is the documentation. When a user runs `Install-Tools`,
+- The output is the documentation. When a user runs `Install-WorkstationTools`,
 the console tells them what was installed, at what versions, and whether it succeeded. No README needed for the happy path.

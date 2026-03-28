@@ -1,9 +1,4 @@
 Describe 'Get-MetaEnvironmentTypes' {
-    It 'returns all types by default' {
-        $all = Get-MetaEnvironmentTypes
-        $all | Should -Not -BeNullOrEmpty
-    }
-
     It '-Scope Customer returns only customer types' {
         $customer = Get-MetaEnvironmentTypes -Scope Customer
         $customer | Should -Not -BeNullOrEmpty

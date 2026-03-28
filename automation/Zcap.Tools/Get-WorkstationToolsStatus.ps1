@@ -7,11 +7,11 @@
     machine. Returns status objects for programmatic use and writes a summary.
     Idempotent — safe to run at any time, read-only.
 .EXAMPLE
-    Get-ToolsStatus
+    Get-WorkstationToolsStatus
 .EXAMPLE
-    Get-ToolsStatus | Where-Object Status -ne 'OK'
+    Get-WorkstationToolsStatus | Where-Object Status -ne 'OK'
 #>
-function Get-ToolsStatus {
+function Get-WorkstationToolsStatus {
     [CmdletBinding()]
     param()
 

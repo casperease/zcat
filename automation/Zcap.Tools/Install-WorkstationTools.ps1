@@ -9,11 +9,11 @@
 .PARAMETER Force
     Replace existing installations that are at the wrong version.
 .EXAMPLE
-    Install-Tools
+    Install-WorkstationTools
 .EXAMPLE
-    Install-Tools -Force
+    Install-WorkstationTools -Force
 #>
-function Install-Tools {
+function Install-WorkstationTools {
     [CmdletBinding()]
     param(
         [switch] $Force
@@ -24,7 +24,7 @@ function Install-Tools {
     Uninstall-Chocolatey
 
     # Report tools that work but aren't managed by us — left untouched.
-    $status = Get-ToolsStatus
+    $status = Get-WorkstationToolsStatus
     $usable = @($status | Where-Object { $_.Status -eq 'Usable' })
     foreach ($tool in $usable) {
         Write-Message "Skipping $($tool.Tool) — $($tool.Installed) already installed, not managed by tools system"

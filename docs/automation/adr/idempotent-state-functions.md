@@ -3,7 +3,7 @@
 ## Context
 
 Automation code gets re-run. Scripts crash halfway and get restarted. CI pipelines retry failed stages.
-Developers run `Install-Tools` after pulling changes even though half the tools are already installed.
+Developers run `Install-WorkstationTools` after pulling changes even though half the tools are already installed.
 A colleague runs a setup script not knowing someone already ran it on the shared build agent.
 
 If state-changing functions are not idempotent, re-runs cause one of three problems:
@@ -131,6 +131,6 @@ If a function wraps a non-idempotent external command, that should also be noted
 
 - Scripts can be safely re-run after partial failures without cleanup.
 - CI pipeline retries work without manual intervention.
-- `Install-Tools` can be run on every shell startup or after every pull without wasting time or breaking state.
+- `Install-WorkstationTools` can be run on every shell startup or after every pull without wasting time or breaking state.
 - Setup instructions simplify to "run this script" — no "but only if you haven't already" caveats.
 - Functions become more predictable: same inputs always produce the same system state, regardless of starting state.

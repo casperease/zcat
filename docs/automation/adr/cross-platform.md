@@ -97,7 +97,7 @@ Developers must be able to test locally on Windows everything that runs in CI on
   Use `-ieq` when comparing paths, or better, compare `[IO.Path]::GetFullPath()` results.
 
 - **CI and local use the same code path.** This is reinforced from [controlling-systemwide-deps](controlling-systemwide-deps.md):
-  the same `Install-Tools` and `importer.ps1` run on developer workstations and in CI pipelines.
+  the same `Install-WorkstationTools` and `importer.ps1` run on developer workstations and in CI pipelines.
   No separate scripts, no "CI-only" logic branches.
 
 ### How this is enforced
