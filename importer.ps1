@@ -12,11 +12,6 @@ if ($isConsoleSession) {
     $sw = [Diagnostics.Stopwatch]::StartNew()
 }
 
-# Bootstrap base modules
-Import-Module Microsoft.PowerShell.Management -ErrorAction SilentlyContinue
-Import-Module Microsoft.PowerShell.Security -ErrorAction SilentlyContinue
-Import-Module Microsoft.PowerShell.Utility -ErrorAction SilentlyContinue
-
 # Configuration
 $automationFolder = 'automation'
 $vendorFolder = '.vendor'
