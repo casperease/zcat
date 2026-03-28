@@ -58,12 +58,14 @@ function Install-Tool {
         Assert-Command winget
         $packageId = $config.WingetId -f $Version
 
+        # --force: winget may see a Store stub or stale alias and report "already installed"
+        # even though no real installation exists. Force ensures it always installs.
         if ($config.WingetScope -eq 'user') {
-            Invoke-CliCommand "winget install --id $packageId --scope user --accept-source-agreements --accept-package-agreements --silent"
+            Invoke-CliCommand "winget install --id $packageId --scope user --accept-source-agreements --accept-package-agreements --silent --force"
         }
         else {
             Assert-IsAdministrator -ErrorText "Install-$Tool on Windows requires Administrator (winget machine-scope). Run as Administrator or install $Tool manually."
-            Invoke-CliCommand "winget install --id $packageId --accept-source-agreements --accept-package-agreements --silent"
+            Invoke-CliCommand "winget install --id $packageId --accept-source-agreements --accept-package-agreements --silent --force"
         }
     }
     elseif ($IsMacOS) {
