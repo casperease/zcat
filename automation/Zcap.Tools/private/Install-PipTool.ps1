@@ -17,9 +17,7 @@ function Install-PipTool {
     param(
         [Parameter(Mandatory)]
         [string] $Tool,
-
         [string] $Version,
-
         [switch] $Force
     )
 

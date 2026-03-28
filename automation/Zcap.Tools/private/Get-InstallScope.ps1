@@ -15,7 +15,6 @@ function Get-InstallScope {
     param(
         [Parameter(Mandatory)]
         [hashtable] $Config,
-
         [Parameter(Mandatory)]
         [string] $Location
     )

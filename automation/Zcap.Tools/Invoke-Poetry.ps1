@@ -22,13 +22,9 @@ function Invoke-Poetry {
     param(
         [Parameter(Mandatory, Position = 0)]
         [string] $Arguments,
-
         [switch] $PassThru,
-
         [switch] $NoAssert,
-
         [switch] $Silent,
-
         [switch] $DryRun
     )
 

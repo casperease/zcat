@@ -31,22 +31,16 @@ function Connect-AzCli {
     param(
         [Parameter(ParameterSetName = 'ServicePrincipal', Mandatory)]
         [switch] $ServicePrincipal,
-
         [Parameter(ParameterSetName = 'ManagedIdentity', Mandatory)]
         [switch] $ManagedIdentity,
-
         [Parameter(ParameterSetName = 'DeviceCode', Mandatory)]
         [switch] $DeviceCode,
-
         [Parameter(ParameterSetName = 'ServicePrincipal', Mandatory)]
         [string] $Tenant,
-
         [Parameter(ParameterSetName = 'ServicePrincipal', Mandatory)]
         [string] $ClientId,
-
         [Parameter(ParameterSetName = 'ServicePrincipal', Mandatory)]
         [string] $ClientSecret,
-
         [switch] $Force
     )
 

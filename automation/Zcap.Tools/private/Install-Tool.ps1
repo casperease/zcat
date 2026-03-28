@@ -18,9 +18,7 @@ function Install-Tool {
     param(
         [Parameter(Mandatory)]
         [string] $Tool,
-
         [string] $Version,
-
         [switch] $Force
     )
 
