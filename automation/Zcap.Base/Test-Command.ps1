@@ -20,11 +20,15 @@ function Test-Command {
     $cmd = Get-Command $Command -ErrorAction Ignore
     if (-not $cmd) { return $false }
 
-    # Windows Store app execution aliases are zero-byte stubs that redirect to
+    # Windows Store app execution aliases include zero-byte stubs that redirect to
     # the Microsoft Store. They pass Get-Command but are not real installations.
+    # Real Store apps (e.g., winget.exe) also live here and must not be filtered.
     if ($IsWindows -and $cmd.Source -match 'Microsoft\\WindowsApps') {
-        Write-Verbose "Ignoring Windows Store stub: $($cmd.Source)"
-        return $false
+        $file = Get-Item $cmd.Source -ErrorAction Ignore
+        if ($file -and $file.Length -eq 0) {
+            Write-Verbose "Ignoring Windows Store stub: $($cmd.Source)"
+            return $false
+        }
     }
 
     $true
