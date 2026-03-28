@@ -40,7 +40,11 @@ function Install-Tool {
             return
         }
 
-        if ($Force) {
+        if (-not $installed) {
+            # Version unparseable (e.g., Windows Store stub) — not a real installation, skip to install
+            Write-Verbose "Could not parse version from '$location' — treating as not installed"
+        }
+        elseif ($Force) {
             Write-Verbose "$Tool $installed found at '$location' — uninstalling before installing $Version"
             Uninstall-Tool -Tool $Tool
         }
