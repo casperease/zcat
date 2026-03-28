@@ -24,13 +24,9 @@ function Uninstall-PipTool {
         return
     }
 
-    # Python required for pip uninstall. Test-Command is not enough — the
-    # Windows Store stub passes Test-Command but cannot run pip. Verify
-    # Python actually works by checking if the version command succeeds.
-    $pythonWorks = (Test-Command python) -and
-        (Invoke-CliCommand 'python --version' -PassThru -NoAssert -Silent 2>$null) -and
-        ($LASTEXITCODE -eq 0)
-    if (-not $pythonWorks) {
+    # Python required for pip uninstall. Test-Tool checks both presence
+    # and functionality — filters out Windows Store stubs.
+    if (-not (Test-Tool 'Python')) {
         Write-Message "Python is not available — pip packages already gone"
         return
     }

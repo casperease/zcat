@@ -21,8 +21,8 @@ function Uninstall-Tool {
     $config = Get-ToolConfig -Tool $Tool
     if (-not $Version) { $Version = $config.Version }
 
-    # Idempotent: skip if not installed
-    if (-not (Test-Command $config.Command)) {
+    # Idempotent: skip if not installed or not functional (e.g., Windows Store stub)
+    if (-not (Test-Tool $Tool)) {
         Write-Message "$Tool is not installed — nothing to do"
         return
     }
