@@ -1,9 +1,5 @@
 # ADR: Console output matters
 
-## Status
-
-Accepted
-
 ## Context
 
 The console is the user interface of a CLI automation platform. There is
@@ -101,7 +97,7 @@ skipped, what path was resolved. Both streams deserve thoughtful content.
 
 ### Rules for output
 
-**Log commands, not commentary.** `Write-Message` logs the exact command
+**Log commands, not commentary.** `Invoke-XyzCli` logs the exact command
 before every external invocation (see [log-before-invoke](log-before-invoke.md)).
 This is the most valuable output: it tells the user what ran, and they
 can copy-paste it to reproduce. Do not add "Now installing Poetry..."
@@ -135,12 +131,12 @@ only for information that deserves attention. Both GitHub Actions and
 Azure DevOps render ANSI colors in their log viewers, so color choices
 matter everywhere, not just in local terminals.
 
-| Color   | Meaning                                      |
-| ------- | -------------------------------------------- |
-| Red     | Errors — something failed                    |
-| Yellow  | Warnings — something needs attention         |
-| Green   | Success confirmations (use sparingly)        |
-| Cyan    | Headers and section dividers                 |
+| Color   | Meaning                                       |
+| ------- | --------------------------------------------- |
+| Red     | Errors — something failed                     |
+| Yellow  | Warnings — something needs attention          |
+| Green   | Success confirmations (use sparingly)         |
+| Cyan    | Headers and section dividers                  |
 | Default | Everything else — normal informational output |
 
 Consistent color creates a visual language the human eye learns to scan.

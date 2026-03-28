@@ -1,9 +1,5 @@
 # ADR: Fail fast with inline assertions
 
-## Status
-
-Accepted
-
 ## Context
 
 PowerShell automation code is fundamentally about side effects — creating

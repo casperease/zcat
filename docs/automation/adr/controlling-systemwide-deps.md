@@ -1,9 +1,5 @@
 # ADR: Controlling system-wide dependencies
 
-## Status
-
-Accepted
-
 ## Context
 
 Automation code depends on tools installed at the OS level — Python,

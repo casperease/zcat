@@ -1,9 +1,5 @@
 # ADR: Use `.ps1` for function files, not `.psm1`
 
-## Status
-
-Accepted
-
 ## Context
 
 We use a one-function-per-file layout with public/private separation by folder.

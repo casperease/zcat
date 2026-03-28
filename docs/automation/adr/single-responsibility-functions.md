@@ -1,9 +1,5 @@
 # ADR: Single-responsibility functions
 
-## Status
-
-Accepted
-
 ## Context
 
 PowerShell makes it easy to write functions that do too much. The language

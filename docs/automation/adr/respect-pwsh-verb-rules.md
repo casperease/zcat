@@ -1,9 +1,5 @@
 # ADR: Respect PowerShell approved verbs
 
-## Status
-
-Accepted
-
 ## Context
 
 PowerShell has a curated list of approved verbs (`Get-Verb`), organized

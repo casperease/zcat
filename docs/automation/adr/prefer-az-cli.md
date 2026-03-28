@@ -1,9 +1,5 @@
 # ADR: Prefer Az CLI over Az PowerShell modules
 
-## Status
-
-Accepted
-
 ## Context
 
 Azure operations can be performed through two official toolchains:

@@ -1,9 +1,5 @@
 # ADR: State-changing functions must be idempotent
 
-## Status
-
-Accepted
-
 ## Context
 
 Automation code gets re-run. Scripts crash halfway and get restarted. CI

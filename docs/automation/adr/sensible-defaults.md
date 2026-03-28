@@ -1,9 +1,5 @@
 # ADR: Sensible defaults for all parameters
 
-## Status
-
-Accepted
-
 ## Context
 
 Automation functions should be easy to call. If a function requires five

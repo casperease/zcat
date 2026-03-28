@@ -1,9 +1,5 @@
 # ADR: One function per file
 
-## Status
-
-Accepted
-
 ## Context
 
 We need a convention for how functions map to files within a module. The two

@@ -1,9 +1,5 @@
 # ADR: Effective in enterprise environments
 
-## Status
-
-Accepted
-
 ## Context
 
 Enterprise environments impose constraints that developer-oriented

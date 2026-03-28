@@ -1,9 +1,5 @@
 # ADR: Zero ceremony, hard to fail
 
-## Status
-
-Accepted
-
 ## Context
 
 This is the foundational design principle. Every other decision in this

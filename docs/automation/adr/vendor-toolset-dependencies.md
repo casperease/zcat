@@ -1,9 +1,5 @@
 # ADR: Vendor toolset dependencies
 
-## Status
-
-Accepted
-
 ## Context
 
 PowerShell modules from the gallery change without notice. A `2.x` version

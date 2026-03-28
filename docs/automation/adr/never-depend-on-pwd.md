@@ -1,9 +1,5 @@
 # ADR: Never depend on `$PWD`
 
-## Status
-
-Accepted
-
 ## Context
 
 PowerShell scripts often assume they are run from a specific directory —

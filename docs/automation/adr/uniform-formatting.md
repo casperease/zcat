@@ -1,9 +1,5 @@
 # ADR: Uniform formatting
 
-## Status
-
-Accepted
-
 ## Context
 
 When code formatting is inconsistent, every pull request contains two

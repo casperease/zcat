@@ -1,9 +1,5 @@
 # ADR: Log the exact command before every invocation
 
-## Status
-
-Accepted
-
 ## Context
 
 When an external command fails, the first question is always: "What

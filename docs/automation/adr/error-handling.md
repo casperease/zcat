@@ -1,9 +1,5 @@
 # ADR: Error handling — fail immediately, no warnings
 
-## Status
-
-Accepted
-
 ## Context
 
 PowerShell has a complex error handling model: terminating errors,
