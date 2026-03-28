@@ -18,7 +18,7 @@ failures that surface far from their origin.
 We simplify this to two states:
 
 1. **Everything is fine.** Execution continues. Output goes through
-   `Write-Message` and `Write-Information`.
+   `Write-Message`, `Write-Information` and `Write-Verbose`.
 2. **Something is wrong.** Execution stops immediately via `throw` or
    `Assert-*`. The error propagates to the caller with a clear message.
 
