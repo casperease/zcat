@@ -65,6 +65,9 @@ function Connect-AzCli {
         }
     }
 
+    # No post-login assertion needed — Invoke-CliCommand throws on non-zero exit
+    # codes via Assert-LastExitCodeWasZero. If az login fails, we never reach the
+    # Write-Message below.
     Write-Verbose "Authenticating via $($PSCmdlet.ParameterSetName)"
     switch ($PSCmdlet.ParameterSetName) {
         'ServicePrincipal' {

@@ -41,3 +41,11 @@ Poetry:
   PipPackage: poetry
   VersionCommand: "poetry --version"
   VersionPattern: "^Poetry \\(version (?<ver>.+)\\)$"
+
+Npm:
+  Version: "11.12"
+  Command: npm
+  # npm ships with Node.js. Install-Npm upgrades it in-place via
+  # npm install -g — no platform package manager needed.
+  VersionCommand: "npm --version"
+  VersionPattern: "^(?<ver>.+)$"

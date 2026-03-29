@@ -34,4 +34,5 @@ function Install-WorkstationTools {
     Install-Poetry
     Install-Dotnet -Force:$Force
     Install-AzCli -Force:$Force
+    Install-Npm -Force:$Force
 }

@@ -1,52 +1,69 @@
 <#
 .SYNOPSIS
-    Redirects PowerShell 7's user module path from a network share to a local directory.
+    Redirects PowerShell 7's user directory from a network share to a local path.
 .DESCRIPTION
-    Enterprise GPOs often redirect the Documents folder to a DFS/UNC share.
-    PowerShell stores user modules under Documents\PowerShell\Modules,
-    causing network scans on every module lookup, tab completion, and
-    command discovery.
+    Enterprise GPOs redirect the Documents folder to a DFS/UNC share.
+    PowerShell stores its user config, profile, and modules under
+    Documents\PowerShell, causing network scans on every module lookup.
 
-    This script writes a user-scope powershell.config.json in the PS7
-    user config directory (Documents\PowerShell, even if on DFS). PS7
-    reads this single file at startup to override the CurrentUser module
-    path. One file read is fast — the slowness comes from recursive
-    module scanning, not reading a config file.
+    This script:
+    1. Creates a local PowerShell directory at LOCALAPPDATA\PowerShell
+    2. Replaces Documents\PowerShell with a symlink to the local directory
+    3. Sets execution policy to Bypass for CurrentUser (required — both
+       DFS and symlinked profiles are treated as "remote" by RemoteSigned)
 
-    No admin required. Idempotent — safe to run repeatedly.
+    The symlink makes $PROFILE, powershell.config.json, and user modules
+    all resolve locally. No admin required. Idempotent.
 .EXAMPLE
     & 'automation\Zcap.Base\assets\Set-LocalPSModulePath.ps1'
 #>
 
-$localModulePath = Join-Path $env:LOCALAPPDATA 'PowerShell' 'Modules'
+$localPSDir = Join-Path $env:LOCALAPPDATA 'PowerShell'
+$localModulePath = Join-Path $localPSDir 'Modules'
+$networkPSDir = Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'PowerShell'
 
+# Skip if Documents is already local
+if ($networkPSDir -notmatch '^\\\\') {
+    Write-Host "Documents folder is local — no fix needed" -ForegroundColor Green
+    exit
+}
+
+# --- 1. Ensure local directory exists ---
+if (-not (Test-Path $localPSDir)) {
+    New-Item -Path $localPSDir -ItemType Directory -Force | Out-Null
+}
 if (-not (Test-Path $localModulePath)) {
     New-Item -Path $localModulePath -ItemType Directory -Force | Out-Null
 }
 
-# Use GetFolderPath, not $PROFILE — admin sessions resolve $PROFILE to a
-# different (local) path than the normal user session (DFS).
-$userConfigDir = Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'PowerShell'
-if (-not (Test-Path $userConfigDir)) {
-    New-Item -Path $userConfigDir -ItemType Directory -Force | Out-Null
-}
-$userConfigFile = Join-Path $userConfigDir 'powershell.config.json'
+# --- 2. Symlink Documents\PowerShell → local ---
+$item = Get-Item $networkPSDir -Force -ErrorAction Ignore
+$alreadySymlinked = $item -and $item.Attributes.HasFlag([IO.FileAttributes]::ReparsePoint)
 
-if (Test-Path $userConfigFile) {
-    $userConfig = Get-Content $userConfigFile -Raw | ConvertFrom-Json
+if ($alreadySymlinked) {
+    Write-Host "Symlink already exists: $networkPSDir -> $($item.Target)" -ForegroundColor Green
 }
 else {
-    $userConfig = [PSCustomObject]@{}
+    if (Test-Path $networkPSDir) {
+        Write-Host "Cannot create symlink — '$networkPSDir' already exists on DFS." -ForegroundColor Yellow
+        Write-Host "Move or delete it, then rerun this script." -ForegroundColor Yellow
+        exit
+    }
+
+    New-Item -ItemType SymbolicLink -Path $networkPSDir -Target $localPSDir | Out-Null
+    Write-Host "Symlink created: $networkPSDir -> $localPSDir" -ForegroundColor Green
 }
 
-if ($userConfig.PSModulePath -ne $localModulePath) {
-    $userConfig | Add-Member -NotePropertyName 'PSModulePath' -NotePropertyValue $localModulePath -Force
-    $userConfig | ConvertTo-Json -Depth 10 | Set-Content $userConfigFile -Encoding UTF8
-    Write-Host "PSModulePath set to '$localModulePath'" -ForegroundColor Green
-    Write-Host "  Config: $userConfigFile" -ForegroundColor Gray
+# --- 3. Execution policy ---
+# Both DFS-hosted and symlinked profiles are treated as "remote" by
+# RemoteSigned. Bypass at CurrentUser scope allows the profile to load.
+$currentPolicy = Get-ExecutionPolicy -Scope CurrentUser
+if ($currentPolicy -ne 'Bypass') {
+    Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy Bypass -Force
+    Write-Host "Execution policy set to Bypass (CurrentUser)" -ForegroundColor Green
 }
 else {
-    Write-Host "PSModulePath already configured" -ForegroundColor Green
+    Write-Host "Execution policy already Bypass" -ForegroundColor Green
 }
 
 Write-Host ''
