@@ -82,7 +82,9 @@ if ($isConsoleSession) {
     # Wrap the existing prompt with error display logic. Preserves custom prompts
     # (Oh My Posh, Starship, user-defined) while adding stack traces for errors
     # from our modules.
-    $global:__OriginalPrompt = (Get-Command prompt).ScriptBlock
+    if (-not (Test-Path variable:global:__OriginalPrompt)) {
+        $global:__OriginalPrompt = (Get-Command prompt).ScriptBlock
+    }
     function global:prompt {
         # The prompt must never throw — a crashing prompt destroys the console session.
         if (-not $? -and $global:Error.Count -gt 0) {

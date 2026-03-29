@@ -9,52 +9,55 @@ function New-DynamicManifest {
 
     $moduleName = Split-Path $ModulePath -Leaf
     $manifestPath = Join-Path $ModulePath "$moduleName.psd1"
+    $pathPrefixLength = $ModulePath.Length + 1
 
-    # Collect public .ps1 files (root level) — file name = function name
-    $publicFiles = Get-ChildItem -Path $ModulePath -Filter '*.ps1' -File -ErrorAction SilentlyContinue |
-    Where-Object { $_.Name -notlike '*.Tests.ps1' }
+    # Collect public .ps1 files (root level) — .NET API avoids Get-ChildItem pipeline overhead
+    $publicFiles = @(foreach ($f in [System.IO.Directory]::EnumerateFiles($ModulePath, '*.ps1')) {
+        if (-not [System.IO.Path]::GetFileName($f).EndsWith('.Tests.ps1', [System.StringComparison]::OrdinalIgnoreCase)) {
+            $f
+        }
+    })
 
     # Collect private .ps1 files (private subfolder)
     $privatePath = Join-Path $ModulePath 'private'
-    $privateFiles = @()
-    if (Test-Path $privatePath) {
-        $privateFiles = Get-ChildItem -Path $privatePath -Filter '*.ps1' -File -ErrorAction SilentlyContinue
-    }
+    $privateFiles = @(
+        if ([System.IO.Directory]::Exists($privatePath)) {
+            [System.IO.Directory]::GetFiles($privatePath, '*.ps1')
+        }
+    )
 
-    # Private first so they're in scope before public functions load
-    $allFiles = @($privateFiles) + @($publicFiles) | Where-Object { $_ }
-
-    if ($allFiles.Count -eq 0) {
+    if ($publicFiles.Count -eq 0 -and $privateFiles.Count -eq 0) {
         Write-Verbose "No .ps1 files found in '$ModulePath'"
         return $null
     }
 
+    # Private first so they're in scope before public functions load
+    $allFiles = $privateFiles + $publicFiles
+
     # .ps1 files in NestedModules run in the module's session state (shared scope)
-    $nestedModules = $allFiles | ForEach-Object {
-        $_.FullName.Substring($ModulePath.Length + 1)
-    }
+    $nestedEntries = foreach ($f in $allFiles) { "'{0}'" -f $f.Substring($pathPrefixLength) }
+    $nestedList = $nestedEntries -join ', '
 
     # Export public functions (or all if ExportPrivates)
-    $exportedFunctions = if ($ExportPrivates) {
-        '*'
-    } else {
-        $publicFiles | ForEach-Object { $_.BaseName }
+    $exportList = if ($ExportPrivates) {
+        "'*'"
+    }
+    else {
+        $names = foreach ($f in $publicFiles) { "'{0}'" -f [System.IO.Path]::GetFileNameWithoutExtension($f) }
+        $names -join ', '
     }
 
-    # Generate the psd1 manifest — manifest-only, no loader needed
-    $manifestParams = @{
-        Path              = $manifestPath
-        RootModule        = ''
-        ModuleVersion     = '0.1.0'
-        PowerShellVersion = '7.4'
-        NestedModules     = $nestedModules
-        FunctionsToExport = $exportedFunctions
-        CmdletsToExport   = @()
-        VariablesToExport = @()
-        AliasesToExport   = '*'
-    }
-
-    New-ModuleManifest @manifestParams
+    # Write minimal .psd1 directly — avoids New-ModuleManifest cmdlet overhead
+    [System.IO.File]::WriteAllText($manifestPath, "@{
+    RootModule        = ''
+    ModuleVersion     = '0.1.0'
+    PowerShellVersion = '7.4'
+    NestedModules     = @($nestedList)
+    FunctionsToExport = @($exportList)
+    CmdletsToExport   = @()
+    VariablesToExport = @()
+    AliasesToExport   = @('*')
+}")
     return $manifestPath
 }
 
@@ -84,22 +87,19 @@ function Import-AllModules {
         Remove-Module $_.Name -Force -ErrorAction SilentlyContinue
     }
 
-    # Clean up stale .psd1 manifests from previous runs
-    Get-ChildItem -Path $ModulesRoot -Directory |
-    Where-Object { $_.Name -notmatch '^\.' } |
-    ForEach-Object {
-        $stalePsd1 = Join-Path $_.FullName "$($_.Name).psd1"
-        if (Test-Path $stalePsd1) {
-            Remove-Item $stalePsd1 -Force
-        }
-    }
-
     foreach ($dir in $moduleDirs) {
         $manifestPath = New-DynamicManifest -ModulePath $dir.FullName -ExportPrivates:$ExportPrivates
 
         if ($manifestPath) {
             Write-Verbose "Importing module: $($dir.Name)"
             Import-Module $manifestPath -Scope Global -Force
+        }
+        else {
+            # Clean up stale .psd1 if module dir became empty
+            $stalePsd1 = Join-Path $dir.FullName "$($dir.Name).psd1"
+            if ([System.IO.File]::Exists($stalePsd1)) {
+                [System.IO.File]::Delete($stalePsd1)
+            }
         }
     }
 }
@@ -120,11 +120,12 @@ function Import-VendorModules {
         [string[]]$Lazy = @()
     )
 
-    if (-not (Test-Path $VendorRoot)) {
+    if (-not [System.IO.Directory]::Exists($VendorRoot)) {
         Write-Verbose "No vendor folder at '$VendorRoot' — skipping"
         return
     }
 
+    $sep = [System.IO.Path]::PathSeparator
     $vendorDirs = Get-ChildItem -Path $VendorRoot -Directory
 
     foreach ($dir in $vendorDirs) {
@@ -155,11 +156,9 @@ function Import-VendorModules {
 
         # Remove system paths for this module from PSModulePath so auto-loading
         # cannot resurrect the system version after we import the vendored one
-        $sep = [System.IO.Path]::PathSeparator
         $env:PSModulePath = ($env:PSModulePath -split $sep |
             Where-Object {
-                $candidate = Join-Path $_ $dir.Name
-                -not (Test-Path $candidate -ErrorAction SilentlyContinue)
+                -not [System.IO.Directory]::Exists((Join-Path $_ $dir.Name))
             }) -join $sep
 
         Write-Verbose "Importing vendor module: $($dir.Name)"
@@ -180,7 +179,6 @@ function Import-VendorModules {
 
     # Prepend vendor root to PSModulePath so lazy (deferred) modules can autoload
     if ($Lazy.Count -gt 0) {
-        $sep = [System.IO.Path]::PathSeparator
         if ($env:PSModulePath -split $sep -notcontains $VendorRoot) {
             $env:PSModulePath = $VendorRoot + $sep + $env:PSModulePath
         }
