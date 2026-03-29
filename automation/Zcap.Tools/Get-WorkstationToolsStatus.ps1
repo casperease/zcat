@@ -69,11 +69,17 @@ function Get-WorkstationToolsStatus {
             # Right version, right manager — scope doesn't matter. If winget
             # installed Python machine-wide, it works and we control it.
             $status = 'OK'
+            $action = 'None'
         }
         elseif ($versionOk) {
             # Right version but installed outside our manager — usable as-is
             $status = 'Usable'
-            $action = "Works, but not managed by $expectedMgr. Recommend: uninstall from '$location', then Install-$toolName"
+            $hasRemove = [bool](Get-Command "Remove-$toolName" -ErrorAction SilentlyContinue)
+            $action = if ($hasRemove) {
+                "Works, but not managed by $expectedMgr. To migrate: Remove-$toolName -Force (destructive — deletes '$location'), then Install-$toolName"
+            } else {
+                "Works, but not managed by $expectedMgr. Recommend: uninstall from '$location', then Install-$toolName"
+            }
         }
         elseif ($managedByExpected) {
             # Wrong version but our manager controls it — easy fix
@@ -85,7 +91,12 @@ function Get-WorkstationToolsStatus {
             # $expectedMgr would succeed but the existing binary on Machine PATH
             # would shadow it — the user would still run the old version.
             $status = 'WrongVersion'
-            $action = "Installed outside $expectedMgr at '$location' — this binary shadows any new install. Uninstall it first, then Install-$toolName"
+            $hasRemove = [bool](Get-Command "Remove-$toolName" -ErrorAction SilentlyContinue)
+            $action = if ($hasRemove) {
+                "Shadows any new install. Run Remove-$toolName -Force (destructive — deletes '$location' and cleans PATH), then Install-$toolName"
+            } else {
+                "Installed outside $expectedMgr at '$location' — this binary shadows any new install. Uninstall it first, then Install-$toolName"
+            }
         }
 
         [PSCustomObject]@{

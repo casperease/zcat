@@ -45,7 +45,7 @@ Poetry:
 NodeJs:
   Version: "22"
   Command: node
-  WingetId: "OpenJS.NodeJS.LTS"
+  WingetId: "OpenJS.NodeJS.{0}"
   WingetScope: user
   BrewFormula: "node@{0}"
   AptPackage: "nodejs"
