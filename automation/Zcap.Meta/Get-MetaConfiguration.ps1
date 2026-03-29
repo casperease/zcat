@@ -9,8 +9,8 @@ function Get-MetaConfiguration {
     [CmdletBinding()]
     param()
 
-    if ($script:MetaConfigCache) {
-        return $script:MetaConfigCache
+    if ($script:metaConfigCache) {
+        return $script:metaConfigCache
     }
 
     $configPath = Join-Path $PSScriptRoot 'assets/config/meta.yml'
@@ -20,6 +20,6 @@ function Get-MetaConfiguration {
     Assert-MetaConfiguration $config
 
     Write-Verbose "Loading meta configuration from: $configPath"
-    $script:MetaConfigCache = $config
-    $script:MetaConfigCache
+    $script:metaConfigCache = $config
+    $script:metaConfigCache
 }

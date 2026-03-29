@@ -14,11 +14,11 @@ function Assert-ToolVersion {
         [string] $Tool
     )
 
-    if (-not $script:ToolVersionCache) {
-        $script:ToolVersionCache = @{}
+    if (-not $script:toolVersionCache) {
+        $script:toolVersionCache = @{}
     }
 
-    if ($script:ToolVersionCache[$Tool]) {
+    if ($script:toolVersionCache[$Tool]) {
         Write-Verbose "Version check cached for $Tool — skipping"
         return
     }
@@ -38,5 +38,5 @@ function Assert-ToolVersion {
     }
 
     Write-Verbose "$Tool version $installed verified"
-    $script:ToolVersionCache[$Tool] = $true
+    $script:toolVersionCache[$Tool] = $true
 }

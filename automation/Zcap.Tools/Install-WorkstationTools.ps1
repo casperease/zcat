@@ -33,6 +33,6 @@ function Install-WorkstationTools {
     Install-Python -Force:$Force
     Install-Poetry
     Install-Dotnet -Force:$Force
+    Install-NodeJs -Force:$Force
     Install-AzCli -Force:$Force
-    Install-Npm -Force:$Force
 }

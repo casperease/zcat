@@ -13,7 +13,7 @@ function Uninstall-WorkstationTools {
 
     # Reverse of Install-WorkstationTools order. AzCli and Poetry use pip (which
     # needs Python), so uninstall them before Python.
-    Uninstall-Npm
+    Uninstall-NodeJs
     Uninstall-AzCli
     Uninstall-Poetry
     Uninstall-Dotnet

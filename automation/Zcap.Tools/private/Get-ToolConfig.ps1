@@ -16,16 +16,16 @@ function Get-ToolConfig {
         [string] $Tool
     )
 
-    if (-not $script:ToolConfigCache) {
+    if (-not $script:toolConfigCache) {
         $configPath = Join-Path $PSScriptRoot '../assets/config/tools.yml'
         Assert-PathExist $configPath
         Write-Verbose "Loading tool config from: $configPath"
-        $script:ToolConfigCache = Get-Content $configPath -Raw | ConvertFrom-Yaml
+        $script:toolConfigCache = Get-Content $configPath -Raw | ConvertFrom-Yaml
     }
 
-    $config = $script:ToolConfigCache[$Tool]
+    $config = $script:toolConfigCache[$Tool]
     if (-not $config) {
-        throw "Unknown tool '$Tool'. Known tools: $($script:ToolConfigCache.Keys -join ', ')"
+        throw "Unknown tool '$Tool'. Known tools: $($script:toolConfigCache.Keys -join ', ')"
     }
 
     $config

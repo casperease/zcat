@@ -2,13 +2,13 @@
 .SYNOPSIS
     Custom PSScriptAnalyzer rule: enforce variable casing conventions.
 .DESCRIPTION
-    PascalCase: parameters, $script:, $global: scoped variables.
-    camelCase: local (unscoped) variables.
+    PascalCase: parameters, $global: scoped variables.
+    camelCase: local (unscoped), $script:, and $private: scoped variables.
     Scriptblock params and automatic variables are skipped.
 #>
 
 # Automatic / preference / well-known variables that should not be flagged
-$script:SkipVariables = [System.Collections.Generic.HashSet[string]]::new(
+$script:skipVariables = [System.Collections.Generic.HashSet[string]]::new(
     [string[]]@(
         '_', 'PSItem', 'this', 'null', 'true', 'false',
         'PSCmdlet', 'PSBoundParameters', 'MyInvocation', 'ExecutionContext',
@@ -81,13 +81,13 @@ function Measure-VariableCasing {
 
         # In test files, $script: is Pester's way of sharing state between It blocks — treat as local
         $isTestFile = $ScriptBlockAst.Extent.File -like '*.Tests.ps1'
-        $isScoped = -not $isTestFile -and ($varPath.IsScript -or $varPath.IsGlobal -or $varPath.IsPrivate)
+        $isScoped = -not $isTestFile -and $varPath.IsGlobal
 
         $name = $varPath.UserPath
         # Strip scope prefix for the casing check (script:Foo → Foo)
         if ($name -match '^(script|global|private):(.+)$') { $name = $Matches[2] }
         if ($paramNames.Contains($name)) { continue }
-        if ($script:SkipVariables.Contains($name)) { continue }
+        if ($script:skipVariables.Contains($name)) { continue }
 
         if ($isScoped) {
             # Scoped variables ($script:, $global:) must start uppercase (PascalCase)

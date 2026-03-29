@@ -31,7 +31,7 @@ function Invoke-Npm {
     Assert-NotNullOrWhitespace $Arguments -ErrorText 'Arguments cannot be empty'
 
     if (-not $DryRun) {
-        Assert-Tool 'Npm'
+        Assert-Tool 'NodeJs'
     }
 
     Invoke-CliCommand "npm $Arguments" -PassThru:$PassThru -NoAssert:$NoAssert -Silent:$Silent -DryRun:$DryRun
