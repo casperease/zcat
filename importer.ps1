@@ -2,7 +2,8 @@
 param(
     [switch] $ExportPrivates,
     [switch] $AllowWarnings,
-    [switch] $IncludeWindowsPowerShell
+    [switch] $IncludeWindowsPowerShell,
+    [switch] $DiagnoseLoadTime
 )
 
 # Detect if running in a direct console session or from a script
@@ -10,6 +11,14 @@ $isConsoleSession = -not $MyInvocation.ScriptName
 
 if ($isConsoleSession) {
     $sw = [Diagnostics.Stopwatch]::StartNew()
+}
+
+if ($DiagnoseLoadTime) {
+    $script:diagSw = [Diagnostics.Stopwatch]::StartNew()
+    function script:Write-LoadTime ([string] $Step) {
+        Write-Host ("{0,6}ms  {1}" -f [int]$script:diagSw.Elapsed.TotalMilliseconds, $Step) -ForegroundColor DarkGray
+        $script:diagSw.Restart()
+    }
 }
 
 # Configuration
@@ -29,16 +38,19 @@ Write-Verbose "RepositoryRoot set to: $($env:RepositoryRoot)"
 $resolverModule = Join-Path $PSScriptRoot "$automationFolder/.resolver/Resolver.psm1"
 Write-Verbose "Loading resolver from: $resolverModule"
 Import-Module $resolverModule -Scope Global -Force
+if ($DiagnoseLoadTime) { Write-LoadTime 'Resolver loaded' }
 
 # Load vendored dependencies first
 $vendorRoot = Join-Path $PSScriptRoot "$automationFolder/$vendorFolder"
 Write-Verbose "Loading vendor modules from: $vendorRoot"
 Import-VendorModules -VendorRoot $vendorRoot -Lazy 'Pester', 'PSScriptAnalyzer'
+if ($DiagnoseLoadTime) { Write-LoadTime 'Vendor modules loaded' }
 
 # Discover and import all modules
 $modulesRoot = Join-Path $PSScriptRoot $automationFolder
 Write-Verbose "Discovering modules in: $modulesRoot"
 Import-AllModules -ModulesRoot $modulesRoot -ExportPrivates:$ExportPrivates
+if ($DiagnoseLoadTime) { Write-LoadTime 'All modules loaded' }
 
 # Clean up resolver — it has served its purpose
 Write-Verbose 'Removing Resolver module'
