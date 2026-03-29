@@ -14,10 +14,10 @@ if ($isConsoleSession) {
 }
 
 if ($DiagnoseLoadTime) {
-    $script:diagSw = [Diagnostics.Stopwatch]::StartNew()
+    $script:DiagSw = [Diagnostics.Stopwatch]::StartNew()
     function script:Write-LoadTime ([string] $Step) {
-        Write-Host ("{0,6}ms  {1}" -f [int]$script:diagSw.Elapsed.TotalMilliseconds, $Step) -ForegroundColor DarkGray
-        $script:diagSw.Restart()
+        Write-Host ("{0,6}ms  {1}" -f [int]$script:DiagSw.Elapsed.TotalMilliseconds, $Step) -ForegroundColor DarkGray
+        $script:DiagSw.Restart()
     }
 }
 
@@ -56,10 +56,9 @@ if ($DiagnoseLoadTime) { Write-LoadTime 'All modules loaded' }
 Write-Verbose 'Removing Resolver module'
 Remove-Module Resolver -Force -ErrorAction SilentlyContinue
 
-# Warn if the default user module path points to a network share. This causes
-# PS7 to scan the network during internal PSModulePath reconstruction (WinCompat,
-# auto-loading) even after our runtime strip. The permanent fix is a one-time
-# admin script that redirects the PS7 user module path to a local directory.
+# Warn if PSModulePath contains a network share. The permanent fix is a one-time
+# script that writes a local PSModulePath to the user-scope powershell.config.json.
+# See: automation/Zcap.Base/assets/README.md
 if ($IsWindows) {
     $hasUncModulePath = ($env:PSModulePath -split [IO.Path]::PathSeparator) -match '^\\\\' | Select-Object -First 1
 
@@ -80,8 +79,10 @@ Set-StrictMode -Version Latest
 # Console session: prompt hook and load timer.
 # In scripts, authors add `trap { Write-Exception $_; break }` after the importer.
 if ($isConsoleSession) {
-    # Default ConciseView handles external errors natively. The prompt hook adds
-    # Write-Exception with full stack trace for errors from our modules only.
+    # Wrap the existing prompt with error display logic. Preserves custom prompts
+    # (Oh My Posh, Starship, user-defined) while adding stack traces for errors
+    # from our modules.
+    $global:__OriginalPrompt = (Get-Command prompt).ScriptBlock
     function global:prompt {
         # The prompt must never throw — a crashing prompt destroys the console session.
         if (-not $? -and $global:Error.Count -gt 0) {
@@ -115,7 +116,7 @@ if ($isConsoleSession) {
                 try { Write-Host $global:Error[0].Message -ForegroundColor Red } catch { }
             }
         }
-        "PS $($executionContext.SessionState.Path.CurrentLocation)> "
+        & $global:__OriginalPrompt
     }
 
     if (Get-Command Write-Message -ErrorAction Ignore) {
