@@ -36,6 +36,18 @@ The `$PROFILE` and config file remain on DFS — that's fine. PS7 hardcodes thei
 
 Single file reads are fast; the performance problem is exclusively from recursive module directory scanning.
 
+## Migrating existing modules
+
+After running the script, any previously installed user modules are still on DFS at `Documents\PowerShell\Modules`. PS7 no longer looks there — it uses the local path. Move them manually:
+
+```powershell
+$dfs = Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'PowerShell\Modules\*'
+$local = Join-Path $env:LOCALAPPDATA 'PowerShell\Modules'
+Move-Item $dfs $local -Force
+```
+
+The script detects leftover modules on DFS and prints the move command.
+
 ## Detection
 
 The importer (`importer.ps1`) checks `$env:PSModulePath` for UNC paths at startup and displays a warning with instructions if found.

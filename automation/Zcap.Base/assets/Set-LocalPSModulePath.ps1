@@ -49,5 +49,14 @@ else {
     Write-Host "PSModulePath already configured" -ForegroundColor Green
 }
 
+# --- Check for modules left on DFS that should be moved ---
+$dfsModulePath = Join-Path $userConfigDir 'Modules'
+if ((Test-Path $dfsModulePath) -and (Get-ChildItem $dfsModulePath -Directory -ErrorAction Ignore)) {
+    Write-Host ''
+    Write-Host "You have modules at '$dfsModulePath' (DFS)." -ForegroundColor Yellow
+    Write-Host "Move them to the new local path to avoid stale copies:" -ForegroundColor Yellow
+    Write-Host "  Move-Item '$dfsModulePath\*' '$localModulePath' -Force" -ForegroundColor Cyan
+}
+
 Write-Host ''
 Write-Host 'Restart PowerShell for changes to take effect.' -ForegroundColor Cyan
