@@ -7,6 +7,7 @@
         'automation/.scriptanalyzer/FunctionLength.psm1'
         'automation/.scriptanalyzer/NoWriteErrorOrWarning.psm1'
         'automation/.scriptanalyzer/NoAzModuleNaming.psm1'
+        'automation/.scriptanalyzer/NoAutomaticVariableMisuse.psm1'
     )
 
     ExcludeRules = @(

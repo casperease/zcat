@@ -86,6 +86,9 @@ if ($isConsoleSession) {
         $global:__OriginalPrompt = (Get-Command prompt).ScriptBlock
     }
     function global:prompt {
+        # Prompt runs immediately after every command — $? is always fresh here.
+        [Diagnostics.CodeAnalysis.SuppressMessageAttribute('Measure-NoAutomaticVariableMisuse', '')]
+        param()
         # The prompt must never throw — a crashing prompt destroys the console session.
         if (-not $? -and $global:Error.Count -gt 0) {
             try {
