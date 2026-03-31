@@ -30,9 +30,17 @@ function Install-WorkstationTools {
         Write-Message "Skipping $($tool.Tool) — $($tool.Installed) already installed, not managed by tools system"
     }
 
+    # Foundation tools (no dependencies)
     Install-Python -Force:$Force
-    Install-Poetry
+    Install-Java -Force:$Force
     Install-Dotnet -Force:$Force
     Install-NodeJs -Force:$Force
+
+    # Pip-based tools (need Python)
+    Install-Poetry
     Install-AzCli -Force:$Force
+    Install-PySpark
+
+    # Standalone CLI tools
+    Install-Terraform -Force:$Force
 }

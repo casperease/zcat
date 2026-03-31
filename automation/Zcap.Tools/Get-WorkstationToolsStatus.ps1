@@ -19,6 +19,46 @@ function Get-WorkstationToolsStatus {
     Assert-PathExist $configPath
     $allTools = Get-Content $configPath -Raw | ConvertFrom-Yaml
 
+    Write-Message 'Getting status of tools'
+
+    # --- Batch slow operations up front ---
+
+    # Single winget list call instead of one per tool (~3s saved per winget tool).
+    $wingetCache = $null
+    if ($IsWindows -and (Test-Command winget)) {
+        $wingetResult = Invoke-CliCommand 'winget list --accept-source-agreements --disable-interactivity' -PassThru -NoAssert -Silent
+        $wingetCache = $wingetResult.Full
+    }
+
+    # Parallel version probes — each spawns a subprocess, so run them concurrently.
+    # Only probe tools that are on PATH (missing tools skip the version check).
+    $versionJobs = @{}
+    foreach ($toolName in $allTools.Keys) {
+        $config = $allTools[$toolName]
+        if (Test-Command $config.Command) {
+            $cmd = $config.VersionCommand
+            $versionJobs[$toolName] = Start-ThreadJob -ScriptBlock {
+                $ErrorActionPreference = 'Continue'
+                Invoke-Expression "$using:cmd 2>&1"
+            }
+        }
+    }
+
+    # Collect all version probe results (blocks until all complete).
+    $versionResults = @{}
+    foreach ($toolName in $versionJobs.Keys) {
+        $config = $allTools[$toolName]
+        $output = $versionJobs[$toolName] | Receive-Job -Wait -AutoRemoveJob
+        $full = ($output | ForEach-Object {
+            if ($_ -is [System.Management.Automation.ErrorRecord]) { $_.Exception.Message } else { [string]$_ }
+        }) -join [Environment]::NewLine
+        if ($full -match $config.VersionPattern) {
+            $versionResults[$toolName] = $Matches['ver']
+        }
+    }
+
+    # --- Per-tool status (now fast — no subprocesses) ---
+
     $results = foreach ($toolName in $allTools.Keys) {
         $config = $allTools[$toolName]
 
@@ -47,18 +87,10 @@ function Get-WorkstationToolsStatus {
         }
 
         $location = (Get-Command $config.Command).Source
-
-        # Parse installed version
-        $installed = $null
-        # -NoAssert: non-zero exit means version unavailable — reported as status, not error
-        # Stderr suppressed: version probes can trigger noisy output (Store stubs, launcher errors)
-        $raw = Invoke-CliCommand $config.VersionCommand -PassThru -NoAssert -Silent 2>$null
-        if ($raw -match $config.VersionPattern) {
-            $installed = $Matches['ver']
-        }
+        $installed = $versionResults[$toolName]
 
         $versionOk = $installed -and $installed.StartsWith($config.Version)
-        $managedByExpected = Test-ExpectedPackageManager -Config $config
+        $managedByExpected = Test-ExpectedPackageManager -Config $config -WingetListCache $wingetCache
         $manager = if ($managedByExpected) { $expectedMgr } else { 'other' }
         $scope = Get-InstallScope -Config $config -Location $location
 

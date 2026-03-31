@@ -11,11 +11,14 @@ function Uninstall-WorkstationTools {
     [CmdletBinding()]
     param()
 
-    # Reverse of Install-WorkstationTools order. AzCli and Poetry use pip (which
-    # needs Python), so uninstall them before Python.
+    # Reverse of Install-WorkstationTools order. Pip tools need Python,
+    # so uninstall them before Python/Java.
+    Uninstall-Terraform
+    Uninstall-PySpark
     Uninstall-NodeJs
     Uninstall-AzCli
     Uninstall-Poetry
     Uninstall-Dotnet
+    Uninstall-Java
     Uninstall-Python
 }

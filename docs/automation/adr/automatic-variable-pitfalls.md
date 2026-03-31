@@ -73,15 +73,19 @@ Invoke-CliCommand 'az account show --output json'
 # At this point $LASTEXITCODE is cleared — no stale state can leak
 ```
 
-**When you must check `$LASTEXITCODE` directly** (e.g., with `-NoAssert` for expected non-zero exits):
+**When you need the exit code with `-NoAssert`** (e.g., for expected non-zero exits):
+
+`Invoke-CliCommand -PassThru` returns a `Zcap.CliResult` object with an `ExitCode` property.
+This eliminates the need to touch `$LASTEXITCODE` directly:
 
 ```powershell
-# Correct — check immediately after the call that set it
-$raw = Invoke-CliCommand 'az account show --output json' -PassThru -NoAssert -Silent
-if ($LASTEXITCODE -ne 0 -or -not $raw) {
+# Correct — use the result object's ExitCode property
+$result = Invoke-CliCommand 'az account show --output json' -PassThru -NoAssert -Silent
+if ($result.ExitCode -ne 0 -or -not $result.Output) {
     Write-Message 'Not logged in — nothing to do'
     return
 }
+$account = $result.Output | ConvertFrom-Json
 ```
 
 **Pipeline trap — cmdlets mask native exit state:**
@@ -106,14 +110,9 @@ Assert-Success   # passes even when az exited non-zero
 `$LASTEXITCODE` _is_ still set correctly by the native call, but code that checks `$?` (or an `Assert-Success` that checks `$?`) will never see the failure.
 
 ```powershell
-# Correct — use Invoke-CliCommand, which checks $LASTEXITCODE internally
-$myvar = Invoke-CliCommand 'az account show --output json' -PassThru | ConvertFrom-Json
-```
-
-```powershell
-# Also correct — split the pipeline so nothing sits between the native call and the check
-$raw = Invoke-CliCommand 'az account show --output json' -PassThru
-$myvar = $raw | ConvertFrom-Json
+# Correct — use Invoke-CliCommand -PassThru, then parse the result
+$result = Invoke-CliCommand 'az account show --output json' -PassThru
+$myvar = $result.Output | ConvertFrom-Json
 ```
 
 **Rules:**

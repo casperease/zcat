@@ -8,7 +8,7 @@
 .PARAMETER Arguments
     Arguments to pass to pip.
 .PARAMETER PassThru
-    Capture and return the output.
+    Return a Zcap.CliResult object with Output, Errors, Full, and ExitCode.
 .PARAMETER NoAssert
     Skip exit code assertion.
 .PARAMETER DryRun

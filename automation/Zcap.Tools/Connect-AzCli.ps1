@@ -49,9 +49,9 @@ function Connect-AzCli {
     # Idempotent: skip if already logged in with the correct identity
     # -NoAssert: non-zero exit means "not logged in" — an expected state, not an error
     if (-not $Force) {
-        $raw = Invoke-CliCommand 'az account show --output json' -PassThru -NoAssert -Silent
-        if ($LASTEXITCODE -eq 0 -and $raw) {
-            $account = $raw | ConvertFrom-Json
+        $result = Invoke-CliCommand 'az account show --output json' -PassThru -NoAssert -Silent
+        if ($result.ExitCode -eq 0 -and $result.Output) {
+            $account = $result.Output | ConvertFrom-Json
             $alreadyCorrect = switch ($PSCmdlet.ParameterSetName) {
                 'ServicePrincipal' {
                     $account.tenantId -eq $Tenant -and $account.user.name -eq $ClientId

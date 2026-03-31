@@ -1,11 +1,12 @@
 <#
 .SYNOPSIS
-    Runs python with the given arguments.
+    Runs pyspark with the given arguments.
 .DESCRIPTION
-    Asserts that the installed Python version matches the locked version
-    in Get-ToolConfig before executing the command.
+    Asserts that the installed PySpark version matches the locked version
+    in Get-ToolConfig before executing the command. Also asserts Java
+    is available (DependsOn in tools.yml).
 .PARAMETER Arguments
-    Arguments to pass to python.
+    Arguments to pass to pyspark.
 .PARAMETER PassThru
     Return a Zcap.CliResult object with Output, Errors, Full, and ExitCode.
 .PARAMETER NoAssert
@@ -15,11 +16,11 @@
 .PARAMETER DryRun
     Return the command string without executing. Used for testing.
 .EXAMPLE
-    Invoke-Python '--version'
+    Invoke-PySpark '--version'
 .EXAMPLE
-    Invoke-Python '--version' -DryRun
+    Invoke-PySpark '--version' -DryRun
 #>
-function Invoke-Python {
+function Invoke-PySpark {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory, Position = 0)]
@@ -30,11 +31,9 @@ function Invoke-Python {
         [switch] $DryRun
     )
 
-    Assert-NotNullOrWhitespace $Arguments -ErrorText 'Arguments cannot be empty — Python would enter interactive mode'
-
     if (-not $DryRun) {
-        Assert-Tool 'Python'
+        Assert-Tool 'PySpark'
     }
 
-    Invoke-CliCommand "python $Arguments" -PassThru:$PassThru -NoAssert:$NoAssert -Silent:$Silent -DryRun:$DryRun
+    Invoke-CliCommand "pyspark $Arguments" -PassThru:$PassThru -NoAssert:$NoAssert -Silent:$Silent -DryRun:$DryRun
 }

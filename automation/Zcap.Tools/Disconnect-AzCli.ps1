@@ -14,13 +14,12 @@ function Disconnect-AzCli {
 
     # Idempotent: skip if not logged in
     # -NoAssert: non-zero exit means "not logged in" — an expected state, not an error
-    $account = Invoke-CliCommand 'az account show --output json' -PassThru -NoAssert -Silent
-    if ($LASTEXITCODE -ne 0 -or -not $account) {
+    $result = Invoke-CliCommand 'az account show --output json' -PassThru -NoAssert -Silent
+    if ($result.ExitCode -ne 0 -or -not $result.Output) {
         Write-Message 'Not logged in — nothing to do'
         return
     }
 
     Invoke-CliCommand 'az logout'
-
     Write-Message 'Logged out of Azure CLI'
 }

@@ -24,17 +24,15 @@ function Assert-ToolVersion {
     }
 
     $config = Get-ToolConfig -Tool $Tool
-    # -NoAssert: non-zero exit is handled below — we throw our own descriptive error
-    $raw = Invoke-CliCommand $config.VersionCommand -PassThru -NoAssert -Silent 2>$null
-    if ($raw -match $config.VersionPattern) {
-        $installed = $Matches['ver']
-        if (-not $installed.StartsWith($config.Version)) {
-            $location = (Get-Command $config.Command).Source
-            throw "$Tool version mismatch: expected $($config.Version).x, found $installed at '$location'. Run Install-$Tool or uninstall the conflicting version."
-        }
-    }
-    else {
+    $installed = Get-ToolVersion -Config $config
+
+    if (-not $installed) {
         throw "$Tool is not functional — '$($config.VersionCommand)' did not return a valid version. Run Install-$Tool."
+    }
+
+    if (-not $installed.StartsWith($config.Version)) {
+        $location = (Get-Command $config.Command).Source
+        throw "$Tool version mismatch: expected $($config.Version).x, found $installed at '$location'. Run Install-$Tool or uninstall the conflicting version."
     }
 
     Write-Verbose "$Tool version $installed verified"

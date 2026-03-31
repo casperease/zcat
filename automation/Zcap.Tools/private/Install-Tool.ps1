@@ -29,9 +29,7 @@ function Install-Tool {
     if (Test-Command $config.Command) {
         $location = (Get-Command $config.Command).Source
 
-        # -NoAssert: non-zero exit means version could not be parsed — falls through to install
-        $raw = Invoke-CliCommand $config.VersionCommand -PassThru -NoAssert -Silent 2>$null
-        $installed = if ($raw -match $config.VersionPattern) { $Matches['ver'] } else { $null }
+        $installed = Get-ToolVersion -Config $config
 
         if ($installed -and $installed.StartsWith($Version)) {
             Write-Message "$Tool $Version is already installed"
@@ -92,15 +90,39 @@ function Install-Tool {
         throw "Unsupported platform for tool installation"
     }
 
-    # Refresh PATH from registry — installers modify the persisted PATH but the
-    # current process still has the stale value.
+    # Refresh PATH — merge registry entries into current session PATH.
+    # Replaces the old approach that dropped session-only entries (dotnet tools,
+    # conda, etc.). New entries from the installer are added; existing entries preserved.
     if ($IsWindows) {
         $machinePath = [System.Environment]::GetEnvironmentVariable('PATH', 'Machine')
         $userPath = [System.Environment]::GetEnvironmentVariable('PATH', 'User')
-        $env:PATH = "$userPath;$machinePath"
-        Write-Verbose 'Refreshed PATH from registry'
+        $registryPaths = ($userPath, $machinePath | ForEach-Object { $_ -split ';' }) |
+            Where-Object { $_ -ne '' }
+
+        $currentPaths = $env:PATH -split ';' | Where-Object { $_ -ne '' }
+        $seen = [System.Collections.Generic.HashSet[string]]::new(
+            [string[]]$currentPaths,
+            [System.StringComparer]::OrdinalIgnoreCase
+        )
+        $newPaths = foreach ($p in $registryPaths) {
+            if ($seen.Add($p)) { $p }
+        }
+        $env:PATH = (@($currentPaths) + @($newPaths)) -join ';'
+        Write-Verbose 'Refreshed PATH from registry (merged with session)'
     }
 
     Assert-Command $config.Command -ErrorText "$Tool was installed but '$($config.Command)' is not on PATH. You may need to restart your shell."
-    Write-Information "$Tool $Version installed successfully"
+
+    # Verify the actual installed version matches what we asked for.
+    $actualVersion = Get-ToolVersion -Config $config
+
+    if ($actualVersion -and $actualVersion.StartsWith($Version)) {
+        Write-Information "$Tool $actualVersion installed successfully"
+    }
+    elseif ($actualVersion) {
+        Write-Message "$Tool installed but version $actualVersion does not match expected $Version.x — package manager may have installed a different version"
+    }
+    else {
+        Write-Message "$Tool installed but could not verify version"
+    }
 }

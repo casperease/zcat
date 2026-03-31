@@ -29,8 +29,7 @@ function Install-Dotnet {
 
     # Same rule as all other tools: if the correct version is on PATH, skip.
     if (Test-Command $config.Command) {
-        $raw = Invoke-CliCommand $config.VersionCommand -PassThru -NoAssert -Silent 2>$null
-        $installed = if ($raw -match $config.VersionPattern) { $Matches['ver'] } else { $null }
+        $installed = Get-ToolVersion -Config $config
 
         if ($installed -and $installed.StartsWith($Version)) {
             Write-Message "Dotnet $Version is already installed"
@@ -47,8 +46,9 @@ function Install-Dotnet {
 
     # Check our install dir for wrong-version scenario
     if (Test-Path $ourBinary) {
-        $raw = Invoke-CliCommand "$ourBinary --version" -PassThru -NoAssert -Silent
-        $ourInstalled = if ($raw -match $config.VersionPattern) { $Matches['ver'] } else { $null }
+        # Check specific binary (not PATH) — can't use Get-ToolVersion here
+        $result = Invoke-CliCommand "$ourBinary --version" -PassThru -NoAssert -Silent
+        $ourInstalled = if ($result.Full -match $config.VersionPattern) { $Matches['ver'] } else { $null }
 
         if ($ourInstalled -and $ourInstalled.StartsWith($Version)) {
             Write-Message "Dotnet $Version is already installed at '$installDir'"

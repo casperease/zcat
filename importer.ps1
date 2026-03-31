@@ -14,10 +14,10 @@ if ($isConsoleSession) {
 }
 
 if ($DiagnoseLoadTime) {
-    $script:DiagSw = [Diagnostics.Stopwatch]::StartNew()
+    $script:diagSw = [Diagnostics.Stopwatch]::StartNew()
     function script:Write-LoadTime ([string] $Step) {
-        Write-Host ("{0,6}ms  {1}" -f [int]$script:DiagSw.Elapsed.TotalMilliseconds, $Step) -ForegroundColor DarkGray
-        $script:DiagSw.Restart()
+        Write-Host ("{0,6}ms  {1}" -f [int]$script:diagSw.Elapsed.TotalMilliseconds, $Step) -ForegroundColor DarkGray
+        $script:diagSw.Restart()
     }
 }
 
@@ -96,25 +96,43 @@ if ($isConsoleSession) {
                 $record = if ($err -is [System.Management.Automation.ErrorRecord]) { $err } else { $null }
                 $trace = if ($record -and $record.psobject.Properties['ScriptStackTrace']) { $record.ScriptStackTrace } else { '' }
 
-                $isOurError = $trace -and $trace -match [regex]::Escape($env:RepositoryRoot)
+                $repoPattern = [regex]::Escape($env:RepositoryRoot)
+
+                # Check if the error originated in our code — via stack trace OR InvocationInfo
+                $isOurError = ($trace -and $trace -match $repoPattern) -or
+                    ($record.InvocationInfo -and $record.InvocationInfo.ScriptName -and
+                     $record.InvocationInfo.ScriptName -match $repoPattern)
                 $isPesterExpected = $trace -and $trace -match 'Should-Throw,.+Pester\.psm1'
 
                 if ($isOurError -and -not $isPesterExpected) {
                     Write-Host ('─' * 60) -ForegroundColor DarkGray
-                    $traceLines = $trace -split "`n"
-                    $formatted = $traceLines | ForEach-Object {
-                        if ($_ -match 'at <ScriptBlock>, <No file>: line \d+') {
-                            $lastCmd = (Get-History -Count 1).CommandLine
-                            if ($lastCmd) {
-                                $lastCmd = ($lastCmd -replace '[\r\n]+', ' ').Trim()
-                                if ($lastCmd.Length -gt 30) { $lastCmd = $lastCmd.Substring(0, 30) + '...' }
-                                "at $lastCmd"
-                            }
-                            else { 'at <prompt>' }
+
+                    # Show error message first when trace is missing or minimal
+                    if (-not $trace -or $trace -notmatch $repoPattern) {
+                        $scriptName = $record.InvocationInfo.ScriptName
+                        $lineNumber = $record.InvocationInfo.ScriptLineNumber
+                        $message = $record.Exception.Message
+                        Write-Host "$message" -ForegroundColor Red
+                        if ($scriptName) {
+                            Write-Host "at ${scriptName}:${lineNumber}" -ForegroundColor Red
                         }
-                        else { $_ }
                     }
-                    Write-Host ($formatted -join "`n") -ForegroundColor Red
+                    else {
+                        $traceLines = $trace -split "`n"
+                        $formatted = $traceLines | ForEach-Object {
+                            if ($_ -match 'at <ScriptBlock>, <No file>: line \d+') {
+                                $lastCmd = (Get-History -Count 1).CommandLine
+                                if ($lastCmd) {
+                                    $lastCmd = ($lastCmd -replace '[\r\n]+', ' ').Trim()
+                                    if ($lastCmd.Length -gt 30) { $lastCmd = $lastCmd.Substring(0, 30) + '...' }
+                                    "at $lastCmd"
+                                }
+                                else { 'at <prompt>' }
+                            }
+                            else { $_ }
+                        }
+                        Write-Host ($formatted -join "`n") -ForegroundColor Red
+                    }
                 }
             }
             catch {

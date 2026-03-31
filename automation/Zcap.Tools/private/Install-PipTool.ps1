@@ -42,8 +42,7 @@ function Install-PipTool {
 
     # Idempotent: skip if already installed at the correct version
     if (Test-Command $config.Command) {
-        $raw = Invoke-CliCommand $config.VersionCommand -PassThru -NoAssert -Silent 2>$null
-        $installed = if ($raw -match $config.VersionPattern) { $Matches['ver'] } else { $null }
+        $installed = Get-ToolVersion -Config $config
 
         if ($installed -and $installed.StartsWith($Version)) {
             Write-Message "$Tool $Version is already installed"
@@ -63,16 +62,39 @@ function Install-PipTool {
         }
     }
 
-    Invoke-Pip "install $($config.PipPackage)==$Version.*"
+    Invoke-Pip "install -q $($config.PipPackage)==$Version.*"
 
-    # Refresh PATH — pip may have added a new Scripts directory
+    # Refresh PATH — merge registry entries into current session PATH.
     if ($IsWindows) {
         $machinePath = [System.Environment]::GetEnvironmentVariable('PATH', 'Machine')
         $userPath = [System.Environment]::GetEnvironmentVariable('PATH', 'User')
-        $env:PATH = "$userPath;$machinePath"
-        Write-Verbose 'Refreshed PATH from registry'
+        $registryPaths = ($userPath, $machinePath | ForEach-Object { $_ -split ';' }) |
+            Where-Object { $_ -ne '' }
+
+        $currentPaths = $env:PATH -split ';' | Where-Object { $_ -ne '' }
+        $seen = [System.Collections.Generic.HashSet[string]]::new(
+            [string[]]$currentPaths,
+            [System.StringComparer]::OrdinalIgnoreCase
+        )
+        $newPaths = foreach ($p in $registryPaths) {
+            if ($seen.Add($p)) { $p }
+        }
+        $env:PATH = (@($currentPaths) + @($newPaths)) -join ';'
+        Write-Verbose 'Refreshed PATH from registry (merged with session)'
     }
 
     Assert-Command $config.Command -ErrorText "$Tool was installed but '$($config.Command)' is not on PATH. You may need to restart your shell."
-    Write-Message "$Tool $Version installed successfully"
+
+    # Verify the actual installed version matches what we asked for.
+    $actualVersion = Get-ToolVersion -Config $config
+
+    if ($actualVersion -and $actualVersion.StartsWith($Version)) {
+        Write-Message "$Tool $actualVersion installed successfully"
+    }
+    elseif ($actualVersion) {
+        Write-Message "$Tool installed but version $actualVersion does not match expected $Version.x — package manager may have installed a different version"
+    }
+    else {
+        Write-Message "$Tool installed but could not verify version"
+    }
 }

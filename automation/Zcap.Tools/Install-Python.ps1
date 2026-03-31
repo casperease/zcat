@@ -18,4 +18,11 @@ function Install-Python {
     )
 
     Install-Tool -Tool 'Python' -Version $Version -Force:$Force
+
+    # Keep pip current — we only pin the Python version, not pip.
+    # -q suppresses the dependency list; runs after Install-Tool so it
+    # only fires when Python is actually present on PATH.
+    if (Test-Command pip) {
+        Invoke-CliCommand 'python -m pip install -q --upgrade pip'
+    }
 }

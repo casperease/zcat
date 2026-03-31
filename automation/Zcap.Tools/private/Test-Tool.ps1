@@ -22,6 +22,5 @@ function Test-Tool {
 
     if (-not (Test-Command $config.Command)) { return $false }
 
-    $raw = Invoke-CliCommand $config.VersionCommand -PassThru -NoAssert -Silent 2>$null
-    [bool]($raw -match $config.VersionPattern)
+    $null -ne (Get-ToolVersion -Config $config)
 }

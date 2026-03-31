@@ -17,6 +17,20 @@ Describe 'Get-ToolConfig' {
         $script:allTools = Get-Content $configPath -Raw | ConvertFrom-Yaml
     }
 
+    Context 'asset dependencies' {
+        It 'tools.yml exists' {
+            Join-Path $PSScriptRoot '../assets/config/tools.yml' | Should -Exist
+        }
+
+        It 'dotnet-install.ps1 exists' {
+            Join-Path $PSScriptRoot '../assets/scripts/dotnet-install.ps1' | Should -Exist
+        }
+
+        It 'dotnet-install.sh exists' {
+            Join-Path $PSScriptRoot '../assets/scripts/dotnet-install.sh' | Should -Exist
+        }
+    }
+
     Context 'structural validation' {
         It 'tools.yml has at least one tool defined' {
             $script:allTools.Keys.Count | Should -BeGreaterThan 0

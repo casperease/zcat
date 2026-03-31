@@ -27,6 +27,13 @@ function Uninstall-Tool {
         return
     }
 
+    # Only uninstall tools managed by the expected package manager.
+    # Use Remove-<Tool> for tools installed outside our control.
+    if (-not (Test-ExpectedPackageManager -Config $config)) {
+        $location = (Get-Command $config.Command).Source
+        throw "$Tool at '$location' was not installed by the expected package manager. Use Remove-$Tool to handle it."
+    }
+
     if ($IsWindows) {
         Assert-NotNullOrWhitespace $config.WingetId -ErrorText "$Tool has no WingetId — use Uninstall-$Tool directly"
         if ($config.WingetScope -ne 'user') {

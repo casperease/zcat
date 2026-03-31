@@ -1,23 +1,25 @@
 <#
 .SYNOPSIS
-    Runs poetry with the given arguments.
+    Runs java with the given arguments.
 .DESCRIPTION
-    Asserts that the installed Poetry version matches the locked version
+    Asserts that the installed Java version matches the locked version
     in Get-ToolConfig before executing the command.
 .PARAMETER Arguments
-    Arguments to pass to poetry.
+    Arguments to pass to java.
 .PARAMETER PassThru
     Return a Zcap.CliResult object with Output, Errors, Full, and ExitCode.
 .PARAMETER NoAssert
     Skip exit code assertion.
 .PARAMETER Silent
     Suppress the command log line.
+.PARAMETER DryRun
+    Return the command string without executing. Used for testing.
 .EXAMPLE
-    Invoke-Poetry 'install'
+    Invoke-Java '--version'
 .EXAMPLE
-    Invoke-Poetry 'version' -PassThru
+    Invoke-Java '--version' -DryRun
 #>
-function Invoke-Poetry {
+function Invoke-Java {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory, Position = 0)]
@@ -28,11 +30,9 @@ function Invoke-Poetry {
         [switch] $DryRun
     )
 
-    Assert-NotNullOrWhitespace $Arguments -ErrorText 'Arguments cannot be empty'
-
     if (-not $DryRun) {
-        Assert-Tool 'Poetry'
+        Assert-Tool 'Java'
     }
 
-    Invoke-CliCommand "poetry $Arguments" -PassThru:$PassThru -NoAssert:$NoAssert -Silent:$Silent -DryRun:$DryRun
+    Invoke-CliCommand "java $Arguments" -PassThru:$PassThru -NoAssert:$NoAssert -Silent:$Silent -DryRun:$DryRun
 }

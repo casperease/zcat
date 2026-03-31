@@ -14,7 +14,11 @@ function Test-ExpectedPackageManager {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
-        [hashtable] $Config
+        [hashtable] $Config,
+
+        # Pre-fetched winget list output. When provided, skips the per-tool
+        # winget list call — pass the result of Get-WingetListCache.
+        [string] $WingetListCache
     )
 
     # 1. Script-installed tools (e.g., Dotnet via dotnet-install scripts).
@@ -42,6 +46,11 @@ function Test-ExpectedPackageManager {
             if ($parts.Count -gt 2 -and $parts[-1] -match '^\d') {
                 $baseId = $parts[0..($parts.Count - 2)] -join '.'
             }
+        }
+
+        # Use pre-fetched cache when available (single winget list call for all tools).
+        if ($WingetListCache) {
+            return $WingetListCache -match [regex]::Escape($baseId)
         }
 
         try {

@@ -913,21 +913,22 @@ function ValidateRemoteLocalFileSizes([string]$LocalFileOutPath, $SourceUri) {
         $remoteFileSize = Get-Remote-File-Size -zipUri $SourceUri
         $fileSize = [long](Get-Item $LocalFileOutPath).Length
         Say "Downloaded file $SourceUri size is $fileSize bytes."
-    
-        if ((![string]::IsNullOrEmpty($remoteFileSize)) -and !([string]::IsNullOrEmpty($fileSize)) ) {
-            if ($remoteFileSize -ne $fileSize) {
-                Say "The remote and local file sizes are not equal. Remote file size is $remoteFileSize bytes and local size is $fileSize bytes. The local package may be corrupted."
-            }
-            else {
-                Say "The remote and local file sizes are equal."
-            }   
+
+        if ([string]::IsNullOrEmpty($fileSize)) {
+            Say "Local file size could not be measured. The package may be corrupted."
+        }
+        elseif ([string]::IsNullOrEmpty($remoteFileSize)) {
+            Say-Verbose "Remote server did not report Content-Length — skipping size validation. Downloaded $fileSize bytes."
+        }
+        elseif ($remoteFileSize -ne $fileSize) {
+            Say "The remote and local file sizes are not equal. Remote file size is $remoteFileSize bytes and local size is $fileSize bytes. The local package may be corrupted."
         }
         else {
-            Say "Either downloaded or local package size can not be measured. One of them may be corrupted."
+            Say "The remote and local file sizes are equal."
         }
     }
     catch {
-        Say "Either downloaded or local package size can not be measured. One of them may be corrupted."
+        Say-Verbose "Could not validate file sizes — skipping size validation."
     }
 }
 

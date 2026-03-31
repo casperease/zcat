@@ -33,6 +33,6 @@ function Uninstall-PipTool {
 
     # Call pip directly — Invoke-Pip asserts tool version which is unnecessary
     # and can fail during uninstall (e.g., wrong version during teardown).
-    Invoke-CliCommand "python -m pip uninstall $($config.PipPackage) -y" 2>$null
+    Invoke-CliCommand "python -m pip uninstall $($config.PipPackage) -y"
     Write-Message "$Tool uninstalled"
 }
