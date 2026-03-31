@@ -84,6 +84,38 @@ if ($LASTEXITCODE -ne 0 -or -not $raw) {
 }
 ```
 
+**Pipeline trap — cmdlets mask native exit state:**
+
+When a native executable pipes into a cmdlet, the cmdlet becomes the last command in the pipeline.
+`$?` reflects the **cmdlet**, not the executable — and if the cmdlet succeeds, the native failure is silently swallowed.
+
+```powershell
+# BROKEN — $? reflects ConvertFrom-Json, not az
+$myvar = az account show | ConvertFrom-Json
+Assert-Success   # passes even when az exited non-zero
+
+# Why it's insidious:
+#   1. az fails (exit code 1) but emits an error response as JSON
+#   2. ConvertFrom-Json happily parses the error JSON → $? is True
+#   3. $myvar now contains an error object, and nobody noticed
+#
+# Even when az emits nothing, ConvertFrom-Json returns $null
+# without error in PS 7.4+ — $? is still True.
+```
+
+`$LASTEXITCODE` _is_ still set correctly by the native call, but code that checks `$?` (or an `Assert-Success` that checks `$?`) will never see the failure.
+
+```powershell
+# Correct — use Invoke-CliCommand, which checks $LASTEXITCODE internally
+$myvar = Invoke-CliCommand 'az account show --output json' -PassThru | ConvertFrom-Json
+```
+
+```powershell
+# Also correct — split the pipeline so nothing sits between the native call and the check
+$raw = Invoke-CliCommand 'az account show --output json' -PassThru
+$myvar = $raw | ConvertFrom-Json
+```
+
 **Rules:**
 
 - **Always reset before invoking.** Prevents a stale exit code from a prior call from leaking into your check.
@@ -164,13 +196,13 @@ This is infrastructure code with a legitimate need to read the global error list
 
 ## Summary of rules
 
-| Variable | Rule | Alternative |
-|---|---|---|
-| `$?` | Never use | `-ErrorAction Stop` + `try`/`catch` |
-| `$LASTEXITCODE` | Reset → invoke → assert → reset (use `Invoke-CliCommand`) | Direct check only with `-NoAssert` |
-| `$Matches` | Capture into a named local on the very next line after `-match` | — |
-| `$_` / `$PSItem` | Capture into a named local before nesting pipelines | — |
-| `$Error` | Never use for control flow | `try`/`catch` |
+| Variable         | Rule                                                            | Alternative                         |
+| ---------------- | --------------------------------------------------------------- | ----------------------------------- |
+| `$?`             | Never use                                                       | `-ErrorAction Stop` + `try`/`catch` |
+| `$LASTEXITCODE`  | Reset → invoke → assert → reset (use `Invoke-CliCommand`)       | Direct check only with `-NoAssert`  |
+| `$Matches`       | Capture into a named local on the very next line after `-match` | —                                   |
+| `$_` / `$PSItem` | Capture into a named local before nesting pipelines             | —                                   |
+| `$Error`         | Never use for control flow                                      | `try`/`catch`                       |
 
 ## Consequences
 

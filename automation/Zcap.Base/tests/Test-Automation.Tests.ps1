@@ -23,7 +23,7 @@ BeforeDiscovery {
     }
 
     # Collect test files from all directories (modules + infrastructure like .resolver)
-    foreach ($dir in $allDirs | Where-Object { $_.Name -ne '.vendor' }) {
+    foreach ($dir in $allDirs | Where-Object { $_.Name -notin '.vendor', '.scriptanalyzer' }) {
         $testsPath = Join-Path $dir.FullName 'tests'
         if (Test-Path $testsPath) {
             $testFiles = Get-ChildItem -Path $testsPath -Filter '*.Tests.ps1' -File -ErrorAction SilentlyContinue

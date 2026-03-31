@@ -30,7 +30,8 @@ function Get-FunctionDependency {
             Where-Object { $_.Name -notlike '*.Tests.ps1' }
 
         foreach ($file in $ps1Files) {
-            $tokens = $null; $errors = $null
+            $tokens = $null
+            $errors = $null
             $ast = [System.Management.Automation.Language.Parser]::ParseFile(
                 $file.FullName, [ref]$tokens, [ref]$errors
             )
@@ -55,7 +56,8 @@ function Get-FunctionDependency {
             Where-Object { $_.Name -notlike '*.Tests.ps1' }
 
         foreach ($file in $ps1Files) {
-            $tokens = $null; $errors = $null
+            $tokens = $null
+            $errors = $null
             $ast = [System.Management.Automation.Language.Parser]::ParseFile(
                 $file.FullName, [ref]$tokens, [ref]$errors
             )

@@ -8,6 +8,8 @@
         'automation/.scriptanalyzer/NoWriteErrorOrWarning.psm1'
         'automation/.scriptanalyzer/NoAzModuleNaming.psm1'
         'automation/.scriptanalyzer/NoAutomaticVariableMisuse.psm1'
+        'automation/.scriptanalyzer/NoForEachObjectControlFlow.psm1'
+        'automation/.scriptanalyzer/NoSemicolons.psm1'
     )
 
     ExcludeRules = @(
