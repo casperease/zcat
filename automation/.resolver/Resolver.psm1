@@ -20,19 +20,26 @@ function New-DynamicManifest {
 
     # Collect private .ps1 files (private subfolder)
     $privatePath = Join-Path $ModulePath 'private'
-    $privateFiles = @(
-        if ([System.IO.Directory]::Exists($privatePath)) {
-            [System.IO.Directory]::GetFiles($privatePath, '*.ps1')
+    $initFile = @()
+    $privateFiles = @()
+    if ([System.IO.Directory]::Exists($privatePath)) {
+        foreach ($f in [System.IO.Directory]::GetFiles($privatePath, '*.ps1')) {
+            if ([System.IO.Path]::GetFileName($f) -eq '_ModuleInit.ps1') {
+                $initFile = @($f)
+            }
+            else {
+                $privateFiles += $f
+            }
         }
-    )
+    }
 
-    if ($publicFiles.Count -eq 0 -and $privateFiles.Count -eq 0) {
+    if ($publicFiles.Count -eq 0 -and $privateFiles.Count -eq 0 -and $initFile.Count -eq 0) {
         Write-Verbose "No .ps1 files found in '$ModulePath'"
         return $null
     }
 
-    # Private first so they're in scope before public functions load
-    $allFiles = $privateFiles + $publicFiles
+    # Init first (module load-time code), then private functions, then public
+    $allFiles = $initFile + $privateFiles + $publicFiles
 
     # .ps1 files in NestedModules run in the module's session state (shared scope)
     $nestedEntries = foreach ($f in $allFiles) { "'{0}'" -f $f.Substring($pathPrefixLength) }

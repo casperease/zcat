@@ -19,9 +19,9 @@
 .PARAMETER IntervalMs
     Milliseconds between dots. Defaults to 1000.
 .EXAMPLE
-    $status = Invoke-WithProgress { Get-WorkstationToolsStatus } -Message 'Checking tools'
+    $status = Invoke-WithProgress { Get-DevBoxToolsStatus } -Message 'Checking tools'
     # Console: Checking tools.......
-    # $status: the PSCustomObject[] returned by Get-WorkstationToolsStatus
+    # $status: the PSCustomObject[] returned by Get-DevBoxToolsStatus
 .EXAMPLE
     Invoke-WithProgress { Install-Dotnet } -Message 'Installing .NET' -IntervalMs 2000
     # Console: Installing .NET...

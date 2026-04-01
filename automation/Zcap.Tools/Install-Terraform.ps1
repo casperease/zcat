@@ -49,8 +49,18 @@ function Install-Terraform {
             Write-Message 'Adding HashiCorp apt repository'
             Invoke-CliCommand 'sudo apt-get update -qq'
             Invoke-CliCommand 'sudo apt-get install -y gnupg software-properties-common'
-            Invoke-CliCommand 'wget -qO- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg'
-            Invoke-CliCommand 'echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list'
+            $gpgKeyPath = '/usr/share/keyrings/hashicorp-archive-keyring.gpg'
+            $gpgTmp = Join-Path ([IO.Path]::GetTempPath()) 'hashicorp.gpg'
+            Invoke-WebRequest -Uri 'https://apt.releases.hashicorp.com/gpg' -OutFile $gpgTmp -UseBasicParsing
+            Invoke-CliCommand "sudo gpg --dearmor -o $gpgKeyPath $gpgTmp"
+            Remove-Item $gpgTmp -Force -ErrorAction SilentlyContinue
+
+            $codename = (Invoke-CliCommand 'lsb_release -cs' -PassThru -Silent).Output.Trim()
+            $repoLine = "deb [signed-by=$gpgKeyPath] https://apt.releases.hashicorp.com $codename main"
+            $repoTmp = Join-Path ([IO.Path]::GetTempPath()) 'hashicorp.list'
+            Set-Content -Path $repoTmp -Value $repoLine -Force
+            Invoke-CliCommand "sudo cp $repoTmp $sourcePath"
+            Remove-Item $repoTmp -Force -ErrorAction SilentlyContinue
         }
 
         Invoke-CliCommand 'sudo apt-get update -qq'

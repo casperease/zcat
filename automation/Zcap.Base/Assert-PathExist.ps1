@@ -17,10 +17,12 @@ function Assert-PathExist {
         [string] $Path,
 
         [ValidateSet('Any', 'Container', 'Leaf')]
-        [string] $PathType = 'Any'
+        [string] $PathType = 'Any',
+
+        [string] $ErrorText
     )
 
     if (-not (Test-Path -Path $Path -PathType $PathType)) {
-        throw "Path does not exist: $Path"
+        throw ($ErrorText ?? "Path does not exist: $Path")
     }
 }

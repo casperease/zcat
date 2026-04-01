@@ -86,7 +86,6 @@ Tooling programs directly against these well-known paths. Folder names are contr
 | `automation/` | Module system root — all PowerShell modules and infrastructure                                  | `importer.ps1`, `Test-Automation`, `Install-VendorModule`       |
 | `docs/`       | Documentation; contains `automation/adr/` for decision records                                  | Human consumption; ADR file naming convention                   |
 | `out/`        | All output files (gitignored) — see [dedicated-output-directory](dedicated-output-directory.md) | Output functions, CI artifacts, cleanup scripts                 |
-| `config/`     | Repo-wide cross-cutting configuration (not module-specific)                                     | Functions needing repo-level settings via `$env:RepositoryRoot` |
 | `.github/`    | GitHub workflows, actions, templates                                                            | GitHub Actions runner                                           |
 | `.vscode/`    | Editor settings, tasks, launch configs                                                          | VS Code                                                         |
 
@@ -123,6 +122,11 @@ Every module directory follows the same internal layout:
 **`private/`** contains `.ps1` files that follow the same one-function-per-file convention as root files.
 They are loaded into the module's session state via `NestedModules` but excluded from `FunctionsToExport`.
 The folder name `private/` means "non-exported" everywhere, in every module, without exception.
+
+**`private/_ModuleInit.ps1`** is a special convention: if this file exists, the resolver places it first in `NestedModules`
+so it runs at module import time, before any function definition. Use it for loading C# types (`Add-Type`),
+module-scoped caches, or stale dependency detection. The underscore prefix signals "not a function file" — it is
+excluded from Verb-Noun naming and one-function-per-file checks. At most one per module.
 
 **`tests/`** contains `*.Tests.ps1` files. `Test-Automation` scans `Join-Path $moduleDir 'tests'` for every module.
 Tests go here and nowhere else. A test file outside `tests/` will not be discovered.

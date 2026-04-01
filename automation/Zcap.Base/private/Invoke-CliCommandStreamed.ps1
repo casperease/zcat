@@ -46,24 +46,8 @@ function Invoke-CliCommandStreamed {
 
     Reset-LastExitCode
 
-    # Load C# CliRunner class once per session from assets/CliRunner.cs.
-    if (-not ([System.Management.Automation.PSTypeName]'Zcap.CliRunner').Type) {
-        $csPath = Join-Path $PSScriptRoot '..' 'assets' 'CliRunner.cs'
-        Assert-PathExist $csPath
-        Add-Type -Path $csPath
-    }
-
-    # Shell out via cmd/bash so pipe operators and shell features work.
-    if ($IsWindows) {
-        $shellExe = 'cmd.exe'
-        $shellArgs = "/c $Command"
-    }
-    else {
-        $shellExe = '/bin/bash'
-        $shellArgs = "-c `"$($Command -replace '"', '\"')`""
-    }
-
-    $runResult = [Zcap.CliRunner]::Run($shellExe, $shellArgs, [bool]$Silent)
+    # CliRunner is loaded at module import time by _ModuleInit.ps1.
+    $runResult = [Zcap.CliRunner]::Run($Command, [bool]$Silent)
 
     # Set $LASTEXITCODE so Assert-LastExitCodeWasZero works
     $global:LASTEXITCODE = $runResult.ExitCode
@@ -87,5 +71,20 @@ function Invoke-CliCommandStreamed {
             ExitCode   = $runResult.ExitCode
             Raw        = @($stdText -split [Environment]::NewLine)
         }
+    }
+}
+
+# --- Module import-time check: detect stale CliRunner type ---
+# Runs when this .ps1 file is loaded as a NestedModule, before any function call.
+# .NET types survive module reimport — if the .cs file changed, the loaded type is stale.
+# Uses a global variable because module scope resets on reimport but .NET types don't.
+if (([System.Management.Automation.PSTypeName]'Zcap.CliRunner').Type) {
+    $csPath = Join-Path $PSScriptRoot '..' 'assets' 'CliRunner.cs'
+    if (Test-Path $csPath) {
+        $currentHash = (Get-FileHash $csPath -Algorithm SHA256).Hash
+        if ($global:__ZcapCliRunnerHash -and $global:__ZcapCliRunnerHash -ne $currentHash) {
+            throw "CliRunner.cs has changed since the Zcap.CliRunner type was loaded. Restart PowerShell to pick up changes."
+        }
+        $global:__ZcapCliRunnerHash = $currentHash
     }
 }

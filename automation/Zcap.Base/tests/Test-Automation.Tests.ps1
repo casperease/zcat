@@ -15,7 +15,8 @@ BeforeDiscovery {
 
         $privatePath = Join-Path $moduleDir.FullName 'private'
         if (Test-Path $privatePath) {
-            $privateFiles = Get-ChildItem -Path $privatePath -Filter '*.ps1' -File -ErrorAction SilentlyContinue
+            $privateFiles = Get-ChildItem -Path $privatePath -Filter '*.ps1' -File -ErrorAction SilentlyContinue |
+                Where-Object { $_.Name -notlike '_*' }
             foreach ($f in $privateFiles) {
                 $allPs1 += @{ Module = $moduleDir.Name; File = $f; Private = $true }
             }

@@ -31,7 +31,7 @@ function Uninstall-Chocolatey {
 
     # Remove Chocolatey directory
     Write-Verbose "Removing Chocolatey directory: $chocoDir"
-    Invoke-CliCommand "cmd /c rmdir /s /q `"$chocoDir`""
+    Remove-Item $chocoDir -Recurse -Force
     # Remove environment variable
     Write-Verbose 'Removing ChocolateyInstall environment variable'
     [System.Environment]::SetEnvironmentVariable('ChocolateyInstall', $null, 'Machine')
