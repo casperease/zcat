@@ -1,5 +1,4 @@
-# CI pipeline — runs on push to main and pull requests.
-# Uses the invoke-automation step template to run tests.
+# CI pipeline — unit tests, framework integration tests, and Azure auth tests.
 
 trigger:
   branches:
@@ -9,12 +8,161 @@ pr:
   branches:
     include: [main]
 
-pool:
-  vmImage: ubuntu-latest
+# ---------------------------------------------------------------------------
+# Job 1: Unit tests (Pester)
+# ---------------------------------------------------------------------------
+jobs:
+  - job: UnitTests
+    displayName: 'Unit Tests'
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+      - checkout: self
 
-steps:
-  - checkout: self
+      - template: /pipelines/steps/invoke-automation.yaml
+        parameters:
+          RunCommand: 'Test-Automation'
 
-  - template: /pipelines/steps/invoke-automation.yaml
-    parameters:
-      RunCommand: 'Test-Automation'
+  # ---------------------------------------------------------------------------
+  # Job 2: Framework integration tests (no Azure auth)
+  # Each step exercises a different edge of the framework through the template.
+  # ---------------------------------------------------------------------------
+  - job: FrameworkTests
+    displayName: 'Framework Integration Tests'
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+      - checkout: self
+
+      # 2a: Multiline command via YAML pipe operator
+      - template: /pipelines/steps/invoke-automation.yaml
+        parameters:
+          RunCommand: |
+            $customers = Get-MetaCustomers
+            $envs = Get-MetaEnvironments
+            Assert-True ($customers.Count -gt 0)
+            Assert-True ($envs.Count -gt 0)
+            Write-Message "Customers: $($customers.Count), Environments: $($envs.Count)"
+
+      # 2b: Invoke-CliCommand output capture and PassThru
+      - template: /pipelines/steps/invoke-automation.yaml
+        parameters:
+          RunCommand: |
+            $result = Invoke-CliCommand 'which which' -PassThru -Silent
+            Assert-True ($result.ExitCode -eq 0)
+            Assert-NotNullOrWhitespace $result.Output
+            Assert-True ($result.Raw.Count -ge 1)
+            Write-Message "CliCommand output: $($result.Output)"
+
+      # 2c: Invoke-CliCommand stderr separation
+      - template: /pipelines/steps/invoke-automation.yaml
+        parameters:
+          RunCommand: |
+            $result = Invoke-CliCommand 'bash -c "echo out; echo err >&2"' -PassThru -NoAssert -Silent
+            Assert-True ($result.Output -match 'out')
+            Assert-True ($result.Errors -match 'err')
+            Assert-True ($result.Full -match 'out')
+            Assert-True ($result.Full -match 'err')
+
+      # 2d: Invoke-CliCommand exit code assertion
+      - template: /pipelines/steps/invoke-automation.yaml
+        parameters:
+          RunCommand: |
+            $threw = $false
+            try { Invoke-CliCommand 'bash -c "exit 1"' -Silent } catch { $threw = $true }
+            Assert-True $threw
+            $result = Invoke-CliCommand 'bash -c "exit 42"' -PassThru -NoAssert -Silent
+            Assert-True ($result.ExitCode -eq 42)
+
+      # 2e: Pipeline detection and output root
+      - template: /pipelines/steps/invoke-automation.yaml
+        parameters:
+          RunCommand: |
+            Assert-True (Test-IsRunningInPipeline)
+            $outRoot = Get-OutputRoot
+            Assert-NotNullOrWhitespace $outRoot
+            Assert-PathExist $outRoot -PathType Container
+            Write-Message "OutputRoot: $outRoot"
+
+      # 2f: Set-PipelineVariable integration
+      - template: /pipelines/steps/invoke-automation.yaml
+        parameters:
+          RunCommand: |
+            Set-PipelineVariable -Name 'test.result' -Value 'passed'
+            Set-PipelineVariable -Name 'my-count' -Value '42' -IsOutput
+
+      # 2g: DryRun mode on tool wrappers (no tools needed)
+      - template: /pipelines/steps/invoke-automation.yaml
+        parameters:
+          RunCommand: |
+            $pyCmd = Invoke-Python '-c "print(42)"' -DryRun
+            Assert-True ($pyCmd -match 'python')
+            Assert-True ($pyCmd -match 'print')
+            $azCmd = Invoke-AzCli 'account show' -DryRun
+            Assert-True ($azCmd -match 'az')
+            Assert-True ($azCmd -match 'account show')
+
+      # 2h: Deliberate failure — verify error handling works.
+      # We test this by asserting that a known-bad command produces a non-zero
+      # exit, then continue. Template steps can't have continueOnError, so we
+      # use an inline pwsh step for this one.
+      - task: PowerShell@2
+        displayName: 'Assert-True $false (expected failure)'
+        inputs:
+          targetType: filePath
+          filePath: pipelines/Run.ps1
+          arguments: -Command 'Assert-True $false'
+          pwsh: true
+        continueOnError: true
+
+      # 2i: Module loading and function discovery
+      - template: /pipelines/steps/invoke-automation.yaml
+        parameters:
+          RunCommand: |
+            $modules = Get-Module | Where-Object { $_.Name -match '^Zcap\.' }
+            Assert-True ($modules.Count -ge 3)
+            Assert-True ($null -ne (Get-Command Get-MetaConfiguration -ErrorAction Ignore))
+            Assert-True ($null -ne (Get-Command Invoke-CliCommand -ErrorAction Ignore))
+            Assert-True ($null -ne (Get-Command Set-PipelineVariable -ErrorAction Ignore))
+            Write-Message "Loaded $($modules.Count) Zcap modules"
+
+  # ---------------------------------------------------------------------------
+  # Job 3: Azure auth mode tests (needs sc-azure-test service connection)
+  # ---------------------------------------------------------------------------
+  - job: AzureAuthTests
+    displayName: 'Azure Auth Tests'
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+      - checkout: self
+
+      # 3a: Mode azcli — az CLI is pre-authenticated
+      - template: /pipelines/steps/invoke-automation.yaml
+        parameters:
+          RunCommand: |
+            $result = Invoke-CliCommand 'az account show --output json' -PassThru -Silent
+            Assert-True ($result.ExitCode -eq 0)
+            $account = $result.Output | ConvertFrom-Json
+            Assert-NotNullOrWhitespace $account.id
+            Write-Message "AzCli logged into: $($account.name)"
+          Mode: azcli
+          ServiceConnection: 'sc-azure-test'
+
+      # 3b: Mode azps — Az PowerShell modules authenticated
+      - template: /pipelines/steps/invoke-automation.yaml
+        parameters:
+          RunCommand: |
+            $ctx = Get-AzContext
+            Assert-NotNull $ctx
+            Assert-NotNullOrWhitespace $ctx.Subscription.Id
+            Write-Message "AzPs context: $($ctx.Subscription.Name)"
+          Mode: azps
+          ServiceConnection: 'sc-azure-test'
+
+      # 3c: ExposeAccessToken — SYSTEM_ACCESSTOKEN is mapped
+      - template: /pipelines/steps/invoke-automation.yaml
+        parameters:
+          RunCommand: |
+            Assert-NotNullOrWhitespace $env:SYSTEM_ACCESSTOKEN
+            Write-Message 'SYSTEM_ACCESSTOKEN is available'
+          ExposeAccessToken: true
