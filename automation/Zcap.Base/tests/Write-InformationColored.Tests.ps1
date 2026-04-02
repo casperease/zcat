@@ -3,6 +3,7 @@ Describe 'Write-InformationColored' {
         Write-InformationColored 'hello' -InformationVariable iv -InformationAction SilentlyContinue
         $iv | Should -HaveCount 1
         $iv[0].MessageData.Message | Should -Be 'hello'
+        $iv[0].Tags | Should -Contain 'PSHOST'
     }
 
     It 'applies foreground color' {
