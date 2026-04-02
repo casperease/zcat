@@ -26,9 +26,19 @@ function Write-Header {
     $separator = '*' * $Width
 
     if ($Message) {
-        Write-InformationColored ("{0}`n* {1}`n{2}" -f $separator, $Message, $separator) -ForegroundColor $ForegroundColor
+        if (Test-IsRunningInPipeline) {
+            Write-Information "##[section]$Message"
+        }
+        else {
+            Write-InformationColored ("{0}`n* {1}`n{2}" -f $separator, $Message, $separator) -ForegroundColor $ForegroundColor
+        }
     }
     else {
-        Write-InformationColored $separator -ForegroundColor $ForegroundColor
+        if (Test-IsRunningInPipeline) {
+            Write-Information "##[section]$separator"
+        }
+        else {
+            Write-InformationColored $separator -ForegroundColor $ForegroundColor
+        }
     }
 }

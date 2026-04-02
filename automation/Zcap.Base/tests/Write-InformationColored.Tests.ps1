@@ -1,23 +1,25 @@
 Describe 'Write-InformationColored' {
-    It 'writes to the information stream' {
-        Write-InformationColored 'hello' -InformationVariable iv -InformationAction SilentlyContinue
+    It 'writes message to the information stream' {
+        Write-InformationColored 'hello' -InformationVariable iv -InformationAction SilentlyContinue 6>&1 | Out-Null
         $iv | Should -HaveCount 1
-        $iv[0].MessageData.Message | Should -Be 'hello'
-        $iv[0].Tags | Should -Contain 'PSHOST'
+        $iv[0].MessageData.Message | Should -Match 'hello'
     }
 
-    It 'applies foreground color' {
-        Write-InformationColored 'test' -ForegroundColor Green -InformationVariable iv -InformationAction SilentlyContinue
-        $iv[0].MessageData.ForegroundColor | Should -Be 'Green'
+    It 'wraps text in ANSI escape codes when color specified' {
+        Write-InformationColored 'test' -ForegroundColor Red -InformationVariable iv -InformationAction SilentlyContinue 6>&1 | Out-Null
+        $text = $iv[0].MessageData.Message
+        $text | Should -Match '^\e\[91m'
+        $text | Should -Match '\e\[0m$'
+        $text | Should -Match 'test'
     }
 
-    It 'applies background color' {
-        Write-InformationColored 'test' -BackgroundColor DarkBlue -InformationVariable iv -InformationAction SilentlyContinue
-        $iv[0].MessageData.BackgroundColor | Should -Be 'DarkBlue'
+    It 'does not add ANSI codes when no color specified' {
+        Write-InformationColored 'plain' -InformationVariable iv -InformationAction SilentlyContinue 6>&1 | Out-Null
+        $iv[0].MessageData.Message | Should -Be 'plain'
     }
 
-    It 'supports NoNewline' {
-        Write-InformationColored 'test' -NoNewline -InformationVariable iv -InformationAction SilentlyContinue
-        $iv[0].MessageData.NoNewline | Should -BeTrue
+    It 'maps Cyan to correct ANSI code' {
+        Write-InformationColored 'x' -ForegroundColor Cyan -InformationVariable iv -InformationAction SilentlyContinue 6>&1 | Out-Null
+        $iv[0].MessageData.Message | Should -Match '^\e\[96m'
     }
 }

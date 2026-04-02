@@ -4,12 +4,16 @@
 .DESCRIPTION
     Like Write-Host but uses Write-Information internally, so output respects
     $InformationPreference and can be suppressed or redirected.
+
+    Colors work in both interactive terminals and CI pipelines (ADO, GitHub
+    Actions) because the message text contains ANSI escape sequences.
+    Write-Host's -ForegroundColor uses the console API, which only works in
+    interactive terminals — in CI stdout is a pipe and colors are lost.
+    Embedding ANSI codes in the string itself ensures colors survive redirection.
 .PARAMETER MessageData
     The message to write.
 .PARAMETER ForegroundColor
     Text color. Defaults to the host's current foreground color.
-.PARAMETER BackgroundColor
-    Background color. Defaults to the host's current background color.
 .PARAMETER NoNewline
     Suppresses the trailing newline.
 .EXAMPLE
@@ -23,20 +27,43 @@ function Write-InformationColored {
         [Parameter(Mandatory, Position = 0)]
         [object] $MessageData,
 
-        [System.ConsoleColor] $ForegroundColor = $Host.UI.RawUI.ForegroundColor,
-        [System.ConsoleColor] $BackgroundColor = $Host.UI.RawUI.BackgroundColor,
+        [System.ConsoleColor] $ForegroundColor,
 
         [switch] $NoNewline
     )
 
-    $msg = [System.Management.Automation.HostInformationMessage]@{
-        Message         = $MessageData
-        ForegroundColor = $ForegroundColor
-        BackgroundColor = $BackgroundColor
-        NoNewline       = $NoNewline.IsPresent
+    $text = [string]$MessageData
+
+    if ($PSBoundParameters.ContainsKey('ForegroundColor')) {
+        $ansi = switch ($ForegroundColor) {
+            'Black'       { "`e[30m" }
+            'DarkRed'     { "`e[31m" }
+            'DarkGreen'   { "`e[32m" }
+            'DarkYellow'  { "`e[33m" }
+            'DarkBlue'    { "`e[34m" }
+            'DarkMagenta' { "`e[35m" }
+            'DarkCyan'    { "`e[36m" }
+            'Gray'        { "`e[37m" }
+            'DarkGray'    { "`e[90m" }
+            'Red'         { "`e[91m" }
+            'Green'       { "`e[92m" }
+            'Yellow'      { "`e[93m" }
+            'Blue'        { "`e[94m" }
+            'Magenta'     { "`e[95m" }
+            'Cyan'        { "`e[96m" }
+            'White'       { "`e[97m" }
+            default       { '' }
+        }
+
+        if ($ansi) {
+            $text = "${ansi}${text}`e[0m"
+        }
     }
 
-    $record = [System.Management.Automation.InformationRecord]::new($msg, $MyInvocation.PSCommandPath)
-    $record.Tags.Add('PSHOST')
-    $PSCmdlet.WriteInformation($record)
+    if ($NoNewline) {
+        Write-Host $text -NoNewline
+    }
+    else {
+        Write-Host $text
+    }
 }

@@ -57,7 +57,14 @@ function Write-Exception {
         $lines += $inner.Message
     }
 
+    $inPipeline = Test-IsRunningInPipeline
+
     foreach ($line in $lines) {
-        Write-InformationColored $line -ForegroundColor Red
+        if ($inPipeline) {
+            Write-Information "##[error]$line"
+        }
+        else {
+            Write-InformationColored $line -ForegroundColor Red
+        }
     }
 }
