@@ -190,8 +190,8 @@ Describe 'Invoke-CliCommand' {
 
         It 'pipe inside quotes does NOT throw' {
             # The parser should not reject this — the | is inside quotes.
-            # Use where.exe with a quoted arg containing | to test parsing only.
-            { Invoke-CliCommand 'where.exe "foo|bar"' -Silent -NoAssert } | Should -Not -Throw
+            $cmd = if ($IsWindows) { 'where.exe "foo|bar"' } else { 'which "foo|bar"' }
+            { Invoke-CliCommand $cmd -Silent -NoAssert } | Should -Not -Throw
         }
     }
 }
