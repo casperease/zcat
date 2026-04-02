@@ -109,7 +109,12 @@ jobs:
             Assert-True ($azCmd -match 'az')
             Assert-True ($azCmd -match 'account show')
 
-      # 2h: Module loading and function discovery
+      # 2h: Write-Header renders as ##[section] in pipeline
+      - template: /pipelines/steps/invoke-automation.yaml
+        parameters:
+          RunCommand: 'Write-Header "Hello from pipeline"; Write-Header'
+
+      # 2i: Module loading and function discovery
       - template: /pipelines/steps/invoke-automation.yaml
         parameters:
           DisplayName: 'Module loading and discovery'
