@@ -103,15 +103,13 @@ jobs:
             Assert-True ($azCmd -match 'account show')
 
       # 2h: Deliberate failure — verify error handling works.
-      # We test this by asserting that a known-bad command produces a non-zero
-      # exit, then continue. Template steps can't have continueOnError, so we
-      # use an inline pwsh step for this one.
+      # Template steps can't have continueOnError, so we use an inline step.
       - task: PowerShell@2
         displayName: 'Assert-True $false (expected failure)'
         inputs:
-          targetType: filePath
-          filePath: pipelines/Run.ps1
-          arguments: -Command 'Assert-True $false'
+          targetType: inline
+          script: |
+            . './pipelines/Run.ps1' -Command 'Assert-True $false'
           pwsh: true
         continueOnError: true
 

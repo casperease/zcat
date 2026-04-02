@@ -7,7 +7,9 @@
 #
 #   - template: /pipelines/steps/invoke-automation.yaml
 #     parameters:
-#       RunCommand: 'Invoke-AzCli "account show"'
+#       RunCommand: |
+#         $config = Get-MetaConfiguration
+#         Deploy-Infrastructure -Config $config
 #       Mode: azcli
 #       ServiceConnection: 'sc-my-subscription'
 #
@@ -42,9 +44,12 @@ steps:
     - task: PowerShell@2
       displayName: '${{ parameters.RunCommand }}'
       inputs:
-        targetType: filePath
-        filePath: pipelines/Run.ps1
-        arguments: -Command '${{ parameters.RunCommand }}'
+        targetType: inline
+        script: |
+          $command = @'
+          ${{ parameters.RunCommand }}
+          '@
+          . './pipelines/Run.ps1' -Command $command
         pwsh: true
       ${{ if parameters.ExposeAccessToken }}:
         env:
@@ -57,8 +62,12 @@ steps:
       inputs:
         azureSubscription: ${{ parameters.ServiceConnection }}
         scriptType: pscore
-        scriptPath: pipelines/Run.ps1
-        arguments: -Command '${{ parameters.RunCommand }}'
+        scriptLocation: inlineScript
+        inlineScript: |
+          $command = @'
+          ${{ parameters.RunCommand }}
+          '@
+          . './pipelines/Run.ps1' -Command $command
       ${{ if parameters.ExposeAccessToken }}:
         env:
           SYSTEM_ACCESSTOKEN: $(System.AccessToken)
@@ -69,9 +78,12 @@ steps:
       displayName: '${{ parameters.RunCommand }}'
       inputs:
         azureSubscription: ${{ parameters.ServiceConnection }}
-        ScriptType: FilePath
-        ScriptPath: pipelines/Run.ps1
-        ScriptArguments: -Command '${{ parameters.RunCommand }}'
+        ScriptType: InlineScript
+        Inline: |
+          $command = @'
+          ${{ parameters.RunCommand }}
+          '@
+          . './pipelines/Run.ps1' -Command $command
         azurePowerShellVersion: LatestVersion
       ${{ if parameters.ExposeAccessToken }}:
         env:
