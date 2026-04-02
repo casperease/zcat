@@ -1,4 +1,8 @@
 Describe 'Write-Exception' {
+    BeforeAll {
+        Mock Test-IsRunningInPipeline { $false }
+    }
+
     It 'displays exception type and message from an ErrorRecord' {
         try { throw [System.InvalidOperationException]::new('test error') } catch { $null }
         Write-Exception $global:Error[0] -InformationVariable iv -InformationAction SilentlyContinue 6>&1 | Out-Null

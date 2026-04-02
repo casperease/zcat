@@ -27,7 +27,7 @@ function Write-Header {
 
     if ($Message) {
         if (Test-IsRunningInPipeline) {
-            Write-Host "##[section]$Message"
+            Write-Information "##[section]$Message"
         }
         else {
             Write-InformationColored ("{0}`n{1}`n{2}" -f $separator, $Message, $separator) -ForegroundColor $ForegroundColor
@@ -35,7 +35,7 @@ function Write-Header {
     }
     else {
         if (Test-IsRunningInPipeline) {
-            Write-Host "##[section]$separator"
+            Write-Information "##[section]$separator"
         }
         else {
             Write-InformationColored $separator -ForegroundColor $ForegroundColor

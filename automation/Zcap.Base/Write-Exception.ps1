@@ -61,7 +61,7 @@ function Write-Exception {
 
     foreach ($line in $lines) {
         if ($inPipeline) {
-            Write-Host "##[error]$line"
+            Write-Information "##[error]$line"
         }
         else {
             Write-InformationColored $line -ForegroundColor Red

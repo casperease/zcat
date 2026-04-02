@@ -25,7 +25,9 @@ trap {
 }
 
 $sanitized = ConvertFrom-PipelineCommand $Command
-Write-Message "Executing: $sanitized"
+Write-Header 'Invoke-Automation'
+Write-Information $sanitized
+Write-Header
 
 $block = [ScriptBlock]::Create($sanitized)
 Invoke-Command -ScriptBlock $block -NoNewScope

@@ -1,4 +1,8 @@
 Describe 'Write-Header' {
+    BeforeAll {
+        Mock Test-IsRunningInPipeline { $false }
+    }
+
     It 'wraps message with separator lines' {
         Write-Header 'test' -Width 10 -InformationVariable iv -InformationAction SilentlyContinue 6>&1 | Out-Null
         $text = $iv[0].MessageData.Message
