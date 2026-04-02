@@ -36,5 +36,7 @@ function Write-InformationColored {
         NoNewline       = $NoNewline.IsPresent
     }
 
-    Write-Information $msg -Tags 'PSHOST'
+    $record = [System.Management.Automation.InformationRecord]::new($msg, $MyInvocation.PSCommandPath)
+    $record.Tags.Add('PSHOST')
+    $PSCmdlet.WriteInformation($record)
 }
