@@ -45,8 +45,6 @@ function Write-Exception {
         else { $_ }
     }
 
-    $inPipeline = Test-IsRunningInPipeline
-
     $lines = @(
         $ErrorRecord.Exception.GetType().FullName
         $ErrorRecord.Exception.Message
@@ -60,11 +58,6 @@ function Write-Exception {
     }
 
     foreach ($line in $lines) {
-        if ($inPipeline) {
-            Write-Information "##[error]$line"
-        }
-        else {
-            Write-InformationColored $line -ForegroundColor Red
-        }
+        Write-InformationColored $line -ForegroundColor Red
     }
 }
