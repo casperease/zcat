@@ -35,65 +35,65 @@ Describe 'Invoke-CliCommand' {
 
     Context 'Stream mode (default) — execution' {
         It 'runs a command successfully' {
-            { Invoke-CliCommand $simpleCmd } | Should -Not -Throw
+            { Invoke-CliCommand $simpleCmd -Silent } | Should -Not -Throw
         }
 
         It 'returns $null without -PassThru' {
-            $result = Invoke-CliCommand $simpleCmd
+            $result = Invoke-CliCommand $simpleCmd -Silent
             $result | Should -BeNullOrEmpty
         }
 
         It 'throws on non-zero exit code' {
-            { Invoke-CliCommand $failCmd } | Should -Throw
+            { Invoke-CliCommand $failCmd -Silent } | Should -Throw
         }
 
         It 'does not throw with -NoAssert' {
-            { Invoke-CliCommand $failCmd -NoAssert } | Should -Not -Throw
+            { Invoke-CliCommand $failCmd -NoAssert -Silent } | Should -Not -Throw
         }
     }
 
     Context 'Stream mode — PassThru result object' {
         It 'returns Zcap.CliResult type' {
-            $result = Invoke-CliCommand $simpleCmd -PassThru
+            $result = Invoke-CliCommand $simpleCmd -PassThru -Silent
             $result | Should -Not -BeNullOrEmpty
             $result.PSObject.TypeNames | Should -Contain 'Zcap.CliResult'
         }
 
         It '.Output contains stdout' {
-            $result = Invoke-CliCommand $simpleCmd -PassThru
+            $result = Invoke-CliCommand $simpleCmd -PassThru -Silent
             $result.Output | Should -Not -BeNullOrEmpty
         }
 
         It '.Output is a string not an array for multi-line' {
-            $result = Invoke-CliCommand $multiLineCmd -PassThru
+            $result = Invoke-CliCommand $multiLineCmd -PassThru -Silent
             $result.Output | Should -BeOfType [string]
             $result.Output | Should -Match 'line1'
             $result.Output | Should -Match 'line2'
         }
 
         It '.Errors contains stderr' {
-            $result = Invoke-CliCommand $stderrCmd -PassThru -NoAssert
+            $result = Invoke-CliCommand $stderrCmd -PassThru -NoAssert -Silent
             $result.Errors | Should -Match 'errtext'
         }
 
         It '.Full contains both stdout and stderr' {
-            $result = Invoke-CliCommand $bothCmd -PassThru -NoAssert
+            $result = Invoke-CliCommand $bothCmd -PassThru -NoAssert -Silent
             $result.Full | Should -Match 'out'
             $result.Full | Should -Match 'err'
         }
 
         It '.ExitCode is 0 on success' {
-            $result = Invoke-CliCommand $simpleCmd -PassThru
+            $result = Invoke-CliCommand $simpleCmd -PassThru -Silent
             $result.ExitCode | Should -Be 0
         }
 
         It '.ExitCode captures non-zero with -NoAssert' {
-            $result = Invoke-CliCommand $fail42Cmd -PassThru -NoAssert
+            $result = Invoke-CliCommand $fail42Cmd -PassThru -NoAssert -Silent
             $result.ExitCode | Should -Be 42
         }
 
         It '.Raw is an array of output lines' {
-            $result = Invoke-CliCommand $multiLineCmd -PassThru
+            $result = Invoke-CliCommand $multiLineCmd -PassThru -Silent
             $result.Raw.Count | Should -BeGreaterOrEqual 2
         }
     }
@@ -116,13 +116,13 @@ Describe 'Invoke-CliCommand' {
 
     Context 'Stream mode — no pipeline leak' {
         It 'output does not leak into caller function return' {
-            function Test-StreamLeak { Invoke-CliCommand $simpleCmd }
+            function Test-StreamLeak { Invoke-CliCommand $simpleCmd -Silent }
             $leaked = Test-StreamLeak
             $leaked | Should -BeNullOrEmpty
         }
 
         It 'multi-line output does not leak' {
-            function Test-MultiLineLeak { Invoke-CliCommand $multiLineCmd }
+            function Test-MultiLineLeak { Invoke-CliCommand $multiLineCmd -Silent }
             $leaked = Test-MultiLineLeak
             $leaked | Should -BeNullOrEmpty
         }
@@ -130,16 +130,16 @@ Describe 'Invoke-CliCommand' {
 
     Context 'Direct mode' {
         It 'output leaks to pipeline' {
-            $result = Invoke-CliCommand 'echo hello' -Direct
+            $result = Invoke-CliCommand 'echo hello' -Direct -Silent
             $result | Should -Be 'hello'
         }
 
         It 'throws on non-zero exit code' {
-            { Invoke-CliCommand $failCmd -Direct } | Should -Throw
+            { Invoke-CliCommand $failCmd -Direct -Silent } | Should -Throw
         }
 
         It 'does not throw with -NoAssert' {
-            { Invoke-CliCommand $failCmd -Direct -NoAssert } | Should -Not -Throw
+            { Invoke-CliCommand $failCmd -Direct -NoAssert -Silent } | Should -Not -Throw
         }
     }
 
@@ -149,12 +149,12 @@ Describe 'Invoke-CliCommand' {
         }
 
         It '-PassThru without -Direct works' {
-            $result = Invoke-CliCommand $simpleCmd -PassThru
+            $result = Invoke-CliCommand $simpleCmd -PassThru -Silent
             $result | Should -Not -BeNullOrEmpty
         }
 
         It '-Direct without -PassThru works' {
-            { Invoke-CliCommand 'echo hello' -Direct } | Should -Not -Throw
+            { Invoke-CliCommand 'echo hello' -Direct -Silent } | Should -Not -Throw
         }
     }
 

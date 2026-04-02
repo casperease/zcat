@@ -1,4 +1,5 @@
 .claude/CLAUDE.local.md
+.mcp.json
 
 # Output directory (keep the folder, ignore contents)
 out/*

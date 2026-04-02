@@ -1,0 +1,78 @@
+# Unified step template for running PowerShell automation commands.
+#
+# Usage:
+#   - template: /pipelines/steps/invoke-automation.yaml
+#     parameters:
+#       RunCommand: 'Test-Automation'
+#
+#   - template: /pipelines/steps/invoke-automation.yaml
+#     parameters:
+#       RunCommand: 'Invoke-AzCli "account show"'
+#       Mode: azcli
+#       ServiceConnection: 'sc-my-subscription'
+#
+# Security: all flags default to off. Each flag is an explicit escalation.
+# No credentials leak to environment variables in any mode.
+# See ADR: docs/automation/adr/ado/pipeline-runner-pattern.md
+
+parameters:
+  - name: RunCommand
+    type: string
+    displayName: PowerShell command to execute
+
+  - name: Mode
+    type: string
+    default: 'none'
+    values: ['none', 'azcli', 'azps']
+    displayName: 'Authentication mode (none = PowerShell@2, azcli = AzureCLI@2, azps = AzurePowerShell@5)'
+
+  - name: ExposeAccessToken
+    type: boolean
+    default: false
+    displayName: 'Map SYSTEM_ACCESSTOKEN (for ADO API, NuGet feeds, git auth)'
+
+  - name: ServiceConnection
+    type: string
+    default: ''
+    displayName: 'Azure service connection (required when Mode is azcli or azps)'
+
+steps:
+  # --- Mode: none → PowerShell@2 ---
+  - ${{ if eq(parameters.Mode, 'none') }}:
+    - task: PowerShell@2
+      displayName: '${{ parameters.RunCommand }}'
+      inputs:
+        targetType: filePath
+        filePath: pipelines/Run.ps1
+        arguments: -Command '${{ parameters.RunCommand }}'
+        pwsh: true
+      ${{ if parameters.ExposeAccessToken }}:
+        env:
+          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+  # --- Mode: azcli → AzureCLI@2 ---
+  - ${{ if eq(parameters.Mode, 'azcli') }}:
+    - task: AzureCLI@2
+      displayName: '${{ parameters.RunCommand }}'
+      inputs:
+        azureSubscription: ${{ parameters.ServiceConnection }}
+        scriptType: pscore
+        scriptPath: pipelines/Run.ps1
+        arguments: -Command '${{ parameters.RunCommand }}'
+      ${{ if parameters.ExposeAccessToken }}:
+        env:
+          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+  # --- Mode: azps → AzurePowerShell@5 ---
+  - ${{ if eq(parameters.Mode, 'azps') }}:
+    - task: AzurePowerShell@5
+      displayName: '${{ parameters.RunCommand }}'
+      inputs:
+        azureSubscription: ${{ parameters.ServiceConnection }}
+        ScriptType: FilePath
+        ScriptPath: pipelines/Run.ps1
+        ScriptArguments: -Command '${{ parameters.RunCommand }}'
+        azurePowerShellVersion: LatestVersion
+      ${{ if parameters.ExposeAccessToken }}:
+        env:
+          SYSTEM_ACCESSTOKEN: $(System.AccessToken)

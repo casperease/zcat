@@ -1,0 +1,20 @@
+# CI pipeline — runs on push to main and pull requests.
+# Uses the invoke-automation step template to run tests.
+
+trigger:
+  branches:
+    include: [main]
+
+pr:
+  branches:
+    include: [main]
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+  - checkout: self
+
+  - template: /pipelines/steps/invoke-automation.yaml
+    parameters:
+      RunCommand: 'Test-Automation'
