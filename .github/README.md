@@ -4,7 +4,7 @@ PowerShell 7.4+ module system for monorepos. Drop a file, get a function — no 
 
 Copy `automation/` and `importer.ps1` into your repo. Everything is self-contained: vendored dependencies, no network calls, no global state.
 
-[![CI](../../actions/workflows/ci.yml/badge.svg)](../../actions/workflows/ci.yml)
+[![CI](../../../actions/workflows/ci.yml/badge.svg)](../../../actions/workflows/ci.yml)
 
 ---
 
