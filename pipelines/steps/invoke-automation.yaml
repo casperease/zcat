@@ -38,17 +38,25 @@ parameters:
     default: ''
     displayName: 'Azure service connection (required when Mode is azcli or azps)'
 
+  - name: DisplayName
+    type: string
+    default: ''
+    displayName: 'Step display name (auto-set from RunCommand for single-line commands)'
+
 steps:
   # --- Mode: none → PowerShell@2 ---
   - ${{ if eq(parameters.Mode, 'none') }}:
     - task: PowerShell@2
-      displayName: '${{ parameters.RunCommand }}'
+      displayName: '${{ coalesce(parameters.DisplayName, parameters.RunCommand) }}'
       inputs:
         targetType: inline
         script: |
           $command = @'
           ${{ parameters.RunCommand }}
           '@
+          if ($command.Contains("`n") -and -not '${{ parameters.DisplayName }}') {
+              throw "Multiline RunCommand requires DisplayName parameter. Add: DisplayName: 'short description'"
+          }
           . './pipelines/Run.ps1' -Command $command
         pwsh: true
       ${{ if parameters.ExposeAccessToken }}:
@@ -58,7 +66,7 @@ steps:
   # --- Mode: azcli → AzureCLI@2 ---
   - ${{ if eq(parameters.Mode, 'azcli') }}:
     - task: AzureCLI@2
-      displayName: '${{ parameters.RunCommand }}'
+      displayName: '${{ coalesce(parameters.DisplayName, parameters.RunCommand) }}'
       inputs:
         azureSubscription: ${{ parameters.ServiceConnection }}
         scriptType: pscore
@@ -67,6 +75,9 @@ steps:
           $command = @'
           ${{ parameters.RunCommand }}
           '@
+          if ($command.Contains("`n") -and -not '${{ parameters.DisplayName }}') {
+              throw "Multiline RunCommand requires DisplayName parameter. Add: DisplayName: 'short description'"
+          }
           . './pipelines/Run.ps1' -Command $command
       ${{ if parameters.ExposeAccessToken }}:
         env:
@@ -75,7 +86,7 @@ steps:
   # --- Mode: azps → AzurePowerShell@5 ---
   - ${{ if eq(parameters.Mode, 'azps') }}:
     - task: AzurePowerShell@5
-      displayName: '${{ parameters.RunCommand }}'
+      displayName: '${{ coalesce(parameters.DisplayName, parameters.RunCommand) }}'
       inputs:
         azureSubscription: ${{ parameters.ServiceConnection }}
         ScriptType: InlineScript
@@ -83,6 +94,9 @@ steps:
           $command = @'
           ${{ parameters.RunCommand }}
           '@
+          if ($command.Contains("`n") -and -not '${{ parameters.DisplayName }}') {
+              throw "Multiline RunCommand requires DisplayName parameter. Add: DisplayName: 'short description'"
+          }
           . './pipelines/Run.ps1' -Command $command
         azurePowerShellVersion: LatestVersion
       ${{ if parameters.ExposeAccessToken }}:

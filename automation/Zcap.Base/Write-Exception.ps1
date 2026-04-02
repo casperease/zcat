@@ -32,9 +32,6 @@ function Write-Exception {
         return
     }
 
-    Write-InformationColored $ErrorRecord.Exception.GetType().FullName -ForegroundColor Red
-    Write-InformationColored $ErrorRecord.Exception.Message -ForegroundColor Red
-
     $traceLines = $ErrorRecord.ScriptStackTrace -split "`n"
     $trace = $traceLines | ForEach-Object {
         if ($_ -match 'at <ScriptBlock>, <No file>: line \d+') {
@@ -47,11 +44,27 @@ function Write-Exception {
         }
         else { $_ }
     }
-    Write-InformationColored ($trace -join "`n") -ForegroundColor Red
+
+    $inPipeline = Test-IsRunningInPipeline
+
+    $lines = @(
+        $ErrorRecord.Exception.GetType().FullName
+        $ErrorRecord.Exception.Message
+        $trace
+    )
 
     $inner = $ErrorRecord.Exception.InnerException
     for ($i = 1; $inner; $i++, ($inner = $inner.InnerException)) {
-        Write-InformationColored "--- Inner exception ($i): $($inner.GetType().FullName) ---" -ForegroundColor DarkYellow
-        Write-Information $inner.Message
+        $lines += "--- Inner exception ($i): $($inner.GetType().FullName) ---"
+        $lines += $inner.Message
+    }
+
+    foreach ($line in $lines) {
+        if ($inPipeline) {
+            Write-Host "##[error]$line"
+        }
+        else {
+            Write-InformationColored $line -ForegroundColor Red
+        }
     }
 }

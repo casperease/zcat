@@ -37,6 +37,7 @@ jobs:
       # 2a: Multiline command via YAML pipe operator
       - template: /pipelines/steps/invoke-automation.yaml
         parameters:
+          DisplayName: 'Multiline: Meta functions'
           RunCommand: |
             $customers = Get-MetaCustomers
             $envs = Get-MetaEnvironments
@@ -47,6 +48,7 @@ jobs:
       # 2b: Invoke-CliCommand output capture and PassThru
       - template: /pipelines/steps/invoke-automation.yaml
         parameters:
+          DisplayName: 'CliCommand: output capture'
           RunCommand: |
             $result = Invoke-CliCommand 'which which' -PassThru -Silent
             Assert-True ($result.ExitCode -eq 0)
@@ -57,6 +59,7 @@ jobs:
       # 2c: Invoke-CliCommand stderr separation
       - template: /pipelines/steps/invoke-automation.yaml
         parameters:
+          DisplayName: 'CliCommand: stderr separation'
           RunCommand: |
             $result = Invoke-CliCommand 'bash -c "echo out; echo err >&2"' -PassThru -NoAssert -Silent
             Assert-True ($result.Output -match 'out')
@@ -67,6 +70,7 @@ jobs:
       # 2d: Invoke-CliCommand exit code assertion
       - template: /pipelines/steps/invoke-automation.yaml
         parameters:
+          DisplayName: 'CliCommand: exit code assertion'
           RunCommand: |
             $threw = $false
             try { Invoke-CliCommand 'bash -c "exit 1"' -Silent } catch { $threw = $true }
@@ -77,6 +81,7 @@ jobs:
       # 2e: Pipeline detection and output root
       - template: /pipelines/steps/invoke-automation.yaml
         parameters:
+          DisplayName: 'Pipeline detection and output root'
           RunCommand: |
             Assert-True (Test-IsRunningInPipeline)
             $outRoot = Get-OutputRoot
@@ -87,6 +92,7 @@ jobs:
       # 2f: Set-PipelineVariable integration
       - template: /pipelines/steps/invoke-automation.yaml
         parameters:
+          DisplayName: 'Set-PipelineVariable integration'
           RunCommand: |
             Set-PipelineVariable -Name 'test.result' -Value 'passed'
             Set-PipelineVariable -Name 'my-count' -Value '42' -IsOutput
@@ -94,6 +100,7 @@ jobs:
       # 2g: DryRun mode on tool wrappers (no tools needed)
       - template: /pipelines/steps/invoke-automation.yaml
         parameters:
+          DisplayName: 'DryRun: tool wrappers'
           RunCommand: |
             $pyCmd = Invoke-Python '-c "print(42)"' -DryRun
             Assert-True ($pyCmd -match 'python')
@@ -102,20 +109,10 @@ jobs:
             Assert-True ($azCmd -match 'az')
             Assert-True ($azCmd -match 'account show')
 
-      # 2h: Deliberate failure — verify error handling works.
-      # Template steps can't have continueOnError, so we use an inline step.
-      - task: PowerShell@2
-        displayName: 'Assert-True $false (expected failure)'
-        inputs:
-          targetType: inline
-          script: |
-            . './pipelines/Run.ps1' -Command 'Assert-True $false'
-          pwsh: true
-        continueOnError: true
-
-      # 2i: Module loading and function discovery
+      # 2h: Module loading and function discovery
       - template: /pipelines/steps/invoke-automation.yaml
         parameters:
+          DisplayName: 'Module loading and discovery'
           RunCommand: |
             $modules = Get-Module | Where-Object { $_.Name -match '^Zcap\.' }
             Assert-True ($modules.Count -ge 3)
@@ -137,6 +134,7 @@ jobs:
       # 3a: Mode azcli — az CLI is pre-authenticated
       - template: /pipelines/steps/invoke-automation.yaml
         parameters:
+          DisplayName: 'Mode azcli: az account show'
           RunCommand: |
             $result = Invoke-CliCommand 'az account show --output json' -PassThru -Silent
             Assert-True ($result.ExitCode -eq 0)
@@ -149,6 +147,7 @@ jobs:
       # 3b: Mode azps — Az PowerShell modules authenticated
       - template: /pipelines/steps/invoke-automation.yaml
         parameters:
+          DisplayName: 'Mode azps: Get-AzContext'
           RunCommand: |
             $ctx = Get-AzContext
             Assert-NotNull $ctx
@@ -160,7 +159,78 @@ jobs:
       # 3c: ExposeAccessToken — SYSTEM_ACCESSTOKEN is mapped
       - template: /pipelines/steps/invoke-automation.yaml
         parameters:
+          DisplayName: 'ExposeAccessToken: token available'
           RunCommand: |
             Assert-NotNullOrWhitespace $env:SYSTEM_ACCESSTOKEN
             Write-Message 'SYSTEM_ACCESSTOKEN is available'
           ExposeAccessToken: true
+
+  # ---------------------------------------------------------------------------
+  # Job 4: Expected failures — verify guardrails work
+  # All steps use continueOnError so the job succeeds overall.
+  # ---------------------------------------------------------------------------
+  - job: ExpectedFailures
+    displayName: 'Expected Failures'
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+      - checkout: self
+
+      # 4a: Assert-True $false triggers trap with stack trace
+      - task: PowerShell@2
+        displayName: 'Trap: Assert-True $false'
+        inputs:
+          targetType: inline
+          script: . './pipelines/Run.ps1' -Command 'Assert-True $false'
+          pwsh: true
+        continueOnError: true
+
+      # 4b: Multiline RunCommand without DisplayName must fail
+      - task: PowerShell@2
+        displayName: 'Guard: multiline without DisplayName'
+        inputs:
+          targetType: inline
+          pwsh: true
+          script: |
+            $command = @'
+            line1
+            line2
+            '@
+            if ($command.Contains("`n") -and -not '') {
+                Write-Host '##[error]Correctly rejected: multiline without DisplayName'
+                exit 0
+            }
+            Write-Host '##[error]Should have been rejected'
+            exit 1
+
+      # 4c: Invoke-CliCommand non-zero exit code throws
+      - task: PowerShell@2
+        displayName: 'Trap: non-zero exit code'
+        inputs:
+          targetType: inline
+          script: . './pipelines/Run.ps1' -Command 'Invoke-CliCommand "bash -c exit\ 1" -Silent'
+          pwsh: true
+        continueOnError: true
+
+      # 4d: Write-Exception outputs ##[error] in pipeline
+      - task: PowerShell@2
+        displayName: 'Verify: Write-Exception uses ##[error]'
+        inputs:
+          targetType: inline
+          pwsh: true
+          script: |
+            . './importer.ps1'
+            $output = try {
+                & { throw 'test error' } 2>&1
+            }
+            catch {
+                Write-Exception $_ 6>&1 *>&1
+            }
+            $hasErrorPrefix = ($output | Out-String) -match '##\[error\]'
+            if ($hasErrorPrefix) {
+                Write-Host 'Write-Exception correctly uses ##[error] prefix'
+            }
+            else {
+                Write-Host '##[error]Write-Exception did not use ##[error] prefix'
+                exit 1
+            }
