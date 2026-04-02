@@ -26,7 +26,7 @@ function Write-Header {
     $separator = '*' * $Width
 
     if ($Message) {
-        Write-InformationColored ("{0}`n{1}`n{2}" -f $separator, $Message, $separator) -ForegroundColor $ForegroundColor
+        Write-InformationColored ("{0}`n* {1}`n{2}" -f $separator, $Message, $separator) -ForegroundColor $ForegroundColor
     }
     else {
         Write-InformationColored $separator -ForegroundColor $ForegroundColor

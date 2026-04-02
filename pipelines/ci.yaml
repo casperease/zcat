@@ -202,10 +202,10 @@ jobs:
             line2
             '@
             if ($command.Contains("`n") -and -not '') {
-                Write-Host '##[error]Correctly rejected: multiline without DisplayName'
+                Write-Information 'Correctly rejected: multiline without DisplayName'
                 exit 0
             }
-            Write-Host '##[error]Should have been rejected'
+            Write-Information 'ERROR: Should have been rejected'
             exit 1
 
       # 4c: Invoke-CliCommand non-zero exit code throws
@@ -217,9 +217,9 @@ jobs:
           pwsh: true
         continueOnError: true
 
-      # 4d: Write-Exception outputs ##[error] in pipeline
+      # 4d: Write-Exception outputs red ANSI text
       - task: PowerShell@2
-        displayName: 'Verify: Write-Exception uses ##[error]'
+        displayName: 'Verify: Write-Exception outputs error info'
         inputs:
           targetType: inline
           pwsh: true
@@ -231,11 +231,11 @@ jobs:
             catch {
                 Write-Exception $_ 6>&1 *>&1
             }
-            $hasErrorPrefix = ($output | Out-String) -match '##\[error\]'
-            if ($hasErrorPrefix) {
-                Write-Host 'Write-Exception correctly uses ##[error] prefix'
+            $text = $output | Out-String
+            if ($text -match 'test error' -and $text -match 'RuntimeException') {
+                Write-Information 'Write-Exception correctly outputs exception type and message'
             }
             else {
-                Write-Host '##[error]Write-Exception did not use ##[error] prefix'
+                throw 'Write-Exception did not output expected content'
                 exit 1
             }

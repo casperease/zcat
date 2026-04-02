@@ -7,7 +7,7 @@ Describe 'Write-Header' {
         Write-Header 'test' -Width 10 -InformationVariable iv -InformationAction SilentlyContinue 6>&1 | Out-Null
         $text = $iv[0].MessageData.Message
         $text | Should -Match '^\*{10}'
-        $text | Should -Match 'test'
+        $text | Should -Match '\* test'
     }
 
     It 'uses specified width for separators' {

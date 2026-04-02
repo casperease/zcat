@@ -25,7 +25,7 @@ trap {
 }
 
 $sanitized = ConvertFrom-PipelineCommand $Command
-Write-Header 'Invoke-Automation'
+Write-Header 'Invoke-Automation executing:'
 Write-Information $sanitized
 Write-Header
 
