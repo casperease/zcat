@@ -36,5 +36,5 @@ function Write-InformationColored {
         NoNewline       = $NoNewline.IsPresent
     }
 
-    Write-Information $msg
+    Write-Information $msg -Tags 'PSHOST'
 }
