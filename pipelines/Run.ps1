@@ -19,7 +19,10 @@ param(
 )
 
 . $PSScriptRoot/../importer.ps1
-trap { Write-Exception $_; break }
+trap {
+    Write-Exception $_
+    break
+}
 
 $sanitized = ConvertFrom-PipelineCommand $Command
 Write-Message "Executing: $sanitized"
