@@ -109,7 +109,7 @@ jobs:
             Assert-True ($azCmd -match 'az')
             Assert-True ($azCmd -match 'account show')
 
-      # 2h: Write-Header renders as ##[section] in pipeline
+      # 2h: Write-Header renders with colored stars in pipeline
       - template: /pipelines/steps/invoke-automation.yaml
         parameters:
           RunCommand: 'Write-Header "Hello from pipeline"; Write-Header'

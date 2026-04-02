@@ -56,7 +56,9 @@ function Write-InformationColored {
         }
 
         if ($ansi) {
-            $text = "${ansi}${text}`e[0m"
+            # Wrap each line individually — ADO/CI log renderers reset ANSI at newlines
+            $lines = $text -split "`n"
+            $text = ($lines | ForEach-Object { "${ansi}$_`e[0m" }) -join "`n"
         }
     }
 
