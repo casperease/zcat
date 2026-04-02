@@ -66,3 +66,46 @@ Describe 'Test file: <Module>/tests/<File>' -ForEach $allTests {
         $File.BaseName -replace '\.Tests$' | Should -Match '-'
     }
 }
+
+Describe 'Module dependencies' {
+    BeforeAll {
+        $script:edges = Get-ModuleDependency
+    }
+
+    It 'has no circular module dependencies' {
+        # Collect all modules that participate in cross-module calls
+        $adjacency = @{}
+        $inDegree = @{}
+        foreach ($edge in $edges) {
+            if (-not $adjacency[$edge.From]) { $adjacency[$edge.From] = [System.Collections.Generic.List[string]]::new() }
+            if (-not $adjacency[$edge.To]) { $adjacency[$edge.To] = [System.Collections.Generic.List[string]]::new() }
+            $adjacency[$edge.From].Add($edge.To)
+            if (-not $inDegree.ContainsKey($edge.From)) { $inDegree[$edge.From] = 0 }
+            if (-not $inDegree.ContainsKey($edge.To)) { $inDegree[$edge.To] = 0 }
+            $inDegree[$edge.To]++
+        }
+
+        # Kahn's algorithm — BFS topological sort
+        $queue = [System.Collections.Generic.Queue[string]]::new()
+        foreach ($mod in $inDegree.Keys) {
+            if ($inDegree[$mod] -eq 0) { $queue.Enqueue($mod) }
+        }
+
+        $processed = 0
+        while ($queue.Count -gt 0) {
+            $current = $queue.Dequeue()
+            $processed++
+            foreach ($neighbor in $adjacency[$current]) {
+                $inDegree[$neighbor]--
+                if ($inDegree[$neighbor] -eq 0) { $queue.Enqueue($neighbor) }
+            }
+        }
+
+        $totalModules = $inDegree.Count
+        $cycleModules = if ($processed -lt $totalModules) {
+            ($inDegree.Keys | Where-Object { $inDegree[$_] -gt 0 }) -join ' <-> '
+        }
+
+        $processed | Should -Be $totalModules -Because "circular dependency detected: $cycleModules"
+    }
+}
