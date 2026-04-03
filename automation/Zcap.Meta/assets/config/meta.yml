@@ -41,28 +41,28 @@ environment_types:
       subtypes: []
 
 customers:
-  blue:
-    details: blå kunde
+  apex:
+    details: Apex Industries
     environment_types:
       - core_customer
       - workspace_bi
-  bold:
-    details: bold kunde
+  nova:
+    details: Nova Systems
     environment_types:
       - core_customer
-  fine:
-    details: fine kunde
+  flux:
+    details: Flux Energy
     environment_types:
       - core_customer
-  cool:
-    details: cool kunde
+  dusk:
+    details: Dusk Analytics
     environment_types:
       - core_customer
-  free:
-    details: free kunde
+  warp:
+    details: Warp Logistics
     environment_types:
       - core_customer
-  kind:
-    details: kind kunde
+  volt:
+    details: Volt Financial
     environment_types:
       - core_customer

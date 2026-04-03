@@ -12,9 +12,9 @@ Describe 'Get-MetaEnvironmentTypes' {
     }
 
     It 'All count equals Customer + Shared count' {
-        $all = Get-MetaEnvironmentTypes
-        $customer = Get-MetaEnvironmentTypes -Scope Customer
-        $shared = Get-MetaEnvironmentTypes -Scope Shared
+        $all = @(Get-MetaEnvironmentTypes)
+        $customer = @(Get-MetaEnvironmentTypes -Scope Customer)
+        $shared = @(Get-MetaEnvironmentTypes -Scope Shared)
         $all | Should -HaveCount ($customer.Count + $shared.Count)
     }
 

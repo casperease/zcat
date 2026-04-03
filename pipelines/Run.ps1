@@ -26,6 +26,7 @@ trap {
 
 $sanitized = ConvertFrom-PipelineCommand $Command
 Write-Header 'Invoke-Automation' -ForegroundColor Cyan
+Write-Header -ForegroundColor Cyan
 Write-Information $sanitized
 Write-Footer -ForegroundColor Cyan
 

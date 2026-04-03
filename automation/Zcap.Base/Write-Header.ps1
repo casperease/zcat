@@ -32,18 +32,21 @@ function Write-Header {
 
     $colorSplat = if ($PSBoundParameters.ContainsKey('ForegroundColor')) { @{ ForegroundColor = $ForegroundColor } } else { @{} }
 
+    $inner = $Width - 2
+    $topLine = "╭$('─' * $inner)╮"
+    $bottomLine = "╰$('─' * $inner)╯"
+
     if ($Message) {
-        $msgWidth = $Message.Length + 4  # "│ " + message + " │"
-        $actualWidth = [Math]::Max($Width, $msgWidth)
-        $inner = $actualWidth - 2
-        $padded = $Message.PadRight($inner - 2)
-        $topLine = "╭$('─' * $inner)╮"
-        $msgLine = "│ $padded │"
-        $bottomLine = "╰$('─' * $inner)╯"
+        $maxMsg = $inner - 2
+        $msgLine = if ($Message.Length -le $maxMsg) {
+            "│ $($Message.PadRight($maxMsg)) │"
+        }
+        else {
+            "│ $Message"
+        }
         Write-InformationColored "$topLine`n$msgLine`n$bottomLine" @colorSplat
     }
     else {
-        $inner = $Width - 2
-        Write-InformationColored "╭$('─' * $inner)╮" @colorSplat
+        Write-InformationColored $topLine @colorSplat
     }
 }

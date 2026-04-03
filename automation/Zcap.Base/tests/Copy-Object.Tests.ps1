@@ -360,12 +360,14 @@ Describe 'Copy-Object' {
         }
 
         It 'individual customer is not the same reference' {
-            [object]::ReferenceEquals($config.customers.blue, $clone.customers.blue) | Should -BeFalse
+            $firstCustomer = @($config.customers.Keys)[0]
+            [object]::ReferenceEquals($config.customers[$firstCustomer], $clone.customers[$firstCustomer]) | Should -BeFalse
         }
 
         It 'mutating clone customer does not affect original' {
-            $clone.customers.blue.details = 'MUTATED'
-            $config.customers.blue.details | Should -Not -Be 'MUTATED'
+            $firstCustomer = @($config.customers.Keys)[0]
+            $clone.customers[$firstCustomer].details = 'MUTATED'
+            $config.customers[$firstCustomer].details | Should -Not -Be 'MUTATED'
         }
     }
 

@@ -4,8 +4,8 @@ Describe 'Get-MetaCustomers' {
     }
 
     It 'contains expected customers' {
-        $customers | Should -Contain 'blue'
-        $customers | Should -Contain 'bold'
+        $customers | Should -Contain 'apex'
+        $customers | Should -Contain 'nova'
     }
 
     It 'count matches meta.yml' {
