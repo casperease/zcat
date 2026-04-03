@@ -37,7 +37,8 @@ function Uninstall-Postman {
     }
     elseif ($IsMacOS) {
         Assert-Command brew
-        if (-not (& brew list --cask postman 2>$null)) {
+        $brewCheck = Invoke-CliCommand 'brew list --cask postman' -PassThru -NoAssert -Silent
+        if ($brewCheck.ExitCode -ne 0) {
             Write-Message 'Postman is not installed via brew — nothing to do'
             return
         }

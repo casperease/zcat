@@ -51,7 +51,8 @@ function Install-Postman {
     elseif ($IsMacOS) {
         Assert-Command brew
 
-        if (& brew list --cask postman 2>$null) {
+        $brewCheck = Invoke-CliCommand 'brew list --cask postman' -PassThru -NoAssert -Silent
+        if ($brewCheck.ExitCode -eq 0) {
             if (-not $Force) {
                 Write-Message 'Postman is already installed via brew'
                 return

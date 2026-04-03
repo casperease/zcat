@@ -53,50 +53,30 @@ function Test-ExpectedPackageManager {
             return $WingetListCache -match [regex]::Escape($baseId)
         }
 
-        try {
-            $output = (& winget list --id $baseId --accept-source-agreements --disable-interactivity 2>$null) -join "`n"
-        }
-        catch {
-            return $false
-        }
-        return $output -match [regex]::Escape($baseId)
+        $result = Invoke-CliCommand "winget list --id $baseId --accept-source-agreements --disable-interactivity" -PassThru -NoAssert -Silent
+        return $result.Full -match [regex]::Escape($baseId)
     }
 
     if ($IsMacOS -and $Config.BrewFormula) {
         if (-not (Test-Command brew)) { return $false }
         $formula = ($Config.BrewFormula -replace '\{0\}', '').TrimEnd('@', '-')
-        try {
-            & brew list $formula 2>$null | Out-Null
-        }
-        catch {
-            return $false
-        }
-        return $LASTEXITCODE -eq 0
+        $result = Invoke-CliCommand "brew list $formula" -PassThru -NoAssert -Silent
+        return $result.ExitCode -eq 0
     }
 
     if ($IsLinux -and $Config.AptPackage) {
         if (-not (Test-Command dpkg)) { return $false }
         $package = ($Config.AptPackage -replace '\{0\}', '').TrimEnd('-')
-        try {
-            & dpkg -s $package 2>$null | Out-Null
-        }
-        catch {
-            return $false
-        }
-        return $LASTEXITCODE -eq 0
+        $result = Invoke-CliCommand "dpkg -s $package" -PassThru -NoAssert -Silent
+        return $result.ExitCode -eq 0
     }
 
     # 3. pip — cross-platform fallback. Catches Poetry everywhere and AzCli
     #    on Windows/Linux. On macOS, AzCli already matched brew above.
     if ($Config.PipPackage) {
         if (-not (Test-Command pip)) { return $false }
-        try {
-            $output = & pip show $Config.PipPackage 2>$null
-        }
-        catch {
-            return $false
-        }
-        return [bool]$output
+        $result = Invoke-CliCommand "pip show $($Config.PipPackage)" -PassThru -NoAssert -Silent
+        return [bool]$result.Output
     }
 
     $false
