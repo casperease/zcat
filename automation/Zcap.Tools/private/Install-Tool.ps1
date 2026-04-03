@@ -41,8 +41,13 @@ function Install-Tool {
             Write-Verbose "Could not parse version from '$location' — treating as not installed"
         }
         elseif ($Force) {
-            Write-Verbose "$Tool $installed found at '$location' — uninstalling before installing $Version"
-            Uninstall-Tool -Tool $Tool
+            if (Test-IsRunningInPipeline) {
+                Write-Message "$Tool $installed found at '$location' — skipping uninstall in CI, installing over it"
+            }
+            else {
+                Write-Verbose "$Tool $installed found at '$location' — uninstalling before installing $Version"
+                Uninstall-Tool -Tool $Tool
+            }
         }
         else {
             throw "$Tool version mismatch: expected $Version.x, found $installed at '$location'. Run Install-$Tool -Force to replace, or uninstall manually."
