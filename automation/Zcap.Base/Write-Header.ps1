@@ -6,7 +6,7 @@
 .PARAMETER Width
     Length of the separator lines. Defaults to 60.
 .PARAMETER ForegroundColor
-    Color for the output. Defaults to Blue.
+    Color for the output. No color by default (renders as terminal default).
 .EXAMPLE
     Write-Header 'Deployment starting'
 .EXAMPLE
@@ -20,15 +20,16 @@ function Write-Header {
 
         [int] $Width = 60,
 
-        [System.ConsoleColor] $ForegroundColor = 'Blue'
+        [System.ConsoleColor] $ForegroundColor
     )
 
     $separator = '*' * $Width
+    $colorSplat = if ($PSBoundParameters.ContainsKey('ForegroundColor')) { @{ ForegroundColor = $ForegroundColor } } else { @{} }
 
     if ($Message) {
-        Write-InformationColored ("{0}`n* {1}`n{2}" -f $separator, $Message, $separator) -ForegroundColor $ForegroundColor
+        Write-InformationColored ("{0}`n* {1}`n{2}" -f $separator, $Message, $separator) @colorSplat
     }
     else {
-        Write-InformationColored $separator -ForegroundColor $ForegroundColor
+        Write-InformationColored $separator @colorSplat
     }
 }

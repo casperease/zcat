@@ -12,6 +12,8 @@
     The object to display. Accepts pipeline input.
 .PARAMETER Name
     Optional label displayed above the output.
+.PARAMETER NoHeader
+    Suppress the type info line and name label. Only the rendered value is shown.
 .PARAMETER ForegroundColor
     Color for the output. Defaults to DarkGray.
 .EXAMPLE
@@ -30,11 +32,15 @@ function Write-Object {
 
         [string] $Name,
 
+        [switch] $NoHeader,
+
         [Alias('Color')]
         [System.ConsoleColor] $ForegroundColor = 'DarkGray'
     )
 
     process {
+        $colorSplat = @{ ForegroundColor = $ForegroundColor }
+
         if ($null -eq $Object) {
             Write-InformationColored '[null]' -ForegroundColor $ForegroundColor
             return
@@ -58,10 +64,10 @@ function Write-Object {
             }
         }
 
-        if ($Name) {
-            Write-InformationColored "--- $Name ---" -ForegroundColor $ForegroundColor
+        if (-not $NoHeader) {
+            $headerText = if ($Name) { "$Name — $info" } else { $info }
+            Write-Header $headerText @colorSplat
         }
-        Write-InformationColored $info -ForegroundColor $ForegroundColor
 
         # Render based on type
         if ($Object -is [string] -or $Object -is [ValueType]) {

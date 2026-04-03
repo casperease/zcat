@@ -3,41 +3,43 @@ Describe 'Write-Object' {
         function script:StripAnsi ([string]$Text) { $Text -replace '\e\[[0-9;]*m', '' }
     }
 
-    It 'shows type info for a string' {
+    It 'shows type info in header for a string' {
         Write-Object 'hello' -InformationVariable iv -InformationAction SilentlyContinue 6>&1 | Out-Null
-        StripAnsi $iv[0].MessageData.Message | Should -Match '\[String\] Length: 5'
+        $text = ($iv | ForEach-Object { StripAnsi $_.MessageData.Message }) -join "`n"
+        $text | Should -Match '\[String\] Length: 5'
     }
 
     It 'renders a string value directly' {
         Write-Object 'hello' -InformationVariable iv -InformationAction SilentlyContinue 6>&1 | Out-Null
-        StripAnsi $iv[1].MessageData.Message | Should -Be 'hello'
+        $text = ($iv | ForEach-Object { StripAnsi $_.MessageData.Message }) -join "`n"
+        $text | Should -Match 'hello'
     }
 
-    It 'shows type info for a number' {
+    It 'shows type info in header for a number' {
         Write-Object 42 -InformationVariable iv -InformationAction SilentlyContinue 6>&1 | Out-Null
-        StripAnsi $iv[0].MessageData.Message | Should -Match 'Int32'
+        $text = ($iv | ForEach-Object { StripAnsi $_.MessageData.Message }) -join "`n"
+        $text | Should -Match 'Int32'
     }
 
     It 'renders hashtable as YAML with nesting' {
         Write-Object @{ A = 1; B = @{ C = 3 } } -InformationVariable iv -InformationAction SilentlyContinue 6>&1 | Out-Null
-        $messages = $iv | ForEach-Object { StripAnsi $_.MessageData.Message }
-        $yaml = $messages -join "`n"
-        $yaml | Should -Match 'A: 1'
-        $yaml | Should -Match 'C: 3'
+        $text = ($iv | ForEach-Object { StripAnsi $_.MessageData.Message }) -join "`n"
+        $text | Should -Match 'A: 1'
+        $text | Should -Match 'C: 3'
     }
 
     It 'renders PSCustomObject as YAML' {
         $obj = [pscustomobject]@{ Name = 'test'; Value = 42 }
         Write-Object $obj -InformationVariable iv -InformationAction SilentlyContinue 6>&1 | Out-Null
-        $messages = $iv | ForEach-Object { StripAnsi $_.MessageData.Message }
-        ($messages -join "`n") | Should -Match 'Name: test'
+        $text = ($iv | ForEach-Object { StripAnsi $_.MessageData.Message }) -join "`n"
+        $text | Should -Match 'Name: test'
     }
 
     It 'renders array of complex objects as YAML' {
         $arr = @([pscustomobject]@{X=1}, [pscustomobject]@{X=2})
         Write-Object $arr -InformationVariable iv -InformationAction SilentlyContinue 6>&1 | Out-Null
-        $messages = $iv | ForEach-Object { StripAnsi $_.MessageData.Message }
-        $messages[0] | Should -Match '\[Array\] Count: 2'
+        $text = ($iv | ForEach-Object { StripAnsi $_.MessageData.Message }) -join "`n"
+        $text | Should -Match '\[Array\] Count: 2'
     }
 
     It 'handles null' {
@@ -45,9 +47,11 @@ Describe 'Write-Object' {
         StripAnsi $iv[0].MessageData.Message | Should -Be '[null]'
     }
 
-    It 'shows name label when provided' {
+    It 'shows name and type in header' {
         Write-Object 'x' -Name 'MyLabel' -InformationVariable iv -InformationAction SilentlyContinue 6>&1 | Out-Null
-        StripAnsi $iv[0].MessageData.Message | Should -Be '--- MyLabel ---'
+        $text = ($iv | ForEach-Object { StripAnsi $_.MessageData.Message }) -join "`n"
+        $text | Should -Match '\* MyLabel'
+        $text | Should -Match '\[String\]'
     }
 
     It 'accepts pipeline input' {
