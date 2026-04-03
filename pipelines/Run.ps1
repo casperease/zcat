@@ -15,7 +15,11 @@
 #>
 param(
     [Parameter(Mandatory)]
-    [string] $Command
+    [string] $Command,
+
+    [string] $Mode = 'none',
+    [switch] $ExposeAccessToken,
+    [string] $ServiceConnection
 )
 
 . $PSScriptRoot/../importer.ps1
@@ -25,10 +29,17 @@ trap {
 }
 
 $sanitized = ConvertFrom-PipelineCommand $Command
-Write-Header 'Invoke-Automation' -ForegroundColor Cyan
-Write-Header -ForegroundColor Cyan
+$modeLabel = if ($Mode -eq 'none') { 'Invoke-Automation' } else { "Invoke-Automation [$Mode]" }
+Write-Message $modeLabel
+if ($ServiceConnection) {
+    Write-Message "  ServiceConnection:  $ServiceConnection"
+}
+if ($ExposeAccessToken) {
+    Write-Message "  ExposeAccessToken:  true"
+}
+Write-Header -ForegroundColor DarkBlue
 Write-Information $sanitized
-Write-Footer -ForegroundColor Cyan
+Write-Footer -ForegroundColor DarkBlue
 
 $block = [ScriptBlock]::Create($sanitized)
 Invoke-Command -ScriptBlock $block -NoNewScope
