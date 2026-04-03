@@ -16,6 +16,14 @@ function Test-IsAdministrator {
         )
     }
     else {
-        (id -u) -eq '0'
+        # Root or has passwordless sudo (CI agents, containers)
+        if ((id -u) -eq '0') { return $true }
+        try {
+            $result = sudo -n true 2>&1
+            $LASTEXITCODE -eq 0
+        }
+        catch {
+            $false
+        }
     }
 }
