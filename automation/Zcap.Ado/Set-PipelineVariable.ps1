@@ -13,7 +13,8 @@
 .PARAMETER Name
     The variable name. Sanitized automatically (. - ' replaced with _).
 .PARAMETER Value
-    The variable value. Empty strings are allowed.
+    The variable value. Empty strings are allowed so callers can clear
+    a variable or signal "no value" to downstream jobs.
 .PARAMETER IsOutput
     Mark as an output variable, accessible from downstream jobs via
     dependencies.JobName.outputs['StepName.VariableName'].

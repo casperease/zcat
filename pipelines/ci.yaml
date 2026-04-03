@@ -246,3 +246,173 @@ jobs:
                 Write-Information "Captured output: $output"
                 throw 'Write-Exception did not output expected content'
             }
+
+  # ---------------------------------------------------------------------------
+  # Job 5: Visual tests — Write-Object rendering across types and depths
+  # These steps are for visual inspection in the ADO log. No assertions —
+  # if they run without error, the writer handles the type.
+  # ---------------------------------------------------------------------------
+  - job: VisualTests
+    displayName: 'Visual Tests'
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+      - checkout: self
+
+      # 5a: Simple types
+      - template: /pipelines/steps/invoke-automation.yaml
+        parameters:
+          DisplayName: 'Write-Object: simple types'
+          RunCommand: |
+            Write-Header 'Simple types'
+            Write-Object 'hello world' -Name 'String'
+            Write-Object 42 -Name 'Int'
+            Write-Object 3.14 -Name 'Double'
+            Write-Object $true -Name 'Bool'
+            Write-Object $null -Name 'Null'
+
+      # 5b: Flat array
+      - template: /pipelines/steps/invoke-automation.yaml
+        parameters:
+          DisplayName: 'Write-Object: flat array'
+          RunCommand: |
+            Write-Header 'Flat array'
+            Write-Object @('alpha', 'bravo', 'charlie', 'delta') -Name 'StringArray'
+            Write-Object @(1, 2, 3, 4, 5) -Name 'IntArray'
+
+      # 5c: Nested hashtable (depth 4)
+      - template: /pipelines/steps/invoke-automation.yaml
+        parameters:
+          DisplayName: 'Write-Object: nested hashtable'
+          RunCommand: |
+            Write-Header 'Nested hashtable (depth 4)'
+            $ht = @{
+                Environment = 'production'
+                Azure = @{
+                    Subscription = 'sub-001'
+                    ResourceGroup = @{
+                        Name = 'rg-app-prod'
+                        Location = 'westeurope'
+                        Tags = @{
+                            Owner = 'platform-team'
+                            CostCenter = 'CC-4200'
+                            ManagedBy = 'zcap'
+                        }
+                    }
+                    Network = @{
+                        VNet = 'vnet-prod'
+                        Subnets = @('snet-app', 'snet-data', 'snet-mgmt')
+                    }
+                }
+            }
+            Write-Object $ht -Name 'InfraConfig'
+
+      # 5d: PSCustomObject (depth 3)
+      - template: /pipelines/steps/invoke-automation.yaml
+        parameters:
+          DisplayName: 'Write-Object: PSCustomObject'
+          RunCommand: |
+            Write-Header 'PSCustomObject (depth 3)'
+            $obj = [PSCustomObject]@{
+                Name = 'Checkout API'
+                Version = '2.4.1'
+                Health = [PSCustomObject]@{
+                    Status = 'Healthy'
+                    Uptime = '14d 6h'
+                    Checks = [PSCustomObject]@{
+                        Database = 'OK'
+                        Cache = 'OK'
+                        MessageBus = 'Degraded'
+                    }
+                }
+                Endpoints = @('/api/v1/orders', '/api/v1/payments', '/health')
+            }
+            Write-Object $obj -Name 'ServiceInfo'
+
+      # 5e: Array of PSCustomObjects
+      - template: /pipelines/steps/invoke-automation.yaml
+        parameters:
+          DisplayName: 'Write-Object: array of objects'
+          RunCommand: |
+            Write-Header 'Array of PSCustomObjects'
+            $customers = @(
+                [PSCustomObject]@{
+                    Name = 'Acme Corp'
+                    Tier = 'Enterprise'
+                    Environments = [PSCustomObject]@{
+                        Dev = [PSCustomObject]@{ Subscription = 'sub-acme-dev'; Region = 'northeurope' }
+                        Prod = [PSCustomObject]@{ Subscription = 'sub-acme-prod'; Region = 'westeurope' }
+                    }
+                }
+                [PSCustomObject]@{
+                    Name = 'Contoso Ltd'
+                    Tier = 'Standard'
+                    Environments = [PSCustomObject]@{
+                        Dev = [PSCustomObject]@{ Subscription = 'sub-contoso-dev'; Region = 'northeurope' }
+                        Prod = [PSCustomObject]@{ Subscription = 'sub-contoso-prod'; Region = 'westeurope' }
+                    }
+                }
+            )
+            Write-Object $customers -Name 'Customers'
+
+      # 5f: OrderedDictionary (depth 3)
+      - template: /pipelines/steps/invoke-automation.yaml
+        parameters:
+          DisplayName: 'Write-Object: ordered dictionary'
+          RunCommand: |
+            Write-Header 'OrderedDictionary (depth 3)'
+            $config = [ordered]@{
+                pipeline = [ordered]@{
+                    name = 'CI'
+                    trigger = @('main', 'release/*')
+                    pool = [ordered]@{
+                        vmImage = 'ubuntu-latest'
+                        demands = @('pwsh', 'dotnet')
+                    }
+                }
+                settings = [ordered]@{
+                    timeoutMinutes = 30
+                    cancelTimeoutMinutes = 5
+                    continueOnError = $false
+                }
+            }
+            Write-Object $config -Name 'PipelineConfig'
+
+      # 5g: Splat (hashtable used as parameter splat)
+      - template: /pipelines/steps/invoke-automation.yaml
+        parameters:
+          DisplayName: 'Write-Object: splat hashtable'
+          RunCommand: |
+            Write-Header 'Splat hashtable'
+            $splat = @{
+                Path = '/home/vsts/work'
+                Filter = '*.ps1'
+                Recurse = $true
+                Depth = 3
+                ErrorAction = 'SilentlyContinue'
+            }
+            Write-Object $splat -Name 'Get-ChildItem splat'
+
+      # 5h: Meta configuration from real YAML
+      - template: /pipelines/steps/invoke-automation.yaml
+        parameters:
+          DisplayName: 'Write-Object: real meta config'
+          RunCommand: |
+            Write-Header 'Real meta.yml configuration'
+            $meta = Get-MetaConfiguration
+            Write-Object $meta -Name 'MetaConfiguration'
+
+      # 5i: Mixed-type array
+      - template: /pipelines/steps/invoke-automation.yaml
+        parameters:
+          DisplayName: 'Write-Object: mixed-type array'
+          RunCommand: |
+            Write-Header 'Mixed-type array'
+            $mixed = @(
+                'plain string'
+                42
+                $true
+                @{ nested = 'hashtable' }
+                [PSCustomObject]@{ Type = 'object'; Value = 99 }
+            )
+            Write-Object $mixed -Name 'MixedArray'
