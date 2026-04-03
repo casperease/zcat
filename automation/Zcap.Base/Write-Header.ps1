@@ -1,29 +1,42 @@
 <#
 .SYNOPSIS
-    Writes a header with optional message using box-drawing characters.
+    Writes a header with optional message in a chosen style.
 .DESCRIPTION
-    Renders a top-style box section:
-      ╭────────────────────╮
-      │ Message             │
-      ╭────────────────────╮
-    Without a message, renders a single top line:
-      ╭────────────────────╮
+    Styles (with message / without message):
+
+      Curved (default):
+        ╭──────────────╮       ╭──────────────╮
+        │ Message       │
+        ╰──────────────╯
+
+      Stars:
+        ****************       ****************
+        * Message
+        ****************
+
 .PARAMETER Message
-    The text to display. If omitted, writes a single top line.
+    The text to display. If omitted, writes a single separator line.
+.PARAMETER Style
+    Visual style: Curved, Stars, or Line. Defaults to Curved.
 .PARAMETER Width
-    Total width of the box lines. Defaults to 60.
+    Total width of the separator lines. Defaults to 60.
 .PARAMETER ForegroundColor
     Color for the output. No color by default (renders as terminal default).
 .EXAMPLE
     Write-Header 'Deployment starting'
 .EXAMPLE
-    Write-Header -ForegroundColor Cyan
+    Write-Header 'Build' -Style Stars -ForegroundColor Yellow
+.EXAMPLE
+    Write-Header -Style Line
 #>
 function Write-Header {
     [CmdletBinding()]
     param(
         [Parameter(Position = 0)]
         [string] $Message,
+
+        [ValidateSet('Curved', 'Stars', 'Heavy')]
+        [string] $Style = 'Curved',
 
         [int] $Width = 60,
 
@@ -32,21 +45,61 @@ function Write-Header {
 
     $colorSplat = if ($PSBoundParameters.ContainsKey('ForegroundColor')) { @{ ForegroundColor = $ForegroundColor } } else { @{} }
 
-    $inner = $Width - 2
-    $topLine = "╭$('─' * $inner)╮"
-    $bottomLine = "╰$('─' * $inner)╯"
+    switch ($Style) {
+        'Curved' {
+            $inner = $Width - 2
+            $topLine = "╭$('─' * $inner)╮"
+            $bottomLine = "╰$('─' * $inner)╯"
 
-    if ($Message) {
-        $maxMsg = $inner - 2
-        $msgLine = if ($Message.Length -le $maxMsg) {
-            "│ $($Message.PadRight($maxMsg)) │"
+            if ($Message) {
+                $maxMsg = $inner - 2
+                $msgLine = if ($Message.Length -le $maxMsg) {
+                    "│ $($Message.PadRight($maxMsg)) │"
+                }
+                else {
+                    "│ $Message"
+                }
+                Write-InformationColored "$topLine`n$msgLine`n$bottomLine" @colorSplat
+            }
+            else {
+                Write-InformationColored "$topLine`n" @colorSplat
+            }
         }
-        else {
-            "│ $Message"
+        'Stars' {
+            $separator = '*' * $Width
+            $maxMsg = $Width - 4  # "* " + message + " *"
+
+            if ($Message) {
+                $msgLine = if ($Message.Length -le $maxMsg) {
+                    "* $($Message.PadRight($maxMsg)) *"
+                }
+                else {
+                    "* $Message"
+                }
+                Write-InformationColored "$separator`n$msgLine`n$separator" @colorSplat
+            }
+            else {
+                Write-InformationColored $separator @colorSplat
+            }
         }
-        Write-InformationColored "$topLine`n$msgLine`n$bottomLine" @colorSplat
-    }
-    else {
-        Write-InformationColored $topLine @colorSplat
+        'Heavy' {
+            $inner = $Width - 2
+            $topLine = "╔$('═' * $inner)╗"
+            $bottomLine = "╚$('═' * $inner)╝"
+            $maxMsg = $inner - 2
+
+            if ($Message) {
+                $msgLine = if ($Message.Length -le $maxMsg) {
+                    "║ $($Message.PadRight($maxMsg)) ║"
+                }
+                else {
+                    "║ $Message"
+                }
+                Write-InformationColored "$topLine`n$msgLine`n$bottomLine" @colorSplat
+            }
+            else {
+                Write-InformationColored $topLine @colorSplat
+            }
+        }
     }
 }
