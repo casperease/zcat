@@ -8,7 +8,7 @@ Some behavior must differ between these contexts:
 - **Output format.** Pipelines need structured logging (`##vso` commands). Interactive sessions need readable console output.
 - **Token source.** Pipelines use `$env:SYSTEM_ACCESSTOKEN`. Local runs use `Get-AzAccessToken` (see [dual-authentication ADR](dual-authentication.md)).
 - **Artifact paths.** Pipelines write to `$env:BUILD_ARTIFACTSTAGINGDIRECTORY`. Local runs write to `out/`.
-- **Pipeline variables.** `Set-PipelineVariable` emits `##vso` in a pipeline and is a no-op locally (see [pipeline-variables ADR](pipeline-variables.md)).
+- **Pipeline variables.** `Set-AdoPipelineVariable` emits `##vso` in a pipeline and is a no-op locally (see [pipeline-variables ADR](pipeline-variables.md)).
 
 The question is: how should a function know which context it is in?
 
@@ -74,7 +74,7 @@ Functions that produce output artifacts call `Get-OutputRoot` instead of hardcod
 
 - **Detection is boolean, not modal.** `Test-IsRunningInPipeline` returns `$true` or `$false`. There is no "maybe" or "partially in a pipeline." If the environment variable exists, the code is in a pipeline. If not, it is not.
 
-- **The function must be fast.** It is called frequently (every `Set-PipelineVariable`, every `Get-OutputRoot`, every auth decision). It reads a single environment variable — no I/O, no network, no computation.
+- **The function must be fast.** It is called frequently (every `Set-AdoPipelineVariable`, every `Get-OutputRoot`, every auth decision). It reads a single environment variable — no I/O, no network, no computation.
 
 ### How this is enforced
 

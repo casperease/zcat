@@ -85,7 +85,8 @@ automation/
     assets/                        config files, templates, scripts
     tests/
       Verb-Noun.Tests.ps1          Pester tests (one per function)
-docs/automation/adr/               architecture decision records
+docs/adr/automation/               automation architecture decision records
+docs/adr/pipelines/                pipeline architecture decision records
 .github/workflows/ci.yml           CI (Linux + Windows + macOS)
 ```
 
@@ -196,6 +197,6 @@ Install-VendorModule <ModuleName> -RequiredVersion <Version>
 
 ## Design
 
-[**Zero ceremony, hard to fail.**](../docs/automation/adr/zero-ceremony-poka-yoke.md) Every design choice is evaluated against two questions: _Does this add ceremony?_ and _Can the author get this wrong?_
+[**Zero ceremony, hard to fail.**](../docs/adr/automation/zero-ceremony-poka-yoke.md) Every design choice is evaluated against two questions: _Does this add ceremony?_ and _Can the author get this wrong?_
 
-See the [architecture decision records](../docs/automation/adr/) for the full set of design rationale covering error handling, folder conventions, vendor strategy, cross-platform support, and enterprise environments.
+See the [architecture decision records](../docs/adr/) for the full set of design rationale covering error handling, folder conventions, vendor strategy, cross-platform support, and enterprise environments.

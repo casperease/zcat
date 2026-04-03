@@ -22,7 +22,7 @@ When the import pattern changes, every pipeline must be updated.
 
 ### The runner pattern
 
-A single `Run.ps1` script acts as the universal entry point for all pipeline steps.
+A single `Invoke-AdoScript.ps1` script acts as the universal entry point for all pipeline steps.
 It handles bootstrapping (importing modules, setting preferences) once, then executes whatever command the pipeline passes in.
 
 The YAML layer becomes purely declarative — it names the command to run and any pipeline-specific concerns
@@ -48,15 +48,15 @@ beyond calling the runner.
 
 ```
 pipelines/
-  Run.ps1                          universal pipeline entry point
+  Invoke-AdoScript.ps1                          universal pipeline entry point
   steps/
     invoke-automation.yaml         unified step template with Mode and security flags
 ```
 
 ### The runner
 
-`Run.ps1` accepts a command string, bootstraps the module system, sanitizes YAML/ADO escaping
-artifacts via `ConvertFrom-PipelineCommand`, and executes the command:
+`Invoke-AdoScript.ps1` accepts a command string, bootstraps the module system, sanitizes YAML/ADO escaping
+artifacts via `ConvertFrom-AdoPipelineCommand`, and executes the command:
 
 ```powershell
 param([Parameter(Mandatory)] [string] $Command)
@@ -64,7 +64,7 @@ param([Parameter(Mandatory)] [string] $Command)
 . $PSScriptRoot/../importer.ps1
 trap { Write-Exception $_; break }
 
-$sanitized = ConvertFrom-PipelineCommand $Command
+$sanitized = ConvertFrom-AdoPipelineCommand $Command
 $block = [ScriptBlock]::Create($sanitized)
 Invoke-Command -ScriptBlock $block -NoNewScope
 ```
@@ -72,7 +72,7 @@ Invoke-Command -ScriptBlock $block -NoNewScope
 The `-NoNewScope` flag ensures the command runs in the same scope as the importer,
 so all imported functions are available without qualification.
 
-`ConvertFrom-PipelineCommand` normalizes line endings, trims whitespace artifacts from YAML
+`ConvertFrom-AdoPipelineCommand` normalizes line endings, trims whitespace artifacts from YAML
 indentation, and preserves intentional newlines for multiline command support.
 
 ### The step template
@@ -128,7 +128,7 @@ The `displayName` mirrors the command, so the ADO UI shows exactly what ran — 
 
 - **YAML steps never contain inline PowerShell.** All PowerShell execution goes through the runner or a step template that calls it.
 
-- **The runner imports once.** The module system is bootstrapped at the start of `Run.ps1`. The command runs in the same scope.
+- **The runner imports once.** The module system is bootstrapped at the start of `Invoke-AdoScript.ps1`. The command runs in the same scope.
 
 - **Step templates are thin wrappers.** They add pipeline concerns (service connections, token injection, display names) but never contain logic.
 

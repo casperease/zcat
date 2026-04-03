@@ -37,10 +37,10 @@ Pipeline variable manipulation is done through dedicated PowerShell functions, n
 
 ### Functions
 
-**`Set-PipelineVariable`** — sets a pipeline variable with proper sanitization and flags.
+**`Set-AdoPipelineVariable`** — sets a pipeline variable with proper sanitization and flags.
 
 ```powershell
-function Set-PipelineVariable {
+function Set-AdoPipelineVariable {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)] [string] $Name,
@@ -59,13 +59,13 @@ Behavior:
 - Throws if `$Name` is null or whitespace.
 
 **`Test-IsRunningInPipeline`** — gates pipeline-specific behavior (see [pipeline-detection ADR](pipeline-detection.md)).
-`Set-PipelineVariable` uses this internally — calling it outside a pipeline is a no-op with a verbose message, not an error.
+`Set-AdoPipelineVariable` uses this internally — calling it outside a pipeline is a no-op with a verbose message, not an error.
 This keeps automation code portable: the same function runs locally (silently skipping the `##vso` command)
 and in a pipeline (emitting it).
 
 ### Rules
 
-- **Never write raw `##vso[task.setvariable]` strings.** Use `Set-PipelineVariable`. The function handles sanitization, flags, and logging.
+- **Never write raw `##vso[task.setvariable]` strings.** Use `Set-AdoPipelineVariable`. The function handles sanitization, flags, and logging.
 
 - **Always use `-IsOutput` when the variable must cross job boundaries.** Without it, the variable is step-local and downstream jobs see an empty string.
 
@@ -73,16 +73,16 @@ and in a pipeline (emitting it).
 
 - **Variable names use PascalCase.** ADO variable names are case-insensitive, but PascalCase matches the PowerShell parameter convention and reads clearly in YAML: `$[dependencies.JobName.outputs['StepName.MyVariable']]`.
 
-- **No-op outside pipelines.** `Set-PipelineVariable` checks `Test-IsRunningInPipeline` and skips the `##vso` emission when running locally. This means automation code does not need `if (Test-IsRunningInPipeline)` guards at every call site.
+- **No-op outside pipelines.** `Set-AdoPipelineVariable` checks `Test-IsRunningInPipeline` and skips the `##vso` emission when running locally. This means automation code does not need `if (Test-IsRunningInPipeline)` guards at every call site.
 
 ### How this is enforced
 
-- **PSScriptAnalyzer custom rule.** A rule flags any string matching `##vso\[task\.setvariable` outside of `Set-PipelineVariable`. Raw logging commands in automation code are a linting error.
+- **PSScriptAnalyzer custom rule.** A rule flags any string matching `##vso\[task\.setvariable` outside of `Set-AdoPipelineVariable`. Raw logging commands in automation code are a linting error.
 
 ## Consequences
 
 - Variable name sanitization is automatic. No more debugging empty variables caused by `.` vs `_` mismatches.
 - Secret masking is a flag, not a syntax detail to remember. Sensitive values cannot be accidentally logged.
-- Pipeline variable usage is greppable: search for `Set-PipelineVariable` to find every variable the automation sets.
+- Pipeline variable usage is greppable: search for `Set-AdoPipelineVariable` to find every variable the automation sets.
 - The same code runs locally and in pipelines without conditional guards. Local runs silently skip the ADO commands.
 - Output variable semantics are explicit in the function call, not hidden in a `##vso` flag string.

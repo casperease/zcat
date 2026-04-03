@@ -22,29 +22,23 @@ $name = $config.Name
 Write-Message $name
 ```
 
-**Inline semicolons** — multiple statements crammed onto one line:
+**Statement chaining on a single line** — permitted when it improves readability for short, related statements:
 
 ```powershell
-# Wrong — hard to read, hard to debug, hard to set breakpoints on
-$a = 1; $b = 2; $c = $a + $b
+# OK — short related assignments chained on one line
+$inner = $Width - 2; "╰$('─' * $inner)╯"
 
-# Wrong — hides control flow
-if ($failed) { Write-Message 'failed'; throw 'done' }
+# OK — compact switch branches
+'Curved' { $inner = $Width - 2; "╰$('─' * $inner)╯" }
 ```
 
 ```powershell
-# Correct — one statement per line
-$a = 1
-$b = 2
-$c = $a + $b
-
-if ($failed) {
-    Write-Message 'failed'
-    throw 'done'
-}
+# Wrong — trailing semicolons (statement terminators, not chaining)
+$a = 1;
+$b = 2;
 ```
 
-Inline semicolons harm readability and debuggability. You cannot set a breakpoint on the second statement of `$a = 1; $b = 2`. In `git blame`, both statements share a single line, so you lose attribution granularity.
+The distinction: a semicolon followed by another statement on the same line is chaining (allowed). A semicolon at the end of a line is a trailing terminator (forbidden).
 
 ### The two exceptions
 
@@ -75,13 +69,13 @@ Both exceptions are structural — the semicolons serve as syntactic separators,
 
 ## Decision
 
-Never use semicolons as statement separators or line terminators. The only permitted semicolons are syntactic separators inside `for` loop headers and inline hash table literals.
+Never use semicolons as trailing statement terminators. Semicolons are permitted for chaining statements on a single line, in `for` loop headers, and in inline hash table literals.
 
 ### Rules
 
-- **No trailing semicolons.** Statements end at the newline. A semicolon at the end of a line is dead syntax.
+- **No trailing semicolons.** Statements end at the newline. A semicolon at the end of a line with nothing after it is dead syntax — a habit from C#/dotnet that does not belong in PowerShell.
 
-- **No inline semicolons between statements.** Put each statement on its own line. If a line has two statements separated by a semicolon, split it into two lines.
+- **Single-line chaining is allowed.** `$x = 1; $y = 2` on one line is fine — the semicolon chains two statements. The guard is against `.NET habits` where every line ends with `;`, not against concise single-line expressions.
 
 - **`for` loop headers are exempt.** `for ($i = 0; $i -lt $n; $i++)` requires semicolons.
 
@@ -90,7 +84,7 @@ Never use semicolons as statement separators or line terminators. The only permi
 ### How this is enforced
 
 - **PSScriptAnalyzer built-in rule `PSAvoidSemicolonsAsLineTerminators`** — catches trailing semicolons (already enabled).
-- **PSScriptAnalyzer custom rule `Measure-NoSemicolons`** (severity: Error) — catches all remaining semicolons except those inside `for` loop headers.
+- **PSScriptAnalyzer custom rule `Measure-NoSemicolons`** (severity: Error) — catches trailing semicolons (semicolons where the next token is on a different line). Allows single-line chaining, `for` headers, and hash tables.
 
 ## Consequences
 

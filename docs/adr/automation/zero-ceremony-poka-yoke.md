@@ -10,9 +10,8 @@ This is the foundational design principle. Every other decision in this project 
 2. **Hard to fail (poka-yoke).** The system should make mistakes impossible or immediately visible.
    If something can go wrong, the design should prevent it structurally — not through documentation, discipline, or code review.
 
-Poka-yoke (ポカヨケ) is a manufacturing concept: design the process so that errors cannot happen,
-or if they do, they are caught at the point of origin before they propagate.
-Applied to automation code, this means the platform itself enforces correctness —
+See [poka-yoke](../principles/poka-yoke.md) for the technology-agnostic principle behind this.
+Applied to automation code, it means the platform itself enforces correctness —
 the author does not have to remember to do the right thing.
 
 ### What zero ceremony looks like

@@ -14,15 +14,15 @@
 .PARAMETER Command
     The raw command string as received from ADO pipeline arguments.
 .EXAMPLE
-    ConvertFrom-PipelineCommand "  Get-Process `r`n  Get-Service  "
+    ConvertFrom-AdoPipelineCommand "  Get-Process `r`n  Get-Service  "
     # Returns: "Get-Process\nGet-Service"
 .EXAMPLE
-    # In Run.ps1:
-    $sanitized = ConvertFrom-PipelineCommand $Command
+    # In Invoke-AdoScript.ps1:
+    $sanitized = ConvertFrom-AdoPipelineCommand $Command
     $block = [ScriptBlock]::Create($sanitized)
     Invoke-Command -ScriptBlock $block -NoNewScope
 #>
-function ConvertFrom-PipelineCommand {
+function ConvertFrom-AdoPipelineCommand {
     [CmdletBinding()]
     [OutputType([string])]
     param(

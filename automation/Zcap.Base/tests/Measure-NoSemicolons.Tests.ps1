@@ -18,36 +18,36 @@ Describe 'Measure-NoSemicolons' {
         $results[0].Severity | Should -Be 'Error'
     }
 
-    It 'flags inline semicolon separating two statements' {
+    It 'allows inline semicolon chaining two statements on one line' {
         $script = @'
             $a = 1; $b = 2
 '@
         $results = Invoke-ScriptAnalyzer -ScriptDefinition $script -CustomRulePath $rulePath -Settings $emptySettings
-        $results | Should -HaveCount 1
+        $results | Should -BeNullOrEmpty
     }
 
-    It 'flags multiple semicolons' {
+    It 'allows multiple semicolons chaining on one line' {
         $script = @'
             $a = 1; $b = 2; $c = 3
 '@
         $results = Invoke-ScriptAnalyzer -ScriptDefinition $script -CustomRulePath $rulePath -Settings $emptySettings
-        $results | Should -HaveCount 2
+        $results | Should -BeNullOrEmpty
     }
 
-    It 'flags semicolons inside braces' {
+    It 'allows semicolons inside braces on one line' {
         $script = @'
             if ($true) { $a = 1; $b = 2 }
 '@
         $results = Invoke-ScriptAnalyzer -ScriptDefinition $script -CustomRulePath $rulePath -Settings $emptySettings
-        $results | Should -HaveCount 1
+        $results | Should -BeNullOrEmpty
     }
 
-    It 'flags semicolons in a while loop body on one line' {
+    It 'allows semicolons in a while loop body on one line' {
         $script = @'
             while ($true) { Do-A; Do-B }
 '@
         $results = Invoke-ScriptAnalyzer -ScriptDefinition $script -CustomRulePath $rulePath -Settings $emptySettings
-        $results | Should -HaveCount 1
+        $results | Should -BeNullOrEmpty
     }
 
     # ── Should not flag ─────────────────────────────────────────
@@ -123,13 +123,13 @@ Describe 'Measure-NoSemicolons' {
         $results | Should -BeNullOrEmpty
     }
 
-    It 'flags semicolons in for loop body but not header' {
+    It 'allows semicolons in for loop body on one line' {
         $script = @'
             for ($i = 0; $i -lt 10; $i++) {
                 Do-A; Do-B
             }
 '@
         $results = Invoke-ScriptAnalyzer -ScriptDefinition $script -CustomRulePath $rulePath -Settings $emptySettings
-        $results | Should -HaveCount 1
+        $results | Should -BeNullOrEmpty
     }
 }

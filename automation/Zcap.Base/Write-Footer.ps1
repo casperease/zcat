@@ -34,7 +34,7 @@ function Write-Footer {
     $line = switch ($Style) {
         'Curved' { $inner = $Width - 2; "`n╰$('─' * $inner)╯" }
         'Stars'  { '*' * $Width }
-        'Heavy' { $inner = $Width - 2; "╚$('═' * $inner)╝" }
+        'Heavy'  { $inner = $Width - 2; "╚$('═' * $inner)╝" }
     }
 
     Write-InformationColored $line @colorSplat

@@ -28,7 +28,7 @@ trap {
     break
 }
 
-$sanitized = ConvertFrom-PipelineCommand $Command
+$sanitized = ConvertFrom-AdoPipelineCommand $Command
 $modeLabel = if ($Mode -eq 'none') { 'Invoke-Automation' } else { "Invoke-Automation [$Mode]" }
 Write-Message $modeLabel
 if ($ServiceConnection) {

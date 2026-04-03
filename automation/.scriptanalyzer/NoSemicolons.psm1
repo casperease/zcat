@@ -1,12 +1,12 @@
 <#
 .SYNOPSIS
-    Custom PSScriptAnalyzer rule: forbid semicolons except in for loop headers
-    and inline hash table literals.
+    Custom PSScriptAnalyzer rule: forbid semicolons used as statement terminators.
 .DESCRIPTION
-    Semicolons are unnecessary in PowerShell — statements end at newlines.
-    The only permitted semicolons are:
+    Semicolons at end of lines are unnecessary in PowerShell — statements end at newlines.
+    Permitted semicolons:
     - Syntactic separators in for loop headers: for ($i = 0; $i -lt $n; $i++)
     - Entry separators in inline hash tables: @{ A = 1; B = 2 }
+    - Chaining statements on a single line: $inner = $Width - 2; "╰$('─' * $inner)╯"
 
     See ADR: never-use-semicolons.
 #>
@@ -68,8 +68,11 @@ function Measure-NoSemicolons {
         }
     }
 
+    $tokenArray = @($tokens)
+
     foreach ($semi in $semicolons) {
         $offset = $semi.Extent.StartOffset
+        $semiLine = $semi.Extent.StartLineNumber
 
         $exempt = $false
         foreach ($range in $exemptRanges) {
@@ -79,6 +82,20 @@ function Measure-NoSemicolons {
             }
         }
         if ($exempt) { continue }
+
+        # Allow semicolons that chain statements on the same line.
+        # Find the next non-whitespace, non-newline token after the semicolon.
+        $semiIndex = [Array]::IndexOf($tokenArray, $semi)
+        $nextToken = $null
+        for ($j = $semiIndex + 1; $j -lt $tokenArray.Count; $j++) {
+            if ($tokenArray[$j].Kind -notin 'NewLine', 'EndOfInput') {
+                $nextToken = $tokenArray[$j]
+                break
+            }
+        }
+        if ($nextToken -and $nextToken.Extent.StartLineNumber -eq $semiLine) {
+            continue
+        }
 
         $results.Add([Microsoft.Windows.PowerShell.ScriptAnalyzer.Generic.DiagnosticRecord]@{
             Message  = 'Do not use semicolons. PowerShell statements are separated by newlines. Put each statement on its own line. See ADR: never-use-semicolons.'

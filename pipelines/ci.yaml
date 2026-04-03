@@ -89,13 +89,14 @@ jobs:
             Assert-PathExist $outRoot -PathType Container
             Write-Message "OutputRoot: $outRoot"
 
-      # 2f: Set-PipelineVariable integration
+      # 2f: Set-AdoPipelineVariable integration
       - template: /pipelines/steps/invoke-automation.yaml
         parameters:
-          DisplayName: 'Set-PipelineVariable integration'
+          DisplayName: 'Set-AdoPipelineVariable integration'
           RunCommand: |
-            Set-PipelineVariable -Name 'test.result' -Value 'passed'
-            Set-PipelineVariable -Name 'my-count' -Value '42' -IsOutput
+            Set-AdoPipelineVariable -Name 'test_result' -Value 'passed'
+            Set-AdoPipelineVariable -Name 'my_count' -Value '42' -IsOutput
+            Set-AdoPipelineVariable -Name 'sanitized.name' -Value 'ok' -SanitizeName
 
       # 2g: DryRun mode on tool wrappers (no tools needed)
       - template: /pipelines/steps/invoke-automation.yaml
@@ -123,7 +124,7 @@ jobs:
             Assert-True ($modules.Count -ge 3)
             Assert-True ($null -ne (Get-Command Get-MetaConfiguration -ErrorAction Ignore))
             Assert-True ($null -ne (Get-Command Invoke-CliCommand -ErrorAction Ignore))
-            Assert-True ($null -ne (Get-Command Set-PipelineVariable -ErrorAction Ignore))
+            Assert-True ($null -ne (Get-Command Set-AdoPipelineVariable -ErrorAction Ignore))
             Write-Message "Loaded $($modules.Count) Zcap modules"
 
       # 2j: Write-Exception outputs exception type and message
@@ -197,7 +198,7 @@ jobs:
         displayName: 'Trap: Assert-True $false'
         inputs:
           targetType: inline
-          script: . './pipelines/Run.ps1' -Command 'Assert-True $false'
+          script: . './pipelines/Invoke-AdoScript.ps1' -Command 'Assert-True $false'
           pwsh: true
         continueOnError: true
 
@@ -219,7 +220,7 @@ jobs:
             if ($command.Contains("`n") -and -not $displayName) {
                 throw "Multiline RunCommand requires DisplayName parameter."
             }
-            . './pipelines/Run.ps1' -Command $command
+            . './pipelines/Invoke-AdoScript.ps1' -Command $command
         continueOnError: true
 
       # 4c: Invoke-CliCommand non-zero exit code throws
@@ -227,7 +228,7 @@ jobs:
         displayName: 'Trap: non-zero exit code'
         inputs:
           targetType: inline
-          script: . './pipelines/Run.ps1' -Command 'Invoke-CliCommand "bash -c exit\ 1" -Silent'
+          script: . './pipelines/Invoke-AdoScript.ps1' -Command 'Invoke-CliCommand "bash -c exit\ 1" -Silent'
           pwsh: true
         continueOnError: true
 

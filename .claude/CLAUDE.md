@@ -12,7 +12,7 @@ PowerShell 7.4+ module system with zero-ceremony module authoring.
 
 ## ADRs
 
-Architecture Decision Records live in `docs/automation/adr/`. **Read all ADRs at the start of every session** — they define the design principles behind this codebase and must be followed when writing or reviewing code.
+Architecture Decision Records live in `docs/adr/automation/` and `docs/adr/pipelines/`. **Read all ADRs at the start of every session** — they define the design principles behind this codebase and must be followed when writing or reviewing code.
 
 ## Rules
 

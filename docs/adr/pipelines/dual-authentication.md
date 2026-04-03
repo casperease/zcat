@@ -82,7 +82,7 @@ parameters:
 steps:
   - task: PowerShell@2
     inputs:
-      filePath: pipelines/Run.ps1
+      filePath: pipelines/Invoke-AdoScript.ps1
       arguments: -Command '${{ parameters.RunCommand }}'
     env:
       ${{ if parameters.UseSystemAccessToken }}:
