@@ -250,38 +250,38 @@ jobs:
 
       - template: /pipelines/steps/invoke-automation.yaml
         parameters:
-          RunCommand: 'Install-Python'
+          RunCommand: 'Install-Python -Force'
 
       - template: /pipelines/steps/invoke-automation.yaml
         parameters:
-          RunCommand: 'Install-Dotnet'
+          RunCommand: 'Install-Dotnet -Force'
 
       - template: /pipelines/steps/invoke-automation.yaml
         parameters:
           DisplayName: 'Install-AzCli (depends on Python)'
-          RunCommand: 'Install-AzCli'
+          RunCommand: 'Install-AzCli -Force'
 
       - template: /pipelines/steps/invoke-automation.yaml
         parameters:
           DisplayName: 'Install-Poetry (depends on Python)'
-          RunCommand: 'Install-Poetry'
+          RunCommand: 'Install-Poetry -Force'
 
       - template: /pipelines/steps/invoke-automation.yaml
         parameters:
-          RunCommand: 'Install-NodeJs'
+          RunCommand: 'Install-NodeJs -Force'
 
       - template: /pipelines/steps/invoke-automation.yaml
         parameters:
-          RunCommand: 'Install-Terraform'
+          RunCommand: 'Install-Terraform -Force'
 
       - template: /pipelines/steps/invoke-automation.yaml
         parameters:
-          RunCommand: 'Install-Java'
+          RunCommand: 'Install-Java -Force'
 
       - template: /pipelines/steps/invoke-automation.yaml
         parameters:
           DisplayName: 'Install-PySpark (depends on Java)'
-          RunCommand: 'Install-PySpark'
+          RunCommand: 'Install-PySpark -Force'
 
       # Verify all tools are at expected versions
       - template: /pipelines/steps/invoke-automation.yaml
