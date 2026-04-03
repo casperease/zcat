@@ -14,8 +14,9 @@
 function Install-PySpark {
     [CmdletBinding()]
     param(
-        [string] $Version
+        [string] $Version,
+        [switch] $Force
     )
 
-    Install-PipTool -Tool 'PySpark' -Version $Version
+    Install-PipTool -Tool 'PySpark' -Version $Version -Force:$Force
 }

@@ -11,8 +11,9 @@
 function Install-Poetry {
     [CmdletBinding()]
     param(
-        [string] $Version
+        [string] $Version,
+        [switch] $Force
     )
 
-    Install-PipTool -Tool 'Poetry' -Version $Version
+    Install-PipTool -Tool 'Poetry' -Version $Version -Force:$Force
 }
