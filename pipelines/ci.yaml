@@ -232,6 +232,33 @@ jobs:
           pwsh: true
         continueOnError: true
 
+      # 4d: Install-Python refuses in pipeline
+      - task: PowerShell@2
+        displayName: 'Guard: Install-Python blocked in CI'
+        inputs:
+          targetType: inline
+          script: . './pipelines/Invoke-AdoScript.ps1' -Command 'Install-Python'
+          pwsh: true
+        continueOnError: true
+
+      # 4e: Install-Dotnet refuses in pipeline
+      - task: PowerShell@2
+        displayName: 'Guard: Install-Dotnet blocked in CI'
+        inputs:
+          targetType: inline
+          script: . './pipelines/Invoke-AdoScript.ps1' -Command 'Install-Dotnet'
+          pwsh: true
+        continueOnError: true
+
+      # 4f: Install-NodeJs refuses in pipeline
+      - task: PowerShell@2
+        displayName: 'Guard: Install-NodeJs blocked in CI'
+        inputs:
+          targetType: inline
+          script: . './pipelines/Invoke-AdoScript.ps1' -Command 'Install-NodeJs'
+          pwsh: true
+        continueOnError: true
+
   # ---------------------------------------------------------------------------
   # Job 5: Visual tests — Write-Object rendering across types and depths
   # These steps are for visual inspection in the ADO log. No assertions —
@@ -248,27 +275,36 @@ jobs:
     steps:
       - checkout: self
 
-      - template: /pipelines/steps/invoke-automation.yaml
-        parameters:
-          RunCommand: 'Install-Python -Force'
+      # Activate pre-cached tool versions on the hosted agent.
+      # These put the correct version on PATH so Install-* sees it and skips.
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: '3.11'
+        displayName: 'Activate Python 3.11'
 
-      - template: /pipelines/steps/invoke-automation.yaml
-        parameters:
-          RunCommand: 'Install-Dotnet -Force'
+      - task: UseDotNet@2
+        inputs:
+          version: '10.x'
+        displayName: 'Activate .NET 10'
 
+      - task: UseNode@1
+        inputs:
+          version: '22.x'
+        displayName: 'Activate Node.js 22'
+
+      # Install remaining tools via our functions.
+      # Python, Dotnet, NodeJs use native ADO tasks above.
+      # pip-based tools depend on Python being on PATH (activated above).
+      # apt-based tools use sudo (available on hosted agents).
       - template: /pipelines/steps/invoke-automation.yaml
         parameters:
-          DisplayName: 'Install-AzCli (depends on Python)'
+          DisplayName: 'Install-AzCli (pip, depends on Python)'
           RunCommand: 'Install-AzCli -Force'
 
       - template: /pipelines/steps/invoke-automation.yaml
         parameters:
-          DisplayName: 'Install-Poetry (depends on Python)'
+          DisplayName: 'Install-Poetry (pip, depends on Python)'
           RunCommand: 'Install-Poetry -Force'
-
-      - template: /pipelines/steps/invoke-automation.yaml
-        parameters:
-          RunCommand: 'Install-NodeJs -Force'
 
       - template: /pipelines/steps/invoke-automation.yaml
         parameters:
@@ -280,7 +316,7 @@ jobs:
 
       - template: /pipelines/steps/invoke-automation.yaml
         parameters:
-          DisplayName: 'Install-PySpark (depends on Java)'
+          DisplayName: 'Install-PySpark (pip, depends on Java)'
           RunCommand: 'Install-PySpark -Force'
 
       # Verify all tools are at expected versions

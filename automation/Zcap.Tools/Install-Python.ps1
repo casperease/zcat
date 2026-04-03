@@ -1,6 +1,16 @@
 <#
 .SYNOPSIS
     Installs Python via the platform package manager.
+.DESCRIPTION
+    Uses winget on Windows, brew on macOS, and apt-get on Linux.
+    Idempotent — skips if already installed at the correct version.
+
+    NOT for CI pipelines. In Azure DevOps, use the native UsePythonVersion task
+    which activates pre-cached versions instantly:
+
+        - task: UsePythonVersion@0
+          inputs:
+            versionSpec: '3.11'
 .PARAMETER Version
     Python version to install. Defaults to the locked version in Get-ToolConfig.
 .PARAMETER Force
@@ -15,6 +25,11 @@ function Install-Python {
     param(
         [string] $Version,
         [switch] $Force
+    )
+
+    Assert-False (Test-IsRunningInPipeline) -ErrorText (
+        "Install-Python is for developer workstations, not CI. " +
+        "In ADO pipelines, use the native task: - task: UsePythonVersion@0 inputs: versionSpec: '3.11'"
     )
 
     Install-Tool -Tool 'Python' -Version $Version -Force:$Force

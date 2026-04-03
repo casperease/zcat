@@ -8,6 +8,13 @@
     No admin required. Persists DOTNET_ROOT and PATH for future sessions.
     Idempotent — if the correct version is already on PATH (regardless of
     how it was installed), skips with a message.
+
+    NOT for CI pipelines. In Azure DevOps, use the native UseDotNet task
+    which activates pre-cached versions instantly:
+
+        - task: UseDotNet@2
+          inputs:
+            version: '10.x'
 .PARAMETER Version
     .NET SDK version to install. Defaults to the locked version in Get-ToolConfig.
 .PARAMETER Force
@@ -22,6 +29,11 @@ function Install-Dotnet {
     param(
         [string] $Version,
         [switch] $Force
+    )
+
+    Assert-False (Test-IsRunningInPipeline) -ErrorText (
+        "Install-Dotnet is for developer workstations, not CI. " +
+        "In ADO pipelines, use the native task: - task: UseDotNet@2 inputs: version: '10.x'"
     )
 
     $config = Get-ToolConfig -Tool 'Dotnet'
