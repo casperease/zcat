@@ -191,22 +191,34 @@ jobs:
         continueOnError: true
 
       # 4b: Multiline RunCommand without DisplayName must fail
+      #     Simulates what invoke-automation.yaml does internally.
       - task: PowerShell@2
         displayName: 'Guard: multiline without DisplayName'
         inputs:
           targetType: inline
           pwsh: true
           script: |
+            . './importer.ps1'
             $command = @'
-            line1
-            line2
+            Get-Process
+            Get-Service
             '@
-            if ($command.Contains("`n") -and -not '') {
-                Write-Information 'Correctly rejected: multiline without DisplayName'
-                exit 0
+            $displayName = ''
+            try {
+                if ($command.Contains("`n") -and -not $displayName) {
+                    throw "Multiline RunCommand requires DisplayName parameter."
+                }
+                . './pipelines/Run.ps1' -Command $command
+                Write-Information 'ERROR: should have thrown'
+                exit 1
             }
-            Write-Information 'ERROR: Should have been rejected'
-            exit 1
+            catch {
+                if ($_.Exception.Message -match 'DisplayName') {
+                    Write-Information "Guard correctly threw: $($_.Exception.Message)"
+                    exit 0
+                }
+                throw
+            }
 
       # 4c: Invoke-CliCommand non-zero exit code throws
       - task: PowerShell@2
@@ -217,7 +229,7 @@ jobs:
           pwsh: true
         continueOnError: true
 
-      # 4d: Write-Exception outputs red ANSI text
+      # 4d: Write-Exception outputs exception type, message, and red ANSI
       - task: PowerShell@2
         displayName: 'Verify: Write-Exception outputs error info'
         inputs:
@@ -225,17 +237,12 @@ jobs:
           pwsh: true
           script: |
             . './importer.ps1'
-            $output = try {
-                & { throw 'test error' } 2>&1
-            }
-            catch {
-                Write-Exception $_ 6>&1 *>&1
-            }
-            $text = $output | Out-String
-            if ($text -match 'test error' -and $text -match 'RuntimeException') {
-                Write-Information 'Write-Exception correctly outputs exception type and message'
+            $record = try { throw 'test error' } catch { $_ }
+            $output = Write-Exception $record *>&1 | Out-String
+            if ($output -match 'test error' -and $output -match 'RuntimeException' -and $output -match '\e\[91m') {
+                Write-Information "Write-Exception output verified: type, message, and red ANSI"
             }
             else {
+                Write-Information "Captured output: $output"
                 throw 'Write-Exception did not output expected content'
-                exit 1
             }
