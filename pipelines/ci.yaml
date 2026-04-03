@@ -237,6 +237,57 @@ jobs:
   # These steps are for visual inspection in the ADO log. No assertions —
   # if they run without error, the writer handles the type.
   # ---------------------------------------------------------------------------
+  # ---------------------------------------------------------------------------
+  # Job 6: Tool installation — install all locked-version tools on Linux
+  # One step per tool, in dependency order.
+  # ---------------------------------------------------------------------------
+  - job: ToolInstallation
+    displayName: 'Tool Installation (Linux)'
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+      - checkout: self
+
+      - template: /pipelines/steps/invoke-automation.yaml
+        parameters:
+          RunCommand: 'Install-Python'
+
+      - template: /pipelines/steps/invoke-automation.yaml
+        parameters:
+          RunCommand: 'Install-Dotnet'
+
+      - template: /pipelines/steps/invoke-automation.yaml
+        parameters:
+          DisplayName: 'Install-AzCli (depends on Python)'
+          RunCommand: 'Install-AzCli'
+
+      - template: /pipelines/steps/invoke-automation.yaml
+        parameters:
+          DisplayName: 'Install-Poetry (depends on Python)'
+          RunCommand: 'Install-Poetry'
+
+      - template: /pipelines/steps/invoke-automation.yaml
+        parameters:
+          RunCommand: 'Install-NodeJs'
+
+      - template: /pipelines/steps/invoke-automation.yaml
+        parameters:
+          RunCommand: 'Install-Terraform'
+
+      - template: /pipelines/steps/invoke-automation.yaml
+        parameters:
+          RunCommand: 'Install-Java'
+
+      - template: /pipelines/steps/invoke-automation.yaml
+        parameters:
+          DisplayName: 'Install-PySpark (depends on Java)'
+          RunCommand: 'Install-PySpark'
+
+      # Verify all tools are at expected versions
+      - template: /pipelines/steps/invoke-automation.yaml
+        parameters:
+          RunCommand: 'Get-DevBoxToolsStatus'
+
   - job: VisualTests
     displayName: 'Visual Tests'
     pool:

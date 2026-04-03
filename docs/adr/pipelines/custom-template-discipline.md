@@ -150,7 +150,7 @@ feature flags, version numbers, deployment targets — the YAML layer becomes a 
 with the automation layer's own config files. Values are defined in YAML, overridden in variable groups,
 re-overridden in variable templates, and passed to scripts through `$env:` — a chain that is impossible to trace
 without opening every file in the variable resolution order. Variables are also mutable by design — upstream steps
-can silently modify downstream values [^3] — making them an unreliable transport for configuration that scripts
+can silently modify downstream values — making them an unreliable transport for configuration that scripts
 depend on being stable. Variable groups make this worse: they are not code, not version-controlled, and have no built-in change tracking
 (see [everything-as-code](../principles/everything-as-code.md)).
 The only legitimate use for a variable group is secrets — and only when no proper secret store (such as Key Vault) is available.
@@ -175,8 +175,7 @@ and are invoked through the runner pattern (see [pipeline-runner-pattern](pipeli
 - **Parameters are either ADO controls or meta selection criteria.** A template parameter is either an ADO-level decision
   (service connection, authentication mode, system token exposure) or a meta-level selection criterion
   (customer, environment, subscription type). Meta parameters are legitimate — they are the keys the automation layer
-  uses to look up configuration. Microsoft's own security guidance frames parameters as constrained selectors with
-  predefined value subsets, "ensuring that the pipeline doesn't accept arbitrary data" [^3]. What does not belong
+  uses to look up configuration. What does not belong
   in pipeline parameters are the *looked-up values themselves*: if the automation layer can derive a value from the
   meta keys, that value should not be a pipeline parameter.
 
@@ -238,5 +237,3 @@ The resolution context shifts at each level, making the actual file path a puzzl
 [^1]: Richard Bown, [Azure DevOps YAML Pipelines: The Land of Confusion](https://richardwbown.com/azure-devops-yaml-pipelines-the-land-of-confusion/) — "Azure DevOps has no built-in (pre-commit) validation mechanism for yaml pipelines." Without expansion or validation tooling, nested templates force slow feedback loops through pipeline runs.
 
 [^2]: Microsoft, [Parameters and templateContext](https://learn.microsoft.com/en-us/azure/devops/pipelines/process/template-parameters?view=azure-devops) — `templateContext` was introduced to bundle job and environment properties together, reducing the need to declare and forward individual parameters through template layers.
-
-[^3]: Microsoft, [Securely use variables and parameters](https://learn.microsoft.com/en-us/azure/devops/pipelines/security/inputs?view=azure-devops) — Variables are read-write by default and "values set in upstream steps can modify downstream values unexpectedly." Parameters by contrast have data types and "can be restricted to specific value subsets, ensuring that the pipeline doesn't accept arbitrary data."

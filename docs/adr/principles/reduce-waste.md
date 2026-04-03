@@ -51,7 +51,7 @@ A better handoff template still loses more context than no handoff.
 
 ## How to apply
 
-When evaluating a process or design, ask: *if I could deliver the same outcome without this step, would I keep it?*
+When evaluating a process or design, ask: *could I deliver the same outcome without this step?*
 If the answer is no, the step is waste. Either eliminate it or understand what structural constraint makes it necessary —
 then address the constraint.
 

@@ -24,7 +24,15 @@ Applied to software systems, this means:
    or at the first line of execution (assertions, precondition checks).
    Never at production time. Never silently.
 
-3. **Zero ceremony.** Every manual step is an opportunity for error.
+3. **Fail fast.** When an error does occur, stop immediately. Do not continue with bad state
+   in the hope that something downstream will compensate. The cost of a defect is proportional
+   to the distance it travels from its point of origin. An error caught at the point of origin
+   is a one-line fix. The same error caught three layers later is an incident.
+   This is the Toyota concept of *jidoka* — stop the line the moment a defect is detected,
+   fix it at the source, and only then resume. Continuing production with a known defect
+   guarantees that defective output accumulates downstream.
+
+4. **Zero ceremony.** Every manual step is an opportunity for error.
    If the platform can do something for the author, the author should not have to do it.
    The ideal workflow has one action with no prerequisites and no follow-up steps.
 
