@@ -25,9 +25,9 @@ trap {
 }
 
 $sanitized = ConvertFrom-PipelineCommand $Command
-Write-Header 'Invoke-Automation executing:' -ForegroundColor DarkBlue
+Write-Header 'Invoke-Automation' -ForegroundColor Cyan
 Write-Information $sanitized
-Write-Header -ForegroundColor Blue
+Write-Footer -ForegroundColor Cyan
 
 $block = [ScriptBlock]::Create($sanitized)
 Invoke-Command -ScriptBlock $block -NoNewScope

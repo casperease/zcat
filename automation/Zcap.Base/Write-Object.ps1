@@ -27,7 +27,6 @@ function Write-Object {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory, Position = 0, ValueFromPipeline)]
-        [AllowNull()]
         [object] $Object,
 
         [string] $Name,
@@ -41,10 +40,7 @@ function Write-Object {
     process {
         $colorSplat = @{ ForegroundColor = $ForegroundColor }
 
-        if ($null -eq $Object) {
-            Write-InformationColored '[null]' -ForegroundColor $ForegroundColor
-            return
-        }
+        Assert-NotNull $Object -ErrorText 'Write-Object received $null — check the caller'
 
         $type = $Object.GetType()
         $typeName = $type.Name

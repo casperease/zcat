@@ -42,16 +42,16 @@ Describe 'Write-Object' {
         $text | Should -Match '\[Array\] Count: 2'
     }
 
-    It 'handles null' {
-        Write-Object $null -InformationVariable iv -InformationAction SilentlyContinue 6>&1 | Out-Null
-        StripAnsi $iv[0].MessageData.Message | Should -Be '[null]'
+    It 'throws on null' {
+        { Write-Object $null } | Should -Throw
     }
 
     It 'shows name and type in header' {
         Write-Object 'x' -Name 'MyLabel' -InformationVariable iv -InformationAction SilentlyContinue 6>&1 | Out-Null
         $text = ($iv | ForEach-Object { StripAnsi $_.MessageData.Message }) -join "`n"
-        $text | Should -Match '\* MyLabel'
+        $text | Should -Match 'MyLabel'
         $text | Should -Match '\[String\]'
+        $text | Should -Match '╭──'
     }
 
     It 'accepts pipeline input' {
