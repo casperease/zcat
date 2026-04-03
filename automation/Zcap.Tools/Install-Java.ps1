@@ -22,10 +22,19 @@ function Install-Java {
         [switch] $Force
     )
 
-    Install-Tool -Tool 'Java' -Version $Version -Force:$Force
-
     $config = Get-ToolConfig -Tool 'Java'
     if (-not $Version) { $Version = $config.Version }
+
+    # Skip entirely if already at correct version — no install, no profile patching
+    if (Test-Command $config.Command) {
+        $installed = Get-ToolVersion -Config $config
+        if ($installed -and $installed.StartsWith($Version)) {
+            Write-Message "Java $Version is already installed"
+            return
+        }
+    }
+
+    Install-Tool -Tool 'Java' -Version $Version -Force:$Force
 
     # Resolve JAVA_HOME from the installed binary location
     $cmd = Get-Command $config.Command -ErrorAction SilentlyContinue
@@ -65,6 +74,10 @@ function Install-Java {
     else {
         $marker = '>>> zcap Install-Java >>>'
         $profilePath = $PROFILE.CurrentUserCurrentHost
+        $profileDir = Split-Path $profilePath
+        if (-not (Test-Path $profileDir)) {
+            New-Item -Path $profileDir -ItemType Directory -Force | Out-Null
+        }
         $profileExists = Test-Path $profilePath
         $alreadyPatched = $profileExists -and (Get-Content $profilePath -Raw) -match [regex]::Escape($marker)
 

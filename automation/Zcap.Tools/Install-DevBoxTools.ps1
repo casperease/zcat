@@ -25,7 +25,7 @@ function Install-DevBoxTools {
     Uninstall-Chocolatey
 
     # Report tools that work but aren't managed by us — left untouched.
-    $status = Get-DevBoxToolsStatus
+    $status = Get-ToolsStatus
     $usable = @($status | Where-Object { $_.Status -eq 'Usable' })
     foreach ($tool in $usable) {
         Write-Message "Skipping $($tool.Tool) — $($tool.Installed) already installed, not managed by tools system"

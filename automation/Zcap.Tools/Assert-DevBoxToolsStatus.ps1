@@ -2,7 +2,7 @@
 .SYNOPSIS
     Asserts all tools are available at the correct version.
 .DESCRIPTION
-    Calls Get-DevBoxToolsStatus and throws if any tool is Missing or WrongVersion.
+    Calls Get-ToolsStatus and throws if any tool is Missing or WrongVersion.
     Tools with status OK or Usable pass — the tool works regardless of how
     it was installed. Chocolatey status is ignored.
 .EXAMPLE
@@ -12,7 +12,7 @@ function Assert-DevBoxToolsStatus {
     [CmdletBinding()]
     param()
 
-    $status = Get-DevBoxToolsStatus
+    $status = Get-ToolsStatus
     $failures = @($status | Where-Object { $_.Status -in 'Missing', 'WrongVersion' })
 
     if ($failures) {

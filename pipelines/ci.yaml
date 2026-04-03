@@ -292,6 +292,12 @@ jobs:
           version: '22.x'
         displayName: 'Activate Node.js 22'
 
+      # Snapshot before installing
+      - template: /pipelines/steps/invoke-automation.yaml
+        parameters:
+          DisplayName: 'Tools status (before)'
+          RunCommand: 'Get-ToolsStatus | Write-Object -Name "Before"'
+
       # Install remaining tools via our functions.
       # Python, Dotnet, NodeJs use native ADO tasks above.
       # pip-based tools depend on Python being on PATH (activated above).
@@ -319,10 +325,11 @@ jobs:
           DisplayName: 'Install-PySpark (pip, depends on Java)'
           RunCommand: 'Install-PySpark -Force'
 
-      # Verify all tools are at expected versions
+      # Snapshot after installing
       - template: /pipelines/steps/invoke-automation.yaml
         parameters:
-          RunCommand: 'Get-DevBoxToolsStatus'
+          DisplayName: 'Tools status (after)'
+          RunCommand: 'Get-ToolsStatus | Write-Object -Name "After"'
 
   - job: VisualTests
     displayName: 'Visual Tests'

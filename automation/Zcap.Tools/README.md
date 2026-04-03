@@ -53,7 +53,7 @@ A tool may have multiple fields (e.g., `BrewFormula` for macOS + `PipPackage` fo
 
 ### Scope enforcement
 
-Tools at the correct version but installed outside the expected manager are reported as `Usable` and left untouched. `Get-DevBoxToolsStatus` reports each tool's `Status`, `Manager`, and `Scope` for diagnostics.
+Tools at the correct version but installed outside the expected manager are reported as `Usable` and left untouched. `Get-ToolsStatus` reports each tool's `Status`, `Manager`, and `Scope` for diagnostics.
 
 ## Adding a new tool
 
