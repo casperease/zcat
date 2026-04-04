@@ -67,6 +67,35 @@ Describe 'Test file: <Module>/tests/<File>' -ForEach $allTests {
     }
 }
 
+Describe 'ConvertTo-FlatSettingSet visual demo' {
+    It 'flattens nested config and renders via Write-Object' {
+        $config = [PSCustomObject]@{
+            app = [PSCustomObject]@{
+                name    = 'zcap'
+                version = '1.0.0'
+            }
+            database = [PSCustomObject]@{
+                host    = 'sql.internal'
+                port    = 1433
+                options = [PSCustomObject]@{
+                    encrypt = $true
+                    timeout = 30
+                }
+            }
+            regions = @('westeurope', 'northeurope')
+        }
+
+        $flat = $config | ConvertTo-FlatSettingSet
+
+        $flat | Write-Object -Name 'Flattened settings'
+
+        $flat | Should -BeOfType [System.Collections.Specialized.OrderedDictionary]
+        $flat['app.name'] | Should -Be 'zcap'
+        $flat['database.options.encrypt'] | Should -BeTrue
+        $flat['regions[0]'] | Should -Be 'westeurope'
+    }
+}
+
 Describe 'Module dependencies' {
     BeforeAll {
         $script:edges = Get-ModuleDependency
