@@ -491,7 +491,17 @@ jobs:
                 42
                 $true
                 @{ nested = 'hashtable' }
-                [PSCustomObject]@{ Type = 'object'; Value = 99 }
+                [PSCustomObject]@{
+                    Type = 'object'
+                    Value = 99
+                    Inner = [PSCustomObject]@{
+                        Status = 'active'
+                        Detail = [PSCustomObject]@{
+                            Code = 'A1'
+                            Tags = @('critical', 'reviewed')
+                        }
+                    }
+                }
             )
             Write-Object $mixed -Name 'MixedArray'
 
