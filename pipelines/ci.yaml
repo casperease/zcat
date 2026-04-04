@@ -494,3 +494,26 @@ jobs:
                 [PSCustomObject]@{ Type = 'object'; Value = 99 }
             )
             Write-Object $mixed -Name 'MixedArray'
+
+      # 5j: ConvertTo-FlatSettingSet — nested config flattened to dot-notation
+      - template: /pipelines/steps/invoke-automation.yaml
+        parameters:
+          DisplayName: 'Write-Object: flattened settings'
+          RunCommand: |
+
+            $config = [PSCustomObject]@{
+                app = [PSCustomObject]@{
+                    name    = 'zcap'
+                    version = '1.0.0'
+                }
+                database = [PSCustomObject]@{
+                    host    = 'sql.internal'
+                    port    = 1433
+                    options = [PSCustomObject]@{
+                        encrypt = $true
+                        timeout = 30
+                    }
+                }
+                regions = @('westeurope', 'northeurope')
+            }
+            $config | ConvertTo-FlatSettingSet | Write-Object -Name 'FlatSettings'
