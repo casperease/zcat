@@ -85,19 +85,7 @@ function Write-Object {
             } | Select-Object -First 1
 
             if ($hasComplex) {
-                $safe = $items | ForEach-Object {
-                    if ($_ -is [System.Collections.IDictionary] -or $_ -is [string] -or $_ -is [ValueType]) { $_ }
-                    else {
-                        $bag = [ordered]@{}
-                        foreach ($p in $_.PSObject.Properties) {
-                            $v = try { $p.Value } catch { $null }
-                            if ($null -eq $v) { $bag[$p.Name] = $null }
-                            elseif ($v -is [string] -or $v -is [ValueType]) { $bag[$p.Name] = $v }
-                            else { $bag[$p.Name] = "$v" }
-                        }
-                        $bag
-                    }
-                }
+                $safe = $items | ForEach-Object { ConvertTo-YamlSafe $_ }
                 Write-InformationColored ($safe | ConvertTo-Yaml).TrimEnd() -ForegroundColor $ForegroundColor
             }
             else {
@@ -108,21 +96,9 @@ function Write-Object {
 
         }
         else {
-            # PSCustomObject, complex .NET objects — extract scalar properties for safe serialization
-            $props = [ordered]@{}
-            foreach ($p in $Object.PSObject.Properties) {
-                $v = try { $p.Value } catch { $null }
-                if ($null -eq $v) {
-                    $props[$p.Name] = $null
-                }
-                elseif ($v -is [string] -or $v -is [ValueType]) {
-                    $props[$p.Name] = $v
-                }
-                else {
-                    $props[$p.Name] = "$v"
-                }
-            }
-            Write-InformationColored ($props | ConvertTo-Yaml).TrimEnd() -ForegroundColor $ForegroundColor
+            # PSCustomObject, complex .NET objects — recursively convert for clean YAML
+            $safe = ConvertTo-YamlSafe $Object
+            Write-InformationColored ($safe | ConvertTo-Yaml).TrimEnd() -ForegroundColor $ForegroundColor
         }
     }
 }
