@@ -41,5 +41,7 @@ Write-Header -ForegroundColor DarkBlue
 Write-Information $sanitized
 Write-Footer -ForegroundColor DarkBlue
 
+Write-Header -ForegroundColor Blue
 $block = [ScriptBlock]::Create($sanitized)
 Invoke-Command -ScriptBlock $block -NoNewScope
+Write-Footer -ForegroundColor Blue
