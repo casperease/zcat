@@ -38,7 +38,7 @@ function Write-Header {
         [ValidateSet('Curved', 'Stars', 'Heavy')]
         [string] $Style = 'Curved',
 
-        [int] $Width = 60,
+        [int] $Width = 78,
 
         [System.ConsoleColor] $ForegroundColor
     )
