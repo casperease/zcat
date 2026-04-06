@@ -23,6 +23,11 @@ param(
 )
 
 . $PSScriptRoot/../importer.ps1
+
+if ($env:SYSTEM_DEBUG -eq 'true') {
+    $global:VerbosePreference = 'Continue'
+}
+
 trap {
     Write-Exception $_
     break
@@ -32,14 +37,19 @@ $sanitized = ConvertFrom-AdoPipelineCommand $Command
 $modeLabel = if ($Mode -eq 'none') { 'Invoke-Automation' } else { "Invoke-Automation [$Mode]" }
 Write-Message $modeLabel
 if ($ServiceConnection) {
-    Write-Message "  ServiceConnection:  $ServiceConnection"
+    Write-Message "ServiceConnection: $ServiceConnection"
 }
 if ($ExposeAccessToken) {
-    Write-Message "  ExposeAccessToken:  true"
+    Write-Message "ExposeAccessToken: true"
 }
 
 Write-Header -ForegroundColor Green
-Write-AdoEnvironmentDiagnostic
+if ($env:SYSTEM_DEBUG -eq 'true') {
+    Write-EnvironmentDiagnostic
+}
+else {
+    Write-AdoEnvironmentDiagnostic
+}
 Write-Footer -ForegroundColor Green
 
 Write-Header -ForegroundColor DarkBlue
