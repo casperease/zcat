@@ -29,24 +29,4 @@ Describe 'Write-Exception' {
         $iv | Should -BeNullOrEmpty
         $savedErrors | ForEach-Object { $global:Error.Add($_) }
     }
-
-    Context 'ADO pipeline' {
-        BeforeAll {
-            $origTfBuild = $env:TF_BUILD
-            $env:TF_BUILD = 'True'
-        }
-        AfterAll {
-            $env:TF_BUILD = $origTfBuild
-        }
-
-        It 'emits ##vso logissue with exception type and message' {
-            try { throw [System.InvalidOperationException]::new('pipeline boom') } catch { $null }
-            $output = Write-Exception $global:Error[0] 6>&1 4>&1 *>&1
-            $vsoLine = $output | Where-Object { $_ -match '##vso\[task\.logissue' }
-            $vsoLine | Should -Not -BeNullOrEmpty
-            $vsoLine | Should -Match 'type=error'
-            $vsoLine | Should -Match 'InvalidOperationException'
-            $vsoLine | Should -Match 'pipeline boom'
-        }
-    }
 }

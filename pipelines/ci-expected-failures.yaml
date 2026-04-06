@@ -83,19 +83,3 @@ jobs:
           script: . './pipelines/Invoke-AdoScript.ps1' -Command 'Install-NodeJs'
           pwsh: true
         continueOnError: true
-
-      # 1g: Write-Exception emits ##vso[task.logissue type=error] in pipeline
-      - task: PowerShell@2
-        displayName: 'Write-Exception: type and message in ADO'
-        inputs:
-          targetType: inline
-          pwsh: true
-          script: |
-            . './pipelines/Invoke-AdoScript.ps1' -Command @'
-            $record = try { throw 'test error' } catch { $_ }
-            $output = Write-Exception $record *>&1 | Out-String
-            Assert-True ($output -match 'test error')
-            Assert-True ($output -match 'RuntimeException')
-            Write-Message 'Write-Exception output verified'
-            '@
-        continueOnError: true

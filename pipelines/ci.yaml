@@ -127,6 +127,16 @@ jobs:
             Assert-True ($null -ne (Get-Command Set-AdoPipelineVariable -ErrorAction Ignore))
             Write-Message "Loaded $($modules.Count) Zcap modules"
 
+      # 2j: Write-Exception outputs exception type and message
+      - template: /pipelines/steps/invoke-automation.yaml
+        parameters:
+          DisplayName: 'Write-Exception: type and message'
+          RunCommand: |
+            $record = try { throw 'test error' } catch { $_ }
+            $output = Write-Exception $record *>&1 | Out-String
+            Assert-True ($output -match 'test error')
+            Assert-True ($output -match 'RuntimeException')
+            Write-Message 'Write-Exception output verified'
 
   # ---------------------------------------------------------------------------
   # Job 3: Azure auth mode tests (needs sc-azure-test service connection)

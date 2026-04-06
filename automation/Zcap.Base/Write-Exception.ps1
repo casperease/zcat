@@ -14,7 +14,6 @@
     Write-Exception -GlobalErrorIndex 2
 #>
 function Write-Exception {
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingWriteHost', '', Justification = 'Write-Host is required — ##vso commands must go to stdout via the host stream')]
     [CmdletBinding()]
     param(
         [Parameter(Position = 0, ParameterSetName = 'FromParameter')]
@@ -56,12 +55,6 @@ function Write-Exception {
     for ($i = 1; $inner; $i++, ($inner = $inner.InnerException)) {
         $lines += "--- Inner exception ($i): $($inner.GetType().FullName) ---"
         $lines += $inner.Message
-    }
-
-    if (Test-IsRunningInPipeline) {
-        $typeName = $ErrorRecord.Exception.GetType().FullName
-        $message = $ErrorRecord.Exception.Message
-        Write-Host "##vso[task.logissue type=error]${typeName}: ${message}"
     }
 
     foreach ($line in $lines) {
