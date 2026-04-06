@@ -16,19 +16,27 @@ Describe 'Get-AdoAuthorizationHeader' {
                 $env:SYSTEM_ACCESSTOKEN = $origToken
             }
         }
+    }
 
-        It 'throws when SYSTEM_ACCESSTOKEN is missing in pipeline' {
+    Context 'PAT authentication' {
+        It 'uses AZURE_DEVOPS_PAT with Basic auth' {
             $origTfBuild = $env:TF_BUILD
             $origToken = $env:SYSTEM_ACCESSTOKEN
+            $origPat = $env:AZURE_DEVOPS_PAT
             try {
-                $env:TF_BUILD = 'True'
+                $env:TF_BUILD = $null
                 $env:SYSTEM_ACCESSTOKEN = $null
+                $env:AZURE_DEVOPS_PAT = 'test-pat-value'
 
-                { Get-AdoAuthorizationHeader } | Should -Throw '*No ADO token*'
+                $header = Get-AdoAuthorizationHeader
+                $header | Should -BeOfType [hashtable]
+                $expected = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(':test-pat-value'))
+                $header.Authorization | Should -Be "Basic $expected"
             }
             finally {
                 $env:TF_BUILD = $origTfBuild
                 $env:SYSTEM_ACCESSTOKEN = $origToken
+                $env:AZURE_DEVOPS_PAT = $origPat
             }
         }
     }

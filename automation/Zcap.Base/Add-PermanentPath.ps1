@@ -88,6 +88,10 @@ function Add-PermanentPath {
         $alreadyPatched = $profileExists -and (Get-Content $profilePath -Raw) -match [regex]::Escape($startMarker)
 
         if (-not $alreadyPatched) {
+            $profileDir = Split-Path $profilePath -Parent
+            if (-not (Test-Path $profileDir)) {
+                New-Item -Path $profileDir -ItemType Directory -Force | Out-Null
+            }
             $pathLine = if ($Prepend) {
                 "`$env:PATH = `"$Path$separator`$env:PATH`""
             }
