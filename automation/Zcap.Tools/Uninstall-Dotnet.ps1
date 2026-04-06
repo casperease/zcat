@@ -25,31 +25,24 @@ function Uninstall-Dotnet {
     Write-Message "Removing '$installDir'"
     Remove-Item $installDir -Recurse -Force
 
-    # Clean up current session
+    # Clean up current session + persistent PATH
     $env:DOTNET_ROOT = $null
-    $env:PATH = ($env:PATH -split [System.IO.Path]::PathSeparator |
-        Where-Object { $_ -ne $installDir }) -join [System.IO.Path]::PathSeparator
+    Remove-PermanentPath $installDir -Label 'Install-Dotnet'
 
-    # Clean persistent environment
+    # Clean persistent DOTNET_ROOT separately
     if ($IsWindows) {
         [Environment]::SetEnvironmentVariable('DOTNET_ROOT', $null, 'User')
-        $userPath = [Environment]::GetEnvironmentVariable('PATH', 'User')
-        if ($userPath) {
-            $cleaned = ($userPath -split ';' | Where-Object { $_ -ne $installDir }) -join ';'
-            [Environment]::SetEnvironmentVariable('PATH', $cleaned, 'User')
-        }
     }
     else {
-        # Remove the marker block from $PROFILE
         $profilePath = $PROFILE.CurrentUserCurrentHost
         if (Test-Path $profilePath) {
             $content = Get-Content $profilePath -Raw
-            $startMarker = '>>> zcap Install-Dotnet >>>'
-            $endMarker = '<<< zcap Install-Dotnet <<<'
-            $pattern = "(?m)\r?\n?# \Q$startMarker\E.*?# \Q$endMarker\E\r?\n?"
-            # Use regex with singleline mode to match across lines
+            $startMarker = '>>> zcap DOTNET_ROOT >>>'
+            $endMarker = '<<< zcap DOTNET_ROOT <<<'
             $cleaned = $content -replace "(?s)\r?\n?# $([regex]::Escape($startMarker)).*?# $([regex]::Escape($endMarker))\r?\n?", ''
-            Set-Content -Path $profilePath -Value $cleaned -NoNewline
+            if ($cleaned -ne $content) {
+                Set-Content -Path $profilePath -Value $cleaned -NoNewline
+            }
         }
     }
 

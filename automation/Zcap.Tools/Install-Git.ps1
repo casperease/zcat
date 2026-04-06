@@ -61,14 +61,7 @@ function Install-Git {
 
         Assert-PathExist $cmdDir
 
-        # Set environment for current session
-        $env:PATH = "$cmdDir$([IO.Path]::PathSeparator)$env:PATH"
-
-        # Persist environment (no admin needed)
-        $userPath = [Environment]::GetEnvironmentVariable('PATH', 'User')
-        if ($userPath -notlike "*$cmdDir*") {
-            [Environment]::SetEnvironmentVariable('PATH', "$cmdDir;$userPath", 'User')
-        }
+        Add-PermanentPath $cmdDir -Prepend
 
         Assert-Command git -ErrorText "Git was installed but 'git' is not on PATH. You may need to restart your shell."
         Write-Message "Git installed successfully to '$installDir'"

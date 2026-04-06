@@ -41,7 +41,48 @@ function Uninstall-Tool {
         }
         Assert-Command winget
         $packageId = $config.WingetId -f $Version
+
+        # Snapshot User PATH before uninstall so we can detect what the
+        # uninstaller removes. Winget uninstallers often remove their registry
+        # PATH entries but leave directories on disk — Test-Path alone can't
+        # tell stale from legitimate.
+        $beforeEntries = [System.Collections.Generic.HashSet[string]]::new(
+            [string[]]([System.Environment]::GetEnvironmentVariable('PATH', 'User') -split ';' |
+                Where-Object { $_ -ne '' } |
+                ForEach-Object { $_.TrimEnd('\', '/') }),
+            [System.StringComparer]::OrdinalIgnoreCase
+        )
+
         Invoke-CliCommand "winget uninstall --id $packageId --silent"
+
+        # Find entries the uninstaller removed from the registry
+        $afterEntries = [System.Collections.Generic.HashSet[string]]::new(
+            [string[]]([System.Environment]::GetEnvironmentVariable('PATH', 'User') -split ';' |
+                Where-Object { $_ -ne '' } |
+                ForEach-Object { $_.TrimEnd('\', '/') }),
+            [System.StringComparer]::OrdinalIgnoreCase
+        )
+        $removed = [System.Collections.Generic.HashSet[string]]::new($beforeEntries, [System.StringComparer]::OrdinalIgnoreCase)
+        $removed.ExceptWith($afterEntries)
+
+        # Remove those entries from the session PATH too
+        if ($removed.Count -gt 0) {
+            $env:PATH = ($env:PATH -split ';' |
+                Where-Object { $_ -eq '' -or -not $removed.Contains($_.TrimEnd('\', '/')) }) -join ';'
+        }
+
+        # Some uninstallers remove the directory but leave the PATH entry in
+        # the registry (e.g. Terraform). Clean those by checking existence.
+        $userPath = [System.Environment]::GetEnvironmentVariable('PATH', 'User')
+        if ($userPath) {
+            $cleaned = ($userPath -split ';' |
+                Where-Object { $_ -eq '' -or (Test-Path $_) }) -join ';'
+            if ($cleaned -ne $userPath) {
+                [System.Environment]::SetEnvironmentVariable('PATH', $cleaned, 'User')
+            }
+        }
+        $env:PATH = ($env:PATH -split ';' |
+            Where-Object { $_ -eq '' -or (Test-Path $_) }) -join ';'
     }
     elseif ($IsMacOS) {
         Assert-NotNullOrWhitespace $config.BrewFormula -ErrorText "$Tool has no BrewFormula — use Uninstall-$Tool directly"

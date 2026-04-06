@@ -90,26 +90,7 @@ function Install-Tool {
         throw "Unsupported platform for tool installation"
     }
 
-    # Refresh PATH — merge registry entries into current session PATH.
-    # Replaces the old approach that dropped session-only entries (dotnet tools,
-    # conda, etc.). New entries from the installer are added; existing entries preserved.
-    if ($IsWindows) {
-        $machinePath = [System.Environment]::GetEnvironmentVariable('PATH', 'Machine')
-        $userPath = [System.Environment]::GetEnvironmentVariable('PATH', 'User')
-        $registryPaths = ($userPath, $machinePath | ForEach-Object { $_ -split ';' }) |
-            Where-Object { $_ -ne '' }
-
-        $currentPaths = $env:PATH -split ';' | Where-Object { $_ -ne '' }
-        $seen = [System.Collections.Generic.HashSet[string]]::new(
-            [string[]]$currentPaths,
-            [System.StringComparer]::OrdinalIgnoreCase
-        )
-        $newPaths = foreach ($p in $registryPaths) {
-            if ($seen.Add($p)) { $p }
-        }
-        $env:PATH = (@($currentPaths) + @($newPaths)) -join ';'
-        Write-Verbose 'Refreshed PATH from registry (merged with session)'
-    }
+    Sync-SessionPath
 
     Assert-Command $config.Command -ErrorText "$Tool was installed but '$($config.Command)' is not on PATH. You may need to restart your shell."
 

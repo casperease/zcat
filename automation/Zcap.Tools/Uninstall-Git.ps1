@@ -25,16 +25,7 @@ function Uninstall-Git {
         Write-Message "Removing '$installDir'"
         Remove-Item $installDir -Recurse -Force
 
-        # Clean up current session PATH
-        $env:PATH = ($env:PATH -split ';' |
-            Where-Object { $_ -ne $cmdDir }) -join ';'
-
-        # Clean persistent user PATH
-        $userPath = [Environment]::GetEnvironmentVariable('PATH', 'User')
-        if ($userPath) {
-            $cleaned = ($userPath -split ';' | Where-Object { $_ -ne $cmdDir }) -join ';'
-            [Environment]::SetEnvironmentVariable('PATH', $cleaned, 'User')
-        }
+        Remove-PermanentPath $cmdDir
 
         Write-Message "Git uninstalled from '$installDir'"
     }

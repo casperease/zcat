@@ -89,32 +89,26 @@ function Install-Dotnet {
         Invoke-CliCommand "bash '$scriptPath' --channel $Version --install-dir $installDir --quality ga"
     }
 
-    # Set environment for current session
+    # Set environment for current session + persist PATH
     $env:DOTNET_ROOT = $installDir
-    $env:PATH = "$installDir$([System.IO.Path]::PathSeparator)$env:PATH"
+    Add-PermanentPath $installDir -Prepend -Label 'Install-Dotnet'
 
-    # Persist environment (no admin needed)
+    # Persist DOTNET_ROOT separately (not PATH — handled above)
     if ($IsWindows) {
         [Environment]::SetEnvironmentVariable('DOTNET_ROOT', $installDir, 'User')
-        $userPath = [Environment]::GetEnvironmentVariable('PATH', 'User')
-        if ($userPath -notlike "*$installDir*") {
-            [Environment]::SetEnvironmentVariable('PATH', "$installDir;$userPath", 'User')
-        }
     }
     else {
-        # Append to $PROFILE with markers so Uninstall-Dotnet can remove them
-        $marker = '>>> zcap Install-Dotnet >>>'
+        $startMarker = '>>> zcap DOTNET_ROOT >>>'
         $profilePath = $PROFILE.CurrentUserCurrentHost
         $profileExists = Test-Path $profilePath
-        $alreadyPatched = $profileExists -and (Get-Content $profilePath -Raw) -match [regex]::Escape($marker)
+        $alreadyPatched = $profileExists -and (Get-Content $profilePath -Raw) -match [regex]::Escape($startMarker)
 
         if (-not $alreadyPatched) {
             $block = @"
 
-# $marker
+# $startMarker
 `$env:DOTNET_ROOT = "$installDir"
-`$env:PATH = "`$env:DOTNET_ROOT$([System.IO.Path]::PathSeparator)`$env:PATH"
-# <<< zcap Install-Dotnet <<<
+# <<< zcap DOTNET_ROOT <<<
 "@
             Add-Content -Path $profilePath -Value $block
         }

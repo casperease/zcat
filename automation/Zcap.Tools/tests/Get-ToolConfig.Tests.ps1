@@ -6,8 +6,8 @@ Describe 'Get-ToolConfig' {
         @{ Tool = $key; Config = $script:allTools[$key] }
     }
     $script:depEntries = foreach ($entry in $script:toolEntries) {
-        if ($entry.Config.DependsOn) {
-            @{ Tool = $entry.Tool; DependsOn = $entry.Config.DependsOn }
+        if ($entry.Config['DependsOn']) {
+            @{ Tool = $entry.Tool; DependsOn = $entry.Config['DependsOn'] }
         }
     }
 
@@ -48,7 +48,7 @@ Describe 'Get-ToolConfig' {
         }
 
         It '<Tool> has at least one install mechanism' -ForEach $script:toolEntries {
-            $hasMechanism = $Config.WingetId -or $Config.BrewFormula -or $Config.AptPackage -or $Config.PipPackage -or $Config.ScriptInstall
+            $hasMechanism = $Config['WingetId'] -or $Config['BrewFormula'] -or $Config['AptPackage'] -or $Config['PipPackage'] -or $Config['ScriptInstall']
             $hasMechanism | Should -BeTrue -Because "$Tool needs WingetId, BrewFormula, AptPackage, PipPackage, or ScriptInstall"
         }
 
