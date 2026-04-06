@@ -25,5 +25,6 @@ function Write-AdoEnvironmentDiagnostic {
             }
         }
     } |
+    Sort-Object Name |
     Format-Table -Property @{ Expression = 'Name'; Width = 40 }, Value
 }
