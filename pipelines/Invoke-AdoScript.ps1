@@ -37,6 +37,11 @@ if ($ServiceConnection) {
 if ($ExposeAccessToken) {
     Write-Message "  ExposeAccessToken:  true"
 }
+
+Write-Header -ForegroundColor Green
+Write-EnvironmentDiagnostic
+Write-Footer -ForegroundColor Green
+
 Write-Header -ForegroundColor DarkBlue
 Write-Information $sanitized
 Write-Footer -ForegroundColor DarkBlue
