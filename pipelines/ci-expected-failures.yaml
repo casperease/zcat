@@ -1,0 +1,85 @@
+# CI pipeline — expected failures. Verifies guardrails work by running
+# commands that must fail. All steps use continueOnError so the job
+# succeeds overall.
+
+trigger:
+  branches:
+    include: [main]
+
+pr:
+  branches:
+    include: [main]
+
+jobs:
+  - job: ExpectedFailures
+    displayName: 'Expected Failures'
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+      - checkout: self
+
+      # 1a: Assert-True $false triggers trap with stack trace
+      - task: PowerShell@2
+        displayName: 'Trap: Assert-True $false'
+        inputs:
+          targetType: inline
+          script: . './pipelines/Invoke-AdoScript.ps1' -Command 'Assert-True $false'
+          pwsh: true
+        continueOnError: true
+
+      # 1b: Multiline RunCommand without DisplayName must fail
+      #     Simulates what invoke-automation.yaml does internally.
+      #     The throw propagates → step goes amber (expected).
+      - task: PowerShell@2
+        displayName: 'Guard: multiline without DisplayName'
+        inputs:
+          targetType: inline
+          pwsh: true
+          script: |
+            . './importer.ps1'
+            $command = @'
+            Get-Process
+            Get-Service
+            '@
+            $displayName = ''
+            if ($command.Contains("`n") -and -not $displayName) {
+                throw "Multiline RunCommand requires DisplayName parameter."
+            }
+            . './pipelines/Invoke-AdoScript.ps1' -Command $command
+        continueOnError: true
+
+      # 1c: Invoke-CliCommand non-zero exit code throws
+      - task: PowerShell@2
+        displayName: 'Trap: non-zero exit code'
+        inputs:
+          targetType: inline
+          script: . './pipelines/Invoke-AdoScript.ps1' -Command 'Invoke-CliCommand "bash -c exit\ 1" -Silent'
+          pwsh: true
+        continueOnError: true
+
+      # 1d: Install-Python refuses in pipeline
+      - task: PowerShell@2
+        displayName: 'Guard: Install-Python blocked in CI'
+        inputs:
+          targetType: inline
+          script: . './pipelines/Invoke-AdoScript.ps1' -Command 'Install-Python'
+          pwsh: true
+        continueOnError: true
+
+      # 1e: Install-Dotnet refuses in pipeline
+      - task: PowerShell@2
+        displayName: 'Guard: Install-Dotnet blocked in CI'
+        inputs:
+          targetType: inline
+          script: . './pipelines/Invoke-AdoScript.ps1' -Command 'Install-Dotnet'
+          pwsh: true
+        continueOnError: true
+
+      # 1f: Install-NodeJs refuses in pipeline
+      - task: PowerShell@2
+        displayName: 'Guard: Install-NodeJs blocked in CI'
+        inputs:
+          targetType: inline
+          script: . './pipelines/Invoke-AdoScript.ps1' -Command 'Install-NodeJs'
+          pwsh: true
+        continueOnError: true

@@ -14,6 +14,8 @@
     Optional label displayed above the output.
 .PARAMETER NoHeader
     Suppress the type info line and name label. Only the rendered value is shown.
+.PARAMETER Depth
+    Maximum recursion depth for nested objects. Defaults to 10.
 .PARAMETER ForegroundColor
     Color for the output. Defaults to DarkGray.
 .EXAMPLE
@@ -32,6 +34,8 @@ function Write-Object {
         [string] $Name,
 
         [switch] $NoHeader,
+
+        [int] $Depth = 10,
 
         [Alias('Color')]
         [System.ConsoleColor] $ForegroundColor = 'DarkGray'
@@ -85,7 +89,7 @@ function Write-Object {
             } | Select-Object -First 1
 
             if ($hasComplex) {
-                $safe = $items | ForEach-Object { ConvertTo-YamlSafe $_ }
+                $safe = $items | ForEach-Object { ConvertTo-YamlSafe $_ -MaxDepth $Depth }
                 Write-InformationColored ($safe | ConvertTo-Yaml).TrimEnd() -ForegroundColor $ForegroundColor
             }
             else {
@@ -97,7 +101,7 @@ function Write-Object {
         }
         else {
             # PSCustomObject, complex .NET objects — recursively convert for clean YAML
-            $safe = ConvertTo-YamlSafe $Object
+            $safe = ConvertTo-YamlSafe $Object -MaxDepth $Depth
             Write-InformationColored ($safe | ConvertTo-Yaml).TrimEnd() -ForegroundColor $ForegroundColor
         }
     }
