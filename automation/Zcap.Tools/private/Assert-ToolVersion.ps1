@@ -14,6 +14,7 @@ function Assert-ToolVersion {
         [string] $Tool
     )
 
+    # Cached for session lifetime. Reset by reimporting (.\importer.ps1).
     if (-not $script:toolVersionCache) {
         $script:toolVersionCache = @{}
     }

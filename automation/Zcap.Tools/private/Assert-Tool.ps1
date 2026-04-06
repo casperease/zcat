@@ -2,9 +2,9 @@
 .SYNOPSIS
     Asserts that a tool is installed and at the expected version.
 .DESCRIPTION
-    Checks DependsOn first (from tools.yml), then Assert-Command and
-    Assert-ToolVersion. Produces "Poetry requires Python" instead of
-    "Could not parse Poetry version" when a dependency is missing.
+    Checks that the tool's command is on PATH and that its version
+    matches the locked version in tools.yml. Does NOT check DependsOn —
+    those are install-time dependencies, not runtime requirements.
 .PARAMETER Tool
     The tool name as defined in Get-ToolConfig (e.g., 'Python', 'AzCli').
 .EXAMPLE
@@ -21,13 +21,6 @@ function Assert-Tool {
 
     $config = Get-ToolConfig -Tool $Tool
 
-    # Check dependency FIRST — produce actionable error naming the root cause
-    if ($config.DependsOn) {
-        $depConfig = Get-ToolConfig -Tool $config.DependsOn
-        Assert-Command $depConfig.Command -ErrorText "$Tool requires $($config.DependsOn) ($($depConfig.Command)) — run Install-$($config.DependsOn)"
-        Assert-ToolVersion -Tool $config.DependsOn
-    }
-
-    Assert-Command $config.Command
+    Assert-Command $config.Command -ErrorText "$Tool is not installed ($($config.Command) not found on PATH). Run Install-$Tool."
     Assert-ToolVersion -Tool $Tool
 }

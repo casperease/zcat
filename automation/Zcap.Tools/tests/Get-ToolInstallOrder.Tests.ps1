@@ -21,7 +21,7 @@ Describe 'Get-ToolInstallOrder' {
 
     It 'dependencies come before dependents' {
         foreach ($name in $allTools.Keys) {
-            $dep = $allTools[$name].DependsOn
+            $dep = $allTools[$name]['DependsOn']
             if ($dep) {
                 $depIndex = [array]::IndexOf($order, $dep)
                 $toolIndex = [array]::IndexOf($order, $name)

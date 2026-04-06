@@ -10,10 +10,13 @@ function Assert-PsModule {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory, Position = 0)]
-        [string] $Module
+        [string] $Module,
+
+        [string] $ErrorText
     )
 
     if (-not (Get-Module $Module -ListAvailable)) {
-        throw "Module '$Module' is not available"
+        $message = if ($ErrorText) { $ErrorText } else { "Module '$Module' is not available" }
+        throw $message
     }
 }

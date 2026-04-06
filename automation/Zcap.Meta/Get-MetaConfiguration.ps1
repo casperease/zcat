@@ -9,6 +9,7 @@ function Get-MetaConfiguration {
     [CmdletBinding()]
     param()
 
+    # Cached for session lifetime. Reset by reimporting (.\importer.ps1).
     if ($script:metaConfigCache) {
         return $script:metaConfigCache
     }
