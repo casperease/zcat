@@ -15,16 +15,15 @@ function Write-AdoEnvironmentDiagnostic {
 
     $whitelist = Get-AdoPipelineEnvWhitelist
 
-    $whitelist |
-    ForEach-Object {
-        $value = [System.Environment]::GetEnvironmentVariable($_)
+    $entries = foreach ($name in $whitelist) {
+        $value = [System.Environment]::GetEnvironmentVariable($name)
         if ($null -ne $value) {
-            [PSCustomObject]@{
-                Name  = $_
-                Value = $value
-            }
+            @{ Name = $name; Value = $value }
         }
-    } |
-    Sort-Object Name |
-    Format-Table -Property @{ Expression = 'Name'; Width = 40 }, Value
+    }
+
+    $sorted = $entries | Sort-Object { $_.Name }
+    foreach ($entry in $sorted) {
+        Write-Information "$($entry.Name.PadRight(40)) $($entry.Value)"
+    }
 }
