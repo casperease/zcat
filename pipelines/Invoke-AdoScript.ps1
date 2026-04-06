@@ -39,7 +39,7 @@ if ($ExposeAccessToken) {
 }
 
 Write-Header -ForegroundColor Green
-Write-EnvironmentDiagnostic
+Write-AdoEnvironmentDiagnostic
 Write-Footer -ForegroundColor Green
 
 Write-Header -ForegroundColor DarkBlue

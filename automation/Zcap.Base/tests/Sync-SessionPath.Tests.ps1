@@ -15,12 +15,13 @@ Describe 'Sync-SessionPath' {
             # Remove a known registry entry from session to simulate a stale session
             if ($userEntries.Count -gt 0) {
                 $removed = $userEntries[0]
+                $normalized = $removed.TrimEnd('\', '/')
                 $env:PATH = ($env:PATH -split ';' |
-                    Where-Object { $_ -ne $removed }) -join ';'
+                    Where-Object { $_.TrimEnd('\', '/') -ne $normalized }) -join ';'
 
                 Sync-SessionPath
 
-                $env:PATH | Should -Match ([regex]::Escape($removed))
+                $env:PATH | Should -Match ([regex]::Escape($normalized))
             }
             else {
                 Set-ItResult -Skipped -Because 'No User PATH entries to test with'
