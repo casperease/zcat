@@ -32,7 +32,7 @@ function Test-FunctionDependency {
     $definitions = @{}
     foreach ($mod in $moduleDirs) {
         $ps1Files = Get-ChildItem $mod.FullName -Filter '*.ps1' -Recurse |
-            Where-Object { $_.Name -notlike '*.Tests.ps1' }
+            Where-Object { $_.Name -notlike '*.Tests.ps1' -and $_.FullName -notmatch '[/\\]assets[/\\]' }
 
         foreach ($file in $ps1Files) {
             $tokens = $null
@@ -60,7 +60,7 @@ function Test-FunctionDependency {
 
     foreach ($mod in $moduleDirs) {
         $ps1Files = Get-ChildItem $mod.FullName -Filter '*.ps1' -Recurse |
-            Where-Object { $_.Name -notlike '*.Tests.ps1' }
+            Where-Object { $_.Name -notlike '*.Tests.ps1' -and $_.FullName -notmatch '[/\\]assets[/\\]' }
 
         foreach ($file in $ps1Files) {
             $tokens = $null

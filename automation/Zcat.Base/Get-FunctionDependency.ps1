@@ -27,7 +27,7 @@ function Get-FunctionDependency {
     $definitions = @{}
     foreach ($mod in $moduleDirs) {
         $ps1Files = Get-ChildItem $mod.FullName -Filter '*.ps1' -Recurse |
-            Where-Object { $_.Name -notlike '*.Tests.ps1' }
+            Where-Object { $_.Name -notlike '*.Tests.ps1' -and $_.FullName -notmatch '[/\\]assets[/\\]' }
 
         foreach ($file in $ps1Files) {
             $tokens = $null
@@ -53,7 +53,7 @@ function Get-FunctionDependency {
     # Step 2: walk each function body for calls → cross-reference
     foreach ($mod in $moduleDirs) {
         $ps1Files = Get-ChildItem $mod.FullName -Filter '*.ps1' -Recurse |
-            Where-Object { $_.Name -notlike '*.Tests.ps1' }
+            Where-Object { $_.Name -notlike '*.Tests.ps1' -and $_.FullName -notmatch '[/\\]assets[/\\]' }
 
         foreach ($file in $ps1Files) {
             $tokens = $null
