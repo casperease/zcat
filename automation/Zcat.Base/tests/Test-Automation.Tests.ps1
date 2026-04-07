@@ -67,7 +67,7 @@ Describe 'Test file: <Module>/tests/<File>' -ForEach $allTests {
     }
 }
 
-Describe 'Function dependencies' {
+Describe 'Function dependencies' -Tag 'L2' {
     It 'has no unresolved function calls' {
         Test-FunctionDependency | Should -BeTrue
     }
