@@ -91,6 +91,7 @@ function Test-FunctionDependency {
                 foreach ($call in $calls) {
                     $cmdName = $call.GetCommandName()
                     if (-not $cmdName) { continue }
+                    if ($cmdName -notmatch '-') { continue }
                     if ($definitions.ContainsKey($cmdName)) { continue }
                     if ($localDefs.Contains($cmdName)) { continue }
                     if (Get-Command $cmdName -ErrorAction Ignore) { continue }
@@ -108,7 +109,7 @@ function Test-FunctionDependency {
     }
 
     foreach ($entry in $unresolved) {
-        Write-Verbose "$($entry.CallerFunction) -> $($entry.MissingCommand) ($($entry.CallerFile):$($entry.CallerLine))"
+        Write-Message "$($entry.CallerFunction) -> $($entry.MissingCommand) ($($entry.CallerFile):$($entry.CallerLine))" -ForegroundColor Red
     }
 
     $unresolved.Count -eq 0
