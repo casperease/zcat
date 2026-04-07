@@ -69,7 +69,7 @@ AfterAll {
     }
 }
 
-Describe 'Resolver' -Tag 'L2' {
+Describe 'Resolver' {
     Context 'empty automation folder' {
         It 'imports without error and loads no modules' {
             $modules = Invoke-Sandbox

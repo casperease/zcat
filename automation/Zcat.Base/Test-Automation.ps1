@@ -85,22 +85,20 @@ function Test-Automation {
     foreach ($test in $result.Tests) {
         if ($test.Result -ne 'Passed') { continue }
 
-        $tags = @($test.Block.Tag)
-        $ms = [int]$test.Duration.TotalMilliseconds
+        # Walk up the block hierarchy — innermost level tag wins
+        $tag = $null
+        $block = $test.Block
+        while ($block -and -not $block.IsRoot) {
+            foreach ($t in $block.Tag) {
+                if ($t -in 'L0', 'L1', 'L2') { $tag = $t; break }
+            }
+            if ($tag) { break }
+            $block = $block.Parent
+        }
+        if (-not $tag) { $tag = 'L1' }
 
-        if ($tags -contains 'L0') {
-            $limitMs = $limits['L0']
-            $tag = 'L0'
-        }
-        elseif ($tags -contains 'L2') {
-            $limitMs = $limits['L2']
-            $tag = 'L2'
-        }
-        else {
-            # Untagged or L1
-            $limitMs = $limits['L1']
-            $tag = 'L1'
-        }
+        $limitMs = $limits[$tag]
+        $ms = [int]$test.Duration.TotalMilliseconds
 
         if ($ms -gt $limitMs) {
             $violations += "[$tag > ${limitMs}ms] $($test.ExpandedName) took ${ms}ms"

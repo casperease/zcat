@@ -79,6 +79,15 @@ function Register-AdoPipeline {
     # Build repository config based on source type
     if ($PSCmdlet.ParameterSetName -eq 'GitHub') {
         $repoFullName = $GitHubRepository -replace '^https://github\.com/', ''
+
+        # Resolve connection name to GUID if needed
+        if (-not [guid]::TryParse($ConnectionId, [ref][guid]::Empty)) {
+            $endpoints = Invoke-AdoRestMethod -Uri "$apiBase/serviceendpoint/endpoints?endpointNames=$ConnectionId&api-version=7.1-preview.4"
+            $endpoint = $endpoints | Select-Object -First 1
+            Assert-NotNull $endpoint -ErrorText "Service connection '$ConnectionId' not found in organization '$Organization'"
+            $ConnectionId = $endpoint.id
+        }
+
         $repoConfig = @{
             fullName   = $repoFullName
             type       = 'gitHub'
