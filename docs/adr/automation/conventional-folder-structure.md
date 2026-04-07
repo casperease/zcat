@@ -98,7 +98,7 @@ Adding a new top-level directory is a conscious architectural decision, not a ca
 | Convention             | Meaning                                         | Examples                                     |
 | ---------------------- | ----------------------------------------------- | -------------------------------------------- |
 | Dot-prefixed directory | Infrastructure — invisible to module discovery  | `.resolver/`, `.vendor/`, `.scriptanalyzer/` |
-| Non-dot directory      | Module — auto-discovered by `Import-AllModules` | `Zcap.Base/`, `Zcap.Tools/`, `Zcap.Meta/`    |
+| Non-dot directory      | Module — auto-discovered by `Import-AllModules` | `Zcat.Base/`, `Zcat.Tools/`, `Zcat.Meta/`    |
 
 `Import-AllModules` filters with `$_.Name -notmatch '^\.'`.
 This is the entire module discovery mechanism: if the folder name starts with a dot, it is infrastructure; otherwise, it is a module.

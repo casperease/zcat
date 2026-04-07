@@ -25,30 +25,38 @@ Not every temporary file is output. Functions that need scratch space for interm
 temp files for atomic writes, decompression buffers — should use the system temp directory (`[IO.Path]::GetTempPath()`).
 Scratch files are transient and disposable. Nobody needs to find them after the function returns.
 
-Output files are different. They are the *result* of an operation — something a human or downstream process will consume.
+Output files are different. They are the _result_ of an operation — something a human or downstream process will consume.
 These need a predictable, findable, and cleanable location inside the repository.
 
 ## Decision
 
-All output files are written to `out/` at the repository root. Scratch files use the system temp directory.
+All output files are written to the path returned by `Get-OutputRoot`.
+
+Locally this is `{RepositoryRoot}/out`; in an Azure DevOps pipeline it is `$env:BUILD_ARTIFACTSTAGINGDIRECTORY`.
+
+Scratch files use the system temp directory.
 
 ### Rules
 
-- **Write all output to `$env:RepositoryRoot/out/`.** Reports, exports, generated configs, build artifacts, test results —
+- **Use `Get-OutputRoot` for the output path.** Reports, exports, generated configs, build artifacts, test results —
   anything a function produces for consumption by a human or another process goes here.
+  `Get-OutputRoot` returns the correct location for the current execution context:
+  locally it resolves to `{RepositoryRoot}/out`, in an Azure DevOps pipeline it returns
+  `$env:BUILD_ARTIFACTSTAGINGDIRECTORY`. Pass `-EnsureExists` to create the directory if it is missing.
 
-  ```powershell
-  $outDir = Join-Path $env:RepositoryRoot 'out'
-  $reportPath = Join-Path $outDir 'test-results.xml'
-  ```
+    ```powershell
+    $outDir = Get-OutputRoot -EnsureExists
+    $reportPath = Join-Path $outDir 'test-results.xml'
+    ```
 
 - **Use subdirectories for organization.** Functions that produce multiple files or recurring output should create
-  a subdirectory under `out/`:
+  a subdirectory under the output root:
 
-  ```powershell
-  $exportDir = Join-Path $env:RepositoryRoot 'out' 'exports'
-  New-Item -ItemType Directory -Path $exportDir -Force | Out-Null
-  ```
+    ```powershell
+    $outdir = Get-OutputRoot -EnsureExists
+    $exportDir = Join-Path $outdir 'exports'
+    New-Item -ItemType Directory -Path $exportDir -Force | Out-Null
+    ```
 
 - **Use `[IO.Path]::GetTempPath()` for scratch files.** Intermediate files that are consumed and discarded within
   the same function call belong in the system temp directory, not in the repository.
@@ -61,16 +69,16 @@ All output files are written to `out/` at the repository root. Scratch files use
 
 - **Cleaning is one command.** To remove all output:
 
-  ```powershell
-  Remove-Item (Join-Path $env:RepositoryRoot 'out' '*') -Recurse -Force
-  ```
+    ```powershell
+    Remove-Item (Join-Path (Get-OutputRoot) '*') -Recurse -Force
+    ```
 
-  CI pipelines and developers use the same path. No hunting for scattered files.
+    CI pipelines and developers use the same path. No hunting for scattered files.
 
 ## Consequences
 
 - `git status` stays clean. Generated files never appear as untracked changes.
 - There is exactly one place to look for output — `out/`. No searching, no guessing.
 - Cleaning up is trivial — delete the contents of one directory.
-- The distinction between source (committed) and output (transient) is structural, not by convention.
+- The distinction between source (committed) and output (transient) is structural, by convention.
 - Functions that previously wrote to ad-hoc locations must be updated to write to `out/`.

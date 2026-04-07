@@ -2,7 +2,13 @@
 
 ## Context
 
-PowerShell does not require semicolons. Statements are separated by newlines. Despite this, semicolons appear frequently in PowerShell code written by developers coming from C#, JavaScript, or other C-family languages. They add visual noise and signal that the author is thinking in a different language.
+PowerShell does not require semicolons.
+
+Statements are separated by newlines.
+
+Despite this, semicolons appear frequently in PowerShell code written by developers coming from C#, JavaScript, or other C-family languages.
+
+They add visual noise and signal that the author is thinking in a different language.
 
 ### The two patterns
 
@@ -38,7 +44,9 @@ $a = 1;
 $b = 2;
 ```
 
-The distinction: a semicolon followed by another statement on the same line is chaining (allowed). A semicolon at the end of a line is a trailing terminator (forbidden).
+The distinction: a semicolon followed by another statement on the same line is chaining (allowed).
+
+A semicolon at the end of a line is a trailing terminator (forbidden).
 
 ### The two exceptions
 
@@ -69,7 +77,9 @@ Both exceptions are structural — the semicolons serve as syntactic separators,
 
 ## Decision
 
-Never use semicolons as trailing statement terminators. Semicolons are permitted for chaining statements on a single line, in `for` loop headers, and in inline hash table literals.
+Never use semicolons as trailing statement terminators.
+
+Semicolons are permitted for chaining statements on a single line, in `for` loop headers, and in inline hash table literals.
 
 ### Rules
 
@@ -83,8 +93,7 @@ Never use semicolons as trailing statement terminators. Semicolons are permitted
 
 ### How this is enforced
 
-- **PSScriptAnalyzer built-in rule `PSAvoidSemicolonsAsLineTerminators`** — catches trailing semicolons (already enabled).
-- **PSScriptAnalyzer custom rule `Measure-NoSemicolons`** (severity: Error) — catches trailing semicolons (semicolons where the next token is on a different line). Allows single-line chaining, `for` headers, and hash tables.
+- **PSScriptAnalyzer built-in rule `PSAvoidSemicolonsAsLineTerminators`** — catches trailing semicolons. Enabled in `PSScriptAnalyzerSettings.psd1`.
 
 ## Consequences
 

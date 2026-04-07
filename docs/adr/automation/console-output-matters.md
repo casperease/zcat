@@ -38,18 +38,21 @@ Each line earns its place:
 
 ### The output hierarchy
 
-PowerShell has built-in output streams. Use them correctly:
+PowerShell has built-in output streams and this toolset defines some more.
 
-| Stream               | When to use                                                                          | Visible by default |
-| -------------------- | ------------------------------------------------------------------------------------ | ------------------ |
-| `Write-Message`      | One-liner status with caller prefix — command execution, completion, short results   | Yes                |
-| `Write-Information`  | Multiline or headerless output — results, tables, formatted data                     | Yes                |
-| `throw` / `Assert-*` | Something is wrong — execution stops                                                 | Yes                |
-| `Write-Verbose`      | Detail that helps debugging but clutters normal output — skip reasons, cache hits    | No (`-Verbose`)    |
-| `Write-Debug`        | Internal state dumps for development — variable values, branch decisions             | No (`-Debug`)      |
-| `Write-Output`       | Function return values. **Never** use for status messages — it pollutes the pipeline | Captured           |
+Use them correctly:
 
-`Write-Message` is built on `Write-Information` — it adds a `[CallerName]` prefix and routes through the information stream, not directly to the console.
+| Stream                     | When to use                                                                          | Visible by default |
+| -------------------------- | ------------------------------------------------------------------------------------ | ------------------ |
+| `Write-Message`            | One-liner status with caller prefix — command execution, completion, short results   | Yes                |
+| `Write-Information`        | Multiline or headerless output — results, tables, formatted data. No colors          | Yes                |
+| `Write-InformationColored` | Multiline or headerless output — results, tables, formatted data. With colors        | Yes                |
+| `throw` / `Assert-*`       | Something is wrong — execution stops                                                 | Yes                |
+| `Write-Verbose`            | Detail that helps debugging but clutters normal output — skip reasons, cache hits    | No (`-Verbose`)    |
+| `Write-Debug`              | Internal state dumps for development — variable values, branch decisions             | No (`-Debug`)      |
+| `Write-Output`             | Function return values. **Never** use for status messages — it pollutes the pipeline | Captured           |
+
+`Write-Message` is built on `Write-InformationColored` — it adds a `[CallerName]` prefix and routes through the information stream, not directly to the console.
 Use it for one-liners where the caller context matters.
 Use `Write-Information` directly for multiline output, tables, or any content where the prefix would indent the first line differently from the rest.
 Both write to the same stream.
@@ -152,7 +155,7 @@ This tells the user the operation is alive without any of the overhead.
 The dots appear in CI logs, in terminals, and in redirected output. No special handling needed.
 
 **Timestamps are opt-in.** `Write-Message` includes a caller name prefix by default (`[Invoke-CliCommand] poetry install`).
-Timestamps can be enabled via `$env:ZCAP_MESSAGE_TIMESTAMPS` for local debugging.
+Timestamps can be enabled via `$env:ZCAT_MESSAGE_TIMESTAMPS` for local debugging.
 CI platforms (ADO, GitHub Actions) already timestamp every log line natively, so this is never needed there.
 
 ## Decision
@@ -163,11 +166,11 @@ Functions use the correct output stream, log commands before execution, report o
 ### How this is enforced
 
 - **The Writer module** — provides all output functions: `Write-Message`, `Write-Object`, `Write-Header`, `Write-Exception`,
-and others. These are the building blocks for uniform console output. Use them instead of raw `Write-Host` or `Write-Information`.
+  and others. These are the building blocks for uniform console output. Use them instead of raw `Write-Host` or `Write-Information`.
 - **`Write-Message`** — the principal communication tool. Every message includes the calling function name automatically (`[Invoke-CliCommand] poetry install`),
-so the user always knows which function produced the output.
-Timestamps can be enabled via `$env:ZCAP_MESSAGE_TIMESTAMPS` for local debugging — CI platforms (ADO, GitHub Actions) already timestamp every log line natively.
-Console output is suppressed during Pester runs so test output stays clean.
+  so the user always knows which function produced the output.
+  Timestamps can be enabled via `$env:ZCAT_MESSAGE_TIMESTAMPS` for local debugging — CI platforms (ADO, GitHub Actions) already timestamp every log line natively.
+  Console output is suppressed during Pester runs so test output stays clean.
 - **`Invoke-CliCommand`** — logs the exact command via `Write-Message` before execution. All `Invoke-*` wrappers inherit this.
 - **Code review** — output quality is a review concern, same as logic correctness. A function that spams the console or swallows errors is a bug.
 
@@ -177,4 +180,4 @@ Console output is suppressed during Pester runs so test output stays clean.
 - Interactive sessions are clean — output is signal, not noise.
 - Copy-paste debugging works — commands are logged exactly as executed.
 - The output is the documentation. When a user runs `Install-DevBoxTools`,
-the console tells them what was installed, at what versions, and whether it succeeded. No README needed for the happy path.
+  the console tells them what was installed, at what versions, and whether it succeeded. No README needed for the happy path.

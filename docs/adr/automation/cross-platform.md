@@ -2,7 +2,8 @@
 
 ## Context
 
-Our workstations run Windows. Our CI runs Linux.
+Our workstations run Windows, maybe MacOS, maybe Linux. Our CI runs Linux.
+MacOs is a unix based os, so is linux, so we can reduce to Windows and Linux for most.
 Everything we write must work on both — and a developer must be able to test locally everything that runs in CI.
 
 PowerShell 7+ is cross-platform by design, but the _code_ people write in it often is not.
@@ -15,19 +16,19 @@ If you can run it locally, you can debug it locally — fast feedback, no waitin
 
 ### What breaks in practice
 
-| Windows-ism                                            | Fails on Linux because                 |
-| ------------------------------------------------------ | -------------------------------------- |
-| `C:\path\to\file` hardcoded                            | No `C:` drive, no backslash paths      |
-| `[Microsoft.Win32.Registry]`                           | Type does not exist on .NET Core Linux |
-| `Get-Service`, `Get-WmiObject`                         | Cmdlets not available on Linux         |
-| `cmd /c` or `Start-Process notepad`                    | Binaries do not exist                  |
-| `$env:APPDATA`, `$env:USERPROFILE`                     | Variables not set on Linux             |
-| `[System.IO.Path]::DirectorySeparatorChar` assumed `\` | It is `/` on Linux                     |
-| Case-insensitive file lookups                          | Linux filesystems are case-sensitive   |
+| Windows-ism                                            | Fails on Unix because                 |
+| ------------------------------------------------------ | ------------------------------------- |
+| `C:\path\to\file` hardcoded                            | No `C:` drive, no backslash paths     |
+| `[Microsoft.Win32.Registry]`                           | Type does not exist on .NET Core Unix |
+| `Get-Service`, `Get-WmiObject`                         | Cmdlets not available on Unix         |
+| `cmd /c` or `Start-Process notepad`                    | Binaries do not exist                 |
+| `$env:APPDATA`, `$env:USERPROFILE`                     | Variables not set on Unix             |
+| `[System.IO.Path]::DirectorySeparatorChar` assumed `\` | It is `/` on Unix                     |
+| Case-insensitive file lookups                          | Unix filesystems are case-sensitive   |
 
 ### What breaks the other way
 
-| Linux-ism                                             | Fails on Windows because                     |
+| Unix-ism                                              | Fails on Windows because                     |
 | ----------------------------------------------------- | -------------------------------------------- |
 | `#!/usr/bin/env pwsh` shebang relied on for execution | Windows uses file associations, not shebangs |
 | `chmod +x` permissions                                | NTFS does not have executable bits           |
@@ -70,7 +71,7 @@ Hardcoded `/` or `\` in paths is always wrong.
 ## Decision
 
 All automation code must run on both Windows and Linux.
-Developers must be able to test locally on Windows everything that runs in CI on Linux.
+Developers must be able to test locally on Windows/MacOS everything that runs in CI on Linux.
 
 ### Rules
 

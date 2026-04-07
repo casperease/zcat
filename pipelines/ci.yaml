@@ -120,12 +120,12 @@ jobs:
         parameters:
           DisplayName: 'Module loading and discovery'
           RunCommand: |
-            $modules = Get-Module | Where-Object { $_.Name -match '^Zcap\.' }
+            $modules = Get-Module | Where-Object { $_.Name -match '^Zcat\.' }
             Assert-True ($modules.Count -ge 3)
             Assert-True ($null -ne (Get-Command Get-MetaConfiguration -ErrorAction Ignore))
             Assert-True ($null -ne (Get-Command Invoke-CliCommand -ErrorAction Ignore))
             Assert-True ($null -ne (Get-Command Set-AdoPipelineVariable -ErrorAction Ignore))
-            Write-Message "Loaded $($modules.Count) Zcap modules"
+            Write-Message "Loaded $($modules.Count) Zcat modules"
 
       # 2j: Write-Exception outputs exception type and message
       - template: /pipelines/steps/invoke-automation.yaml
@@ -292,7 +292,7 @@ jobs:
                         Tags = @{
                             Owner = 'platform-team'
                             CostCenter = 'CC-4200'
-                            ManagedBy = 'zcap'
+                            ManagedBy = 'zcat'
                         }
                     }
                     Network = @{
@@ -431,7 +431,7 @@ jobs:
 
             $config = [PSCustomObject]@{
                 app = [PSCustomObject]@{
-                    name    = 'zcap'
+                    name    = 'zcat'
                     version = '1.0.0'
                 }
                 database = [PSCustomObject]@{

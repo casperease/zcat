@@ -19,10 +19,11 @@ param(
 
     [string] $Mode = 'none',
     [switch] $ExposeAccessToken,
-    [string] $ServiceConnection
+    [string] $ServiceConnection,
+    [switch] $AllowWarnings
 )
 
-. $PSScriptRoot/../importer.ps1
+. $PSScriptRoot/../importer.ps1 -AllowWarnings:$AllowWarnings
 
 if ($env:SYSTEM_DEBUG -eq 'true') {
     $global:VerbosePreference = 'Continue'

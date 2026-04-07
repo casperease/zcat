@@ -26,6 +26,11 @@ A function is idempotent when calling it N times with the same arguments leaves 
 The function may do work on the first call and skip it on subsequent calls,
 or it may overwrite the same state each time — either approach is valid as long as the end state is identical.
 
+A function that throws is still idempotent if the system state is unchanged by the failed call.
+`Remove-Thing` throwing "not found" is idempotent — the thing is still absent either way.
+Whether a function throws or returns cleanly is an error-handling concern, not an idempotency concern.
+That said, graceful handling (guard clause + early return) is preferred because it makes re-runs seamless.
+
 ```powershell
 # IDEMPOTENT — checks before acting
 function Install-Poetry {
@@ -51,12 +56,12 @@ function Set-ProjectConfig {
     Set-Content -Path $ConfigPath -Value ($config | ConvertTo-Json)
 }
 
-# NOT IDEMPOTENT — fails if already exists
+# IDEMPOTENT but ungraceful — throws if already exists
 function New-ServicePrincipal {
-    az ad sp create --id $AppId    # throws if SP already exists
+    az ad sp create --id $AppId    # throws if SP already exists — system state is unchanged
 }
 
-# IDEMPOTENT — checks existence first
+# IDEMPOTENT and graceful — checks existence first (preferred)
 function New-ServicePrincipal {
     $existing = az ad sp show --id $AppId 2>$null | ConvertFrom-Json
     if ($existing) { return $existing }
@@ -71,7 +76,7 @@ function New-ServicePrincipal {
 | `Install-*`               | **Must be**  | Re-running setup is the most common scenario                    |
 | `Set-*`, `Update-*`       | **Must be**  | Writing the same desired state twice must not corrupt           |
 | `New-*`                   | **Must be**  | Must check existence before creating; return existing if found  |
-| `Remove-*`, `Uninstall-*` | **Must be**  | Removing something already gone must not throw                  |
+| `Remove-*`, `Uninstall-*` | **Must be**  | Removing something already gone must leave state unchanged      |
 | `Assert-*`, `Test-*`      | Naturally    | Pure checks, no state change                                    |
 | `Get-*`                   | Naturally    | Read-only, no state change                                      |
 | `Write-*`                 | Not required | Output/logging functions produce output on every call by design |
@@ -115,8 +120,8 @@ Running them multiple times with the same arguments must produce the same system
 - **Check before acting.** Before creating, installing, or modifying, check whether the desired state already exists.
 If it does, return early or silently succeed.
 
-- **Never fail on "already exists" or "already removed".** These are success conditions for idempotent functions, not errors.
-Handle them with a guard clause, not a try/catch.
+- **Prefer graceful handling of "already exists" or "already removed".** A function that throws on a no-op re-run is still idempotent (the system state is unchanged),
+but guard clauses with early returns make re-runs seamless and avoid forcing callers to handle expected errors.
 
 - **Prefer overwrite over append.** Use `Set-Content` not `Add-Content`. Use `PUT` not `POST`.
 Use create-or-update APIs over create-only APIs. Appending is inherently non-idempotent.

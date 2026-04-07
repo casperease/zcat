@@ -11,9 +11,6 @@ The core problem: **automatic variables are only valid at the exact point they a
 One statement later they may reflect a completely different operation.
 Code that reads them "at a distance" — separated from the operation that set them by other statements, function calls, or control flow — is reading stale state.
 
-This is not a theoretical concern. The `Assert-Success` anti-pattern (checking `$?` many lines after the command it was supposed to validate)
-has caused production bugs where an intervening successful statement masked a prior failure.
-
 ### The general principle
 
 > If an automatic variable is set implicitly by the engine, treat it like a register value in assembly:
@@ -48,7 +45,7 @@ There is no reliable way to use `$?` in general-purpose code.
 
 **What to do instead:**
 
-- For **cmdlets and functions**: use `-ErrorAction Stop` (set globally by the importer) so failures throw. Catch with `try`/`catch`. See [error-handling](error-handling.md).
+- For **cmdlets and functions**: `-ErrorAction Stop` (set globally by the importer) so failures throw. Catch with `try`/`catch`. See [error-handling](error-handling.md).
 - For **native executables**: use `$LASTEXITCODE` (see below) or `Invoke-CliCommand` which handles the entire cycle.
 
 **Enforced by:** PSScriptAnalyzer custom rule `Measure-NoAutomaticVariableMisuse` (severity: Error).
@@ -75,7 +72,7 @@ Invoke-CliCommand 'az account show --output json'
 
 **When you need the exit code with `-NoAssert`** (e.g., for expected non-zero exits):
 
-`Invoke-CliCommand -PassThru` returns a `Zcap.CliResult` object with an `ExitCode` property.
+`Invoke-CliCommand -PassThru` returns a `Zcat.CliResult` object with an `ExitCode` property.
 This eliminates the need to touch `$LASTEXITCODE` directly:
 
 ```powershell
@@ -197,7 +194,7 @@ This is infrastructure code with a legitimate need to read the global error list
 
 | Variable         | Rule                                                            | Alternative                         |
 | ---------------- | --------------------------------------------------------------- | ----------------------------------- |
-| `$?`             | Never use                                                       | `-ErrorAction Stop` + `try`/`catch` |
+| `$?`             | In general, dont use                                            | `-ErrorAction Stop` + `try`/`catch` |
 | `$LASTEXITCODE`  | Reset → invoke → assert → reset (use `Invoke-CliCommand`)       | Direct check only with `-NoAssert`  |
 | `$Matches`       | Capture into a named local on the very next line after `-match` | —                                   |
 | `$_` / `$PSItem` | Capture into a named local before nesting pipelines             | —                                   |

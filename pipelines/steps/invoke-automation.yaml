@@ -38,6 +38,11 @@ parameters:
     default: ''
     displayName: 'Azure service connection (required when Mode is azcli or azps)'
 
+  - name: AllowWarnings
+    type: boolean
+    default: false
+    displayName: 'Downgrade warnings from errors to non-terminating (sets WarningPreference = Continue)'
+
   - name: DisplayName
     type: string
     default: ''
@@ -57,7 +62,7 @@ steps:
           if ($command.Contains("`n") -and -not '${{ parameters.DisplayName }}') {
               throw "Multiline RunCommand requires DisplayName parameter. Add: DisplayName: 'short description'"
           }
-          . './pipelines/Invoke-AdoScript.ps1' -Command $command -Mode 'none' -ExposeAccessToken:$${{ parameters.ExposeAccessToken }} -ServiceConnection '${{ parameters.ServiceConnection }}'
+          . './pipelines/Invoke-AdoScript.ps1' -Command $command -Mode 'none' -ExposeAccessToken:$${{ parameters.ExposeAccessToken }} -ServiceConnection '${{ parameters.ServiceConnection }}' -AllowWarnings:$${{ parameters.AllowWarnings }}
         pwsh: true
       ${{ if parameters.ExposeAccessToken }}:
         env:
@@ -78,7 +83,7 @@ steps:
           if ($command.Contains("`n") -and -not '${{ parameters.DisplayName }}') {
               throw "Multiline RunCommand requires DisplayName parameter. Add: DisplayName: 'short description'"
           }
-          . './pipelines/Invoke-AdoScript.ps1' -Command $command -Mode 'azcli' -ExposeAccessToken:$${{ parameters.ExposeAccessToken }} -ServiceConnection '${{ parameters.ServiceConnection }}'
+          . './pipelines/Invoke-AdoScript.ps1' -Command $command -Mode 'azcli' -ExposeAccessToken:$${{ parameters.ExposeAccessToken }} -ServiceConnection '${{ parameters.ServiceConnection }}' -AllowWarnings:$${{ parameters.AllowWarnings }}
       ${{ if parameters.ExposeAccessToken }}:
         env:
           SYSTEM_ACCESSTOKEN: $(System.AccessToken)
@@ -97,7 +102,7 @@ steps:
           if ($command.Contains("`n") -and -not '${{ parameters.DisplayName }}') {
               throw "Multiline RunCommand requires DisplayName parameter. Add: DisplayName: 'short description'"
           }
-          . './pipelines/Invoke-AdoScript.ps1' -Command $command -Mode 'azps' -ExposeAccessToken:$${{ parameters.ExposeAccessToken }} -ServiceConnection '${{ parameters.ServiceConnection }}'
+          . './pipelines/Invoke-AdoScript.ps1' -Command $command -Mode 'azps' -ExposeAccessToken:$${{ parameters.ExposeAccessToken }} -ServiceConnection '${{ parameters.ServiceConnection }}' -AllowWarnings:$${{ parameters.AllowWarnings }}
         azurePowerShellVersion: LatestVersion
       ${{ if parameters.ExposeAccessToken }}:
         env:

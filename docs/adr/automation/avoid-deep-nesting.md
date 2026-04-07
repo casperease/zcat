@@ -47,7 +47,7 @@ When a deeply nested expression throws, the error points at the entire line:
 
 ```text
 InvalidOperation: You cannot index into a null array.
-At C:\projects\zcap\automation\Zcap.Tools\Install-Dotnet.ps1:42
+At C:\projects\zcat\automation\Zcat.Tools\Install-Dotnet.ps1:42
 ```
 
 Which part is null? The pipeline result? The `.Items` property? The `.Where()` output? The `[0]` index?
@@ -57,7 +57,7 @@ When each step is on its own line, the error points at the exact operation that 
 
 ```text
 InvalidOperation: You cannot index into a null array.
-At C:\projects\zcap\automation\Zcap.Tools\Install-Dotnet.ps1:44
+At C:\projects\zcat\automation\Zcat.Tools\Install-Dotnet.ps1:44
 ```
 
 Line 44 is `$name = $active[0].Name.ToLower()` — so `$active` is null or empty.
@@ -80,11 +80,14 @@ Split into steps, you can inject assertions exactly where assumptions are made:
 $config = Get-Content $path | ConvertFrom-Json
 Assert-HaveProperty $config 'Items'
 
-$active = $config.Items.Where({ $_.Status -eq 'Active' })
-Assert-PipelineCount $active -Minimum 1
-
 $name = $active[0].Name.ToLower()
 Assert-NotNullOrWhitespace $name
+```
+
+There is an assert you can use "in the middle of a a complex statement":
+
+```powershell
+$active = $config.Items.Where({ $_.Status -eq 'Active' }) | Assert-PipelineCount -Minimum 1 | Select-Object -Last 1
 ```
 
 Each assertion documents a precondition and catches failures at the source.
@@ -101,8 +104,8 @@ $settingsPath = Join-Path $env:RepositoryRoot 'PSScriptAnalyzerSettings.psd1'
 # Fine — single property access on a known object
 $moduleName = $moduleDir.Name
 
-# Fine — short pipeline with one stage
-$ps1Files = Get-ChildItem $path -Filter '*.ps1'
+# Fine — short pipeline with two obvious stages
+$ps1Files = Get-ChildItem $path -Filter '*.ps1' | Select-Object -exp Fullname
 ```
 
 The rule of thumb: if you have to scan backwards or count parentheses to understand a line, split it.

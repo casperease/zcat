@@ -1,6 +1,8 @@
-# zcap — Zero Ceremony Automation Platform
+# zcat — Zero Ceremony Automation Toolset
 
-PowerShell 7.4+ module system for monorepos. Drop a file, get a function — no manifests, no installers, no configuration.
+PowerShell 7.4+ module system for monorepos.
+
+Drop a file, get a function — no manifests, no installers, no configuration.
 
 Copy `automation/` and `importer.ps1` into your repo. Everything is self-contained: vendored dependencies, no network calls, no global state.
 
@@ -14,9 +16,11 @@ Copy `automation/` and `importer.ps1` into your repo. Everything is self-contain
 | ----------------------- | ---------------------------------- |
 | Interactive terminal    | `.\importer.ps1`                   |
 | Inside a script         | `. ./importer.ps1`                 |
-| Debug (expose privates) | `. ./importer.ps1 -ExportPrivates` |
+| Debug (export privates) | `. ./importer.ps1 -ExportPrivates` |
 
-Every function from every module is available after import. Load time: **~0.5s**. Use `-DiagnoseLoadTime` to see per-step timings.
+Every function from every module is available after import.
+
+Load time: **~0.5s**.
 
 ---
 
@@ -40,11 +44,9 @@ Dot-source the importer, add the `trap` line for automatic stack traces on error
 
 ```yaml
 steps:
-    - name: Run automation
-      shell: pwsh
-      run: |
-          . ./importer.ps1
-          Test-Automation
+    - template: /pipelines/steps/invoke-automation.yaml
+        parameters:
+        RunCommand: "Invoke-MyFunction"
 ```
 
 - Works on Linux, Windows, and macOS — CI runs on all three
@@ -54,7 +56,9 @@ steps:
 
 ### Error handling
 
-The importer sets `$ErrorActionPreference` and `$WarningPreference` to `Stop`. Errors and warnings are both fatal — bad state cannot silently propagate.
+The importer sets `$ErrorActionPreference` and `$WarningPreference` to `Stop`.
+
+Errors and warnings are both fatal — bad state cannot silently propagate.
 
 - **Interactive sessions**: the prompt hook automatically displays stack traces when an error occurs
 - **Scripts**: add `trap { Write-Exception $_; break }` after the importer line
@@ -111,7 +115,9 @@ docs/adr/pipelines/                pipeline architecture decision records
 
 ### Add a function
 
-Create the file, re-run the importer. The resolver discovers it automatically — no manifest to update, no export list to maintain.
+Create the file, re-run the importer.
+
+The resolver discovers it automatically — no manifest to update, no export list to maintain.
 
 ```powershell
 # automation/<Module>/Verb-Noun.ps1
@@ -127,29 +133,40 @@ function Verb-Noun {
 
 ### Add a private helper
 
-Create `Verb-Noun.ps1` in `private/`. It loads into the module's session state but is not exported. Callable from any function in the same module.
+Create `Verb-Noun.ps1` in `private/`.
+
+It loads into the module's session state but is not exported. Callable from any function in the same module.
 
 ### Add a module
 
-Create a folder under `automation/`. Add `.ps1` files. The folder name becomes the module name. No registration, no configuration.
+Create a folder under `automation/`.
+
+Add `.ps1` files. The folder name becomes the module name. No registration, no configuration.
 
 ### Add module initialization code
 
-Create `private/_ModuleInit.ps1`. It runs at import time before any function definitions — use it for `Add-Type`, module-scoped caches, or early validation. At most one per module.
+Create `private/_ModuleInit.ps1`.
+
+It runs at import time before any function definitions — use it for `Add-Type`, module-scoped caches, or early validation. At most one per module.
 
 ---
 
 ## Tool management
 
-CLI tools follow the `Install-` / `Invoke-` / `Uninstall-` pattern. Versions are locked in a YAML config file.
+CLI tools follow the `Install-` / `Invoke-` / `Uninstall-` / `Remove-` pattern.
+
+Versions are locked in a YAML config file.
 
 | Function pattern   | Behavior                                                                                              |
 | ------------------ | ----------------------------------------------------------------------------------------------------- |
 | `Install-<Tool>`   | Installs the locked version. Idempotent — skips if already correct. `-Force` replaces wrong versions. |
 | `Invoke-<Tool>`    | Asserts the installed version matches config before execution (cached per session).                   |
-| `Uninstall-<Tool>` | Removes the managed installation.                                                                     |
+| `Uninstall-<Tool>` | Uninstall the managed installation.                                                                   |
+| `Remove-<Tool>`    | Hard removes an unmanaged installation.                                                               |
 
-Platform-specific package managers are selected automatically: winget on Windows, Homebrew on macOS, apt on Linux, pip as a cross-platform fallback. Tools prefer user-space installation to avoid admin requirements.
+Platform-specific package managers are selected automatically: winget on Windows, Homebrew on macOS, apt on Linux, pip as a cross-platform fallback.
+
+Tools prefer user-space installation to avoid admin requirements.
 
 ---
 
