@@ -19,7 +19,7 @@ When Documents is on DFS, step 1 resolves to a UNC path. PS7 then recursively sc
 `Set-LocalPSModulePath.ps1` writes a user-scope `powershell.config.json` that overrides the CurrentUser module path to a local directory. PS7 reads this single file at startup — one file read from DFS is fast, the slowness comes from recursive module scanning.
 
 ```powershell
-& 'automation\Zcat.Base\assets\Set-LocalPSModulePath.ps1'
+& 'automation\Zcat.Utils\assets\Set-LocalPSModulePath.ps1'
 ```
 
 No admin required. Restart PowerShell after running.

@@ -58,12 +58,12 @@ Remove-Module Resolver -Force -ErrorAction SilentlyContinue
 
 # Warn if PSModulePath contains a network share. The permanent fix is a one-time
 # script that writes a local PSModulePath to the user-scope powershell.config.json.
-# See: automation/Zcat.Base/assets/README.md
+# See: automation/Zcat.Utils/assets/README.md
 if ($IsWindows) {
     $hasUncModulePath = ($env:PSModulePath -split [IO.Path]::PathSeparator) -match '^\\\\' | Select-Object -First 1
 
     if ($hasUncModulePath) {
-        $fixScript = Join-Path $PSScriptRoot "$automationFolder/Zcat.Base/assets/Set-LocalPSModulePath.ps1"
+        $fixScript = Join-Path $PSScriptRoot "$automationFolder/Zcat.Utils/assets/Set-LocalPSModulePath.ps1"
         Write-Host ''
         Write-Host 'WARNING: PSModulePath contains a network share.' -ForegroundColor Yellow
         Write-Host 'PowerShell will be slow — module lookups scan the network.' -ForegroundColor Yellow

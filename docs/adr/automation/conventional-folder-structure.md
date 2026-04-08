@@ -81,13 +81,13 @@ Tooling programs directly against these well-known paths. Folder names are contr
 
 ### Level 1: Repository root
 
-| Directory     | Meaning                                                                                         | Programmed against by                                           |
-| ------------- | ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| `automation/` | Module system root — all PowerShell modules and infrastructure                                  | `importer.ps1`, `Test-Automation`, `Install-VendorModule`       |
-| `docs/`       | Documentation; contains `automation/adr/` for decision records                                  | Human consumption; ADR file naming convention                   |
-| `out/`        | All output files (gitignored) — see [dedicated-output-directory](dedicated-output-directory.md) | Output functions, CI artifacts, cleanup scripts                 |
-| `.github/`    | GitHub workflows, actions, templates                                                            | GitHub Actions runner                                           |
-| `.vscode/`    | Editor settings, tasks, launch configs                                                          | VS Code                                                         |
+| Directory     | Meaning                                                                                         | Programmed against by                                     |
+| ------------- | ----------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| `automation/` | Module system root — all PowerShell modules and infrastructure                                  | `importer.ps1`, `Test-Automation`, `Install-VendorModule` |
+| `docs/`       | Documentation; contains `automation/adr/` for decision records                                  | Human consumption; ADR file naming convention             |
+| `out/`        | All output files (gitignored) — see [dedicated-output-directory](dedicated-output-directory.md) | Output functions, CI artifacts, cleanup scripts           |
+| `.github/`    | GitHub workflows, actions, templates                                                            | GitHub Actions runner                                     |
+| `.vscode/`    | Editor settings, tasks, launch configs                                                          | VS Code                                                   |
 
 `automation/` is the only directory that the module system interacts with.
 The others exist for clear separation of concerns at the repo level.
@@ -95,10 +95,10 @@ Adding a new top-level directory is a conscious architectural decision, not a ca
 
 ### Level 2: `automation/` — modules vs. infrastructure
 
-| Convention             | Meaning                                         | Examples                                     |
-| ---------------------- | ----------------------------------------------- | -------------------------------------------- |
-| Dot-prefixed directory | Infrastructure — invisible to module discovery  | `.resolver/`, `.vendor/`, `.scriptanalyzer/` |
-| Non-dot directory      | Module — auto-discovered by `Import-AllModules` | `Zcat.Base/`, `Zcat.Tools/`, `Zcat.Meta/`    |
+| Convention             | Meaning                                         | Examples                                      |
+| ---------------------- | ----------------------------------------------- | --------------------------------------------- |
+| Dot-prefixed directory | Infrastructure — invisible to module discovery  | `.resolver/`, `.vendor/`, `.scriptanalyzer/`  |
+| Non-dot directory      | Module — auto-discovered by `Import-AllModules` | `Zcat.Asserts/`, `Zcat.Utils/`, `Zcat.Tools/` |
 
 `Import-AllModules` filters with `$_.Name -notmatch '^\.'`.
 This is the entire module discovery mechanism: if the folder name starts with a dot, it is infrastructure; otherwise, it is a module.

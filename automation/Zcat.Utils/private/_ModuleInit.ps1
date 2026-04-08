@@ -19,7 +19,7 @@ else {
     # First load — compile C# and cache hash.
     # Cannot use Assert-PathExist here — _ModuleInit runs before functions are defined.
     if (-not (Test-Path $csPath)) {
-        throw "CliRunner.cs not found at '$csPath'. The Zcat.Base module requires this asset."
+        throw "CliRunner.cs not found at '$csPath'. The Zcat.Utils module requires this asset."
     }
     Add-Type -Path $csPath
     $global:__ZcatCliRunnerHash = (Get-FileHash $csPath -Algorithm SHA256).Hash

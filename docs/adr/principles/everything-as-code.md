@@ -26,7 +26,7 @@ If an artifact is required to reproduce an environment or a process, it is code.
 
 ## Why
 
-Two requirements drive this principle:
+Three requirements drive this principle:
 
 **Reproducibility.** Teams must be able to provision any environment in a fully automated fashion and know that any new environment
 reproduced from the same configuration is identical. This is only possible when the scripts and configuration required to provision

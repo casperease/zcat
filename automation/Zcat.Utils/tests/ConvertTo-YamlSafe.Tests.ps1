@@ -1,6 +1,6 @@
 Describe 'ConvertTo-YamlSafe' {
     BeforeAll {
-        $mod = Get-Module Zcat.Base
+        $mod = Get-Module Zcat.Utils
     }
 
     It 'passes through null' {

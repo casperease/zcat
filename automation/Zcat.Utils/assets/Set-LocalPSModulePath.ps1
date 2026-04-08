@@ -15,7 +15,7 @@
 
     No admin required. Idempotent — safe to run repeatedly.
 .EXAMPLE
-    & 'automation\Zcat.Base\assets\Set-LocalPSModulePath.ps1'
+    & 'automation\Zcat.Utils\assets\Set-LocalPSModulePath.ps1'
 #>
 
 $localModulePath = Join-Path $env:LOCALAPPDATA 'PowerShell' 'Modules'
