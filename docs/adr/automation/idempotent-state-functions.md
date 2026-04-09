@@ -81,7 +81,7 @@ function New-ServicePrincipal {
 | `Get-*`                   | Naturally    | Read-only, no state change                                      |
 | `Write-*`                 | Not required | Output/logging functions produce output on every call by design |
 
-**A note on `Invoke-*` wrappers.** The thin wrappers themselves (`Invoke-CliCommand`, `Invoke-Python`, `Invoke-Poetry`) are transparent pass-throughs — they do not control what the underlying command does,
+**A note on `Invoke-*` wrappers.** The thin wrappers themselves (`Invoke-Executable`, `Invoke-Python`, `Invoke-Poetry`) are transparent pass-throughs — they do not control what the underlying command does,
 so they cannot guarantee idempotency on their own. The calling function is responsible for ensuring idempotency — but that does not always mean adding extra checks.
 If the underlying tool already guarantees idempotency (winget skips already-installed packages, `Set-Content` overwrites to the same result),
 lean on that contract instead of adding redundant guards. Know the tools you wrap — unnecessary checks are waste, not safety.

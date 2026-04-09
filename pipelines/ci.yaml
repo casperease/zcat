@@ -45,37 +45,37 @@ jobs:
             Assert-True ($envs.Count -gt 0)
             Write-Message "Customers: $($customers.Count), Environments: $($envs.Count)"
 
-      # 2b: Invoke-CliCommand output capture and PassThru
+      # 2b: Invoke-Executable output capture and PassThru
       - template: /pipelines/steps/invoke-automation.yaml
         parameters:
           DisplayName: 'CliCommand: output capture'
           RunCommand: |
-            $result = Invoke-CliCommand 'which which' -PassThru -Silent
+            $result = Invoke-Executable 'which which' -PassThru -Silent
             Assert-True ($result.ExitCode -eq 0)
             Assert-NotNullOrWhitespace $result.Output
             Assert-True ($result.Raw.Count -ge 1)
             Write-Message "CliCommand output: $($result.Output)"
 
-      # 2c: Invoke-CliCommand stderr separation
+      # 2c: Invoke-Executable stderr separation
       - template: /pipelines/steps/invoke-automation.yaml
         parameters:
           DisplayName: 'CliCommand: stderr separation'
           RunCommand: |
-            $result = Invoke-CliCommand 'bash -c "echo out; echo err >&2"' -PassThru -NoAssert -Silent
+            $result = Invoke-Executable 'bash -c "echo out; echo err >&2"' -PassThru -NoAssert -Silent
             Assert-True ($result.Output -match 'out')
             Assert-True ($result.Errors -match 'err')
             Assert-True ($result.Full -match 'out')
             Assert-True ($result.Full -match 'err')
 
-      # 2d: Invoke-CliCommand exit code assertion
+      # 2d: Invoke-Executable exit code assertion
       - template: /pipelines/steps/invoke-automation.yaml
         parameters:
           DisplayName: 'CliCommand: exit code assertion'
           RunCommand: |
             $threw = $false
-            try { Invoke-CliCommand 'bash -c "exit 1"' -Silent } catch { $threw = $true }
+            try { Invoke-Executable 'bash -c "exit 1"' -Silent } catch { $threw = $true }
             Assert-True $threw
-            $result = Invoke-CliCommand 'bash -c "exit 42"' -PassThru -NoAssert -Silent
+            $result = Invoke-Executable 'bash -c "exit 42"' -PassThru -NoAssert -Silent
             Assert-True ($result.ExitCode -eq 42)
 
       # 2e: Pipeline detection and output root
@@ -123,7 +123,7 @@ jobs:
             $modules = Get-Module | Where-Object { $_.Name -match '^Zcat\.' }
             Assert-True ($modules.Count -ge 3)
             Assert-True ($null -ne (Get-Command Get-MetaConfiguration -ErrorAction Ignore))
-            Assert-True ($null -ne (Get-Command Invoke-CliCommand -ErrorAction Ignore))
+            Assert-True ($null -ne (Get-Command Invoke-Executable -ErrorAction Ignore))
             Assert-True ($null -ne (Get-Command Set-AdoPipelineVariable -ErrorAction Ignore))
             Write-Message "Loaded $($modules.Count) Zcat modules"
 
@@ -153,7 +153,7 @@ jobs:
         parameters:
           DisplayName: 'Mode azcli: az account show'
           RunCommand: |
-            $result = Invoke-CliCommand 'az account show --output json' -PassThru -Silent
+            $result = Invoke-Executable 'az account show --output json' -PassThru -Silent
             Assert-True ($result.ExitCode -eq 0)
             $account = $result.Output | ConvertFrom-Json
             Assert-NotNullOrWhitespace $account.id

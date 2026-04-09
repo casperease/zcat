@@ -9,29 +9,11 @@ Install-DevBoxTools          # install all tools at locked versions
 Install-DevBoxTools -Force   # replace wrong versions automatically
 ```
 
-## Tools
+## Convention
 
-Each tool has `Install-`, `Invoke-`, and `Uninstall-` functions. Versions are locked in `assets/config/tools.yml`.
+Each tool follows a consistent function pattern: `Install-<Tool>`, `Invoke-<Tool>`, `Uninstall-<Tool>`. Versions are locked in `assets/config/tools.yml`. All functions are idempotent — safe to re-run.
 
-| Tool      | Command  | Functions                                             |
-| --------- | -------- | ----------------------------------------------------- |
-| Python    | `python` | `Install-Python`, `Invoke-Python`, `Uninstall-Python` |
-| Poetry    | `poetry` | `Install-Poetry`, `Invoke-Poetry`, `Uninstall-Poetry` |
-| .NET SDK  | `dotnet` | `Install-Dotnet`, `Invoke-Dotnet`, `Uninstall-Dotnet` |
-| Azure CLI | `az`     | `Install-AzCli`, `Invoke-AzCli`, `Uninstall-AzCli`    |
-
-### Azure CLI extras
-
-```powershell
-Connect-AzCli                        # interactive browser login
-Connect-AzCli -DeviceCode            # headless / SSH
-Connect-AzCli -ServicePrincipal ...  # CI / automation
-Connect-AzCli -ManagedIdentity       # Azure-hosted
-Disconnect-AzCli
-Set-AzCliSubscription 'my-sub'
-```
-
-All Az functions are idempotent — `Connect-AzCli` skips if already authenticated (validates tenant + app ID for service principal), `Set-AzCliSubscription` skips if already on the correct subscription.
+Azure CLI has additional connection management (`Connect-AzCli`, `Disconnect-AzCli`, `Set-AzCliSubscription`) supporting interactive, device-code, service-principal, and managed-identity authentication.
 
 ## How it works
 
@@ -41,13 +23,13 @@ All Az functions are idempotent — `Connect-AzCli` skips if already authenticat
 
 Tools prefer user-space installation to avoid admin requirements. The installation method for each tool is determined by config fields in `tools.yml`:
 
-| Config field          | Mechanism                                                              |
-| --------------------- | ---------------------------------------------------------------------- |
-| `WingetId`            | winget (Windows). `WingetScope: user` adds `--scope user`.            |
-| `BrewFormula`         | Homebrew (macOS, always user-space).                                   |
-| `AptPackage`          | apt-get (Linux, requires root — asserted up front).                    |
-| `PipPackage`          | pip (cross-platform, user-space). Used as fallback on Windows/Linux.   |
-| `ScriptInstall`       | Vendored install script (no package manager). User-space on all platforms. |
+| Config field    | Mechanism                                                                  |
+| --------------- | -------------------------------------------------------------------------- |
+| `WingetId`      | winget (Windows). `WingetScope: user` adds `--scope user`.                 |
+| `BrewFormula`   | Homebrew (macOS, always user-space).                                       |
+| `AptPackage`    | apt-get (Linux, requires root — asserted up front).                        |
+| `PipPackage`    | pip (cross-platform, user-space). Used as fallback on Windows/Linux.       |
+| `ScriptInstall` | Vendored install script (no package manager). User-space on all platforms. |
 
 A tool may have multiple fields (e.g., `BrewFormula` for macOS + `PipPackage` for Windows/Linux). The most specific match for the current platform wins.
 

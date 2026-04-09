@@ -35,13 +35,13 @@ function Uninstall-Git {
             Write-Message 'Git is not installed — nothing to do'
             return
         }
-        Invoke-CliCommand 'brew uninstall git'
+        Invoke-Executable 'brew uninstall git'
         Write-Message 'Git uninstalled via brew'
     }
     elseif ($IsLinux) {
         Assert-IsAdministrator -ErrorText 'Uninstall-Git on Linux requires root (apt-get). Run as root or uninstall Git manually.'
         Assert-Command apt-get
-        Invoke-CliCommand 'sudo apt-get remove -y git'
+        Invoke-Executable 'sudo apt-get remove -y git'
         Write-Message 'Git uninstalled via apt-get'
     }
     else {

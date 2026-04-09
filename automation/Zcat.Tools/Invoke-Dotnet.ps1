@@ -36,5 +36,5 @@ function Invoke-Dotnet {
         Assert-Tool 'Dotnet'
     }
 
-    Invoke-CliCommand "dotnet $Arguments" -PassThru:$PassThru -NoAssert:$NoAssert -Silent:$Silent -DryRun:$DryRun
+    Invoke-Executable "dotnet $Arguments" -PassThru:$PassThru -NoAssert:$NoAssert -Silent:$Silent -DryRun:$DryRun
 }

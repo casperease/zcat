@@ -12,12 +12,9 @@ Static configuration database for the multi-customer platform. All the "configur
 
 **The matrix** — a customer's actual deployments are the cross product of their environment types and the environments. Customer `blue` with types `[core_customer, workspace_bi]` gets 8 deployments: 4 environments times 2 types.
 
-## Lookup functions
+## Usage
 
-- `Get-MetaCustomers` — all customer shortnames
-- `Get-MetaEnvironments` — all environment shortnames
-- `Get-MetaEnvironmentTypes` — all type shortnames, filterable by `-Scope Customer/Shared/All`
-- `Get-MetaConfiguration` — the full parsed and validated config (cached after first call)
+Public functions follow the `Get-Meta*` pattern — look up customers, environments, environment types (filterable by scope), or the full validated configuration. Results are cached after first load.
 
 ## Validation
 

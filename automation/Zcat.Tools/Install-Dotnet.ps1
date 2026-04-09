@@ -59,7 +59,7 @@ function Install-Dotnet {
     # Check our install dir for wrong-version scenario
     if (Test-Path $ourBinary) {
         # Check specific binary (not PATH) — can't use Get-ToolVersion here
-        $result = Invoke-CliCommand "$ourBinary --version" -PassThru -NoAssert -Silent
+        $result = Invoke-Executable "$ourBinary --version" -PassThru -NoAssert -Silent
         $ourInstalled = if ($result.Full -match $config.VersionPattern) { $Matches['ver'] } else { $null }
 
         if ($ourInstalled -and $ourInstalled.StartsWith($Version)) {
@@ -86,7 +86,7 @@ function Install-Dotnet {
         $scriptPath = Join-Path $PSScriptRoot 'assets' 'scripts' 'dotnet-install.sh'
         Assert-PathExist $scriptPath
         Write-Message "Installing .NET SDK $Version to '$installDir'"
-        Invoke-CliCommand "bash '$scriptPath' --channel $Version --install-dir $installDir --quality ga"
+        Invoke-Executable "bash '$scriptPath' --channel $Version --install-dir $installDir --quality ga"
     }
 
     # Set environment for current session + persist PATH

@@ -38,5 +38,5 @@ function Invoke-AzCli {
         Assert-Tool 'AzCli'
     }
 
-    Invoke-CliCommand "az $Arguments" -PassThru:$PassThru -NoAssert:$NoAssert -Silent:$Silent -DryRun:$DryRun
+    Invoke-Executable "az $Arguments" -PassThru:$PassThru -NoAssert:$NoAssert -Silent:$Silent -DryRun:$DryRun
 }

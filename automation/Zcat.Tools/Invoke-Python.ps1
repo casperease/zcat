@@ -36,5 +36,5 @@ function Invoke-Python {
         Assert-Tool 'Python'
     }
 
-    Invoke-CliCommand "python $Arguments" -PassThru:$PassThru -NoAssert:$NoAssert -Silent:$Silent -DryRun:$DryRun
+    Invoke-Executable "python $Arguments" -PassThru:$PassThru -NoAssert:$NoAssert -Silent:$Silent -DryRun:$DryRun
 }

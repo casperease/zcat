@@ -35,5 +35,5 @@ function Invoke-PySpark {
         Assert-Tool 'PySpark'
     }
 
-    Invoke-CliCommand "pyspark $Arguments" -PassThru:$PassThru -NoAssert:$NoAssert -Silent:$Silent -DryRun:$DryRun
+    Invoke-Executable "pyspark $Arguments" -PassThru:$PassThru -NoAssert:$NoAssert -Silent:$Silent -DryRun:$DryRun
 }

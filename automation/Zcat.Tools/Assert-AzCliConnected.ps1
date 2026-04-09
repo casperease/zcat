@@ -13,7 +13,7 @@ function Assert-AzCliConnected {
 
     Assert-Command az -ErrorText 'az CLI is not installed. Run Install-AzCli or install it manually.'
 
-    $result = Invoke-CliCommand 'az account show --output json' -PassThru -NoAssert -Silent
+    $result = Invoke-Executable 'az account show --output json' -PassThru -NoAssert -Silent
     if ($result.ExitCode -ne 0) {
         throw 'az CLI is not authenticated. Run Connect-AzCli first.'
     }

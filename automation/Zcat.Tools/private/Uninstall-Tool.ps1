@@ -22,7 +22,7 @@ function Uninstall-Tool {
     if (-not $Version) { $Version = $config.Version }
 
     # Idempotent: skip if not installed or not functional (e.g., Windows Store stub)
-    if (-not (Test-Tool $Tool)) {
+    if (-not (Test-Tool $Tool -SkipVersionCheck)) {
         Write-Message "$Tool is not installed — nothing to do"
         return
     }
@@ -53,7 +53,7 @@ function Uninstall-Tool {
             [System.StringComparer]::OrdinalIgnoreCase
         )
 
-        Invoke-CliCommand "winget uninstall --id $packageId --silent"
+        Invoke-Executable "winget uninstall --id $packageId --silent"
 
         # Find entries the uninstaller removed from the registry
         $afterEntries = [System.Collections.Generic.HashSet[string]]::new(
@@ -88,14 +88,14 @@ function Uninstall-Tool {
         Assert-NotNullOrWhitespace $config.BrewFormula -ErrorText "$Tool has no BrewFormula — use Uninstall-$Tool directly"
         Assert-Command brew
         $formula = $config.BrewFormula -f $Version
-        Invoke-CliCommand "brew uninstall $formula"
+        Invoke-Executable "brew uninstall $formula"
     }
     elseif ($IsLinux) {
         Assert-NotNullOrWhitespace $config.AptPackage -ErrorText "$Tool has no AptPackage — use Uninstall-$Tool directly"
         Assert-IsAdministrator -ErrorText "Uninstall-$Tool on Linux requires root (apt-get). Run as root or uninstall $Tool manually."
         Assert-Command apt-get
         $package = $config.AptPackage -f $Version
-        Invoke-CliCommand "sudo apt-get remove -y $package"
+        Invoke-Executable "sudo apt-get remove -y $package"
     }
     else {
         throw "Unsupported platform for tool uninstallation"

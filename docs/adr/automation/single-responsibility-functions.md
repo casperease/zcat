@@ -72,7 +72,7 @@ writing a file) are independent even if they happen to run in sequence.
 function Invoke-Poetry {
     Assert-Command poetry
     Assert-ToolVersion -Tool 'Poetry'
-    Invoke-CliCommand "poetry $Arguments" -PassThru:$PassThru
+    Invoke-Executable "poetry $Arguments" -PassThru:$PassThru
 }
 ```
 
@@ -84,7 +84,7 @@ function Invoke-Poetry {
     if (-not (Test-Command poetry)) {
         Install-Poetry                          # side effect the caller did not ask for
     }
-    Invoke-CliCommand "poetry $Arguments"
+    Invoke-Executable "poetry $Arguments"
 }
 ```
 

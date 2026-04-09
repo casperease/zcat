@@ -25,7 +25,7 @@ function Uninstall-Postman {
         $updateExe = Join-Path $installDir 'Update.exe'
         if (Test-Path $updateExe) {
             Write-Message 'Running Postman uninstaller'
-            Invoke-CliCommand "$updateExe --uninstall" -NoAssert
+            Invoke-Executable "$updateExe --uninstall" -NoAssert
         }
 
         # Remove any remnants the uninstaller left behind
@@ -37,12 +37,12 @@ function Uninstall-Postman {
     }
     elseif ($IsMacOS) {
         Assert-Command brew
-        $brewCheck = Invoke-CliCommand 'brew list --cask postman' -PassThru -NoAssert -Silent
+        $brewCheck = Invoke-Executable 'brew list --cask postman' -PassThru -NoAssert -Silent
         if ($brewCheck.ExitCode -ne 0) {
             Write-Message 'Postman is not installed via brew — nothing to do'
             return
         }
-        Invoke-CliCommand 'brew uninstall --cask postman'
+        Invoke-Executable 'brew uninstall --cask postman'
         Write-Message 'Postman uninstalled via brew'
     }
     elseif ($IsLinux) {

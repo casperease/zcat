@@ -39,19 +39,19 @@ Every function that invokes an external command must log the exact command strin
 
 - **Log the full command string as the last step before invocation.** Use `Write-Message` (or equivalent) with the resolved command — all variables expanded, all arguments in place. The log entry must be copy-pasteable.
 
-- **This is handled in `Invoke-CliCommand`.** The central invoker logs automatically. Functions that use `Invoke-CliCommand` get this for free. Functions that bypass it (direct `& $tool` calls) must add their own logging.
+- **This is handled in `Invoke-Executable`.** The central invoker logs automatically. Functions that use `Invoke-Executable` get this for free. Functions that bypass it (direct `& $tool` calls) must add their own logging.
 
 - **Do not paraphrase.** Do not log "Installing Python..." — log `winget install --id Python.Python.3.11 --silent`. The readable description is nice to have in addition, but it is not a substitute for the actual command.
 
 - **Do not conditionally log.** The command is logged on every run, not behind `-Verbose` or `-Debug`. When you need it, it is already there.
 
-- **`-Silent` is available as an escape hatch.** Every invoker (`Invoke-CliCommand`, `Invoke-Python`, `Invoke-Poetry`, `Invoke-Dotnet`) supports a `-Silent` switch that suppresses the command log line.
+- **`-Silent` is available as an escape hatch.** Every invoker (`Invoke-Executable`, `Invoke-Python`, `Invoke-Poetry`, `Invoke-Dotnet`) supports a `-Silent` switch that suppresses the command log line.
   Use this for plumbing calls where the log would be noise,
   or when a command contains a secret retrieved at runtime (e.g., fetched from a storage account or key vault) that ADO does not know about and cannot mask.
 
 ### How this is enforced
 
-- **`Invoke-CliCommand`** — logs the full command string via `Write-Message` before execution. All `Invoke-*` tool wrappers (`Invoke-Python`, `Invoke-Poetry`, `Invoke-Dotnet`) delegate to `Invoke-CliCommand` and inherit this behavior automatically.
+- **`Invoke-Executable`** — logs the full command string via `Write-Message` before execution. All `Invoke-*` tool wrappers (`Invoke-Python`, `Invoke-Poetry`, `Invoke-Dotnet`) delegate to `Invoke-Executable` and inherit this behavior automatically.
 
 ## Consequences
 

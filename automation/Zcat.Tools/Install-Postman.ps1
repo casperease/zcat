@@ -42,7 +42,7 @@ function Install-Postman {
         Assert-PathExist $setupPath
 
         Write-Message "Installing Postman to '$installDir'"
-        Invoke-CliCommand "$setupPath --silent"
+        Invoke-Executable "$setupPath --silent"
         Remove-Item $setupPath -Force
 
         Assert-PathExist $postmanExe -ErrorText "Postman was installed but '$postmanExe' not found. The installer may have placed it elsewhere."
@@ -51,17 +51,17 @@ function Install-Postman {
     elseif ($IsMacOS) {
         Assert-Command brew
 
-        $brewCheck = Invoke-CliCommand 'brew list --cask postman' -PassThru -NoAssert -Silent
+        $brewCheck = Invoke-Executable 'brew list --cask postman' -PassThru -NoAssert -Silent
         if ($brewCheck.ExitCode -eq 0) {
             if (-not $Force) {
                 Write-Message 'Postman is already installed via brew'
                 return
             }
             Write-Verbose 'Removing existing brew cask before reinstalling'
-            Invoke-CliCommand 'brew uninstall --cask postman'
+            Invoke-Executable 'brew uninstall --cask postman'
         }
 
-        Invoke-CliCommand 'brew install --cask postman'
+        Invoke-Executable 'brew install --cask postman'
         Write-Message 'Postman installed successfully via brew'
     }
     elseif ($IsLinux) {
@@ -86,7 +86,7 @@ function Install-Postman {
 
         # The tar.gz extracts a Postman/ directory containing the app
         $extractDir = [IO.Path]::GetTempPath()
-        Invoke-CliCommand "tar -xzf '$tarPath' -C '$extractDir'"
+        Invoke-Executable "tar -xzf '$tarPath' -C '$extractDir'"
         Remove-Item $tarPath -Force
 
         $extracted = Join-Path $extractDir 'Postman'

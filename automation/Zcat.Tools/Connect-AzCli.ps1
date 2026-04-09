@@ -49,7 +49,7 @@ function Connect-AzCli {
     # Idempotent: skip if already logged in with the correct identity
     # -NoAssert: non-zero exit means "not logged in" — an expected state, not an error
     if (-not $Force) {
-        $result = Invoke-CliCommand 'az account show --output json' -PassThru -NoAssert -Silent
+        $result = Invoke-Executable 'az account show --output json' -PassThru -NoAssert -Silent
         if ($result.ExitCode -eq 0 -and $result.Output) {
             $account = $result.Output | ConvertFrom-Json
             $alreadyCorrect = switch ($PSCmdlet.ParameterSetName) {
@@ -65,22 +65,22 @@ function Connect-AzCli {
         }
     }
 
-    # No post-login assertion needed — Invoke-CliCommand throws on non-zero exit
+    # No post-login assertion needed — Invoke-Executable throws on non-zero exit
     # codes via Assert-LastExitCodeWasZero. If az login fails, we never reach the
     # Write-Message below.
     Write-Verbose "Authenticating via $($PSCmdlet.ParameterSetName)"
     switch ($PSCmdlet.ParameterSetName) {
         'ServicePrincipal' {
-            Invoke-CliCommand "az login --service-principal --tenant $Tenant --username $ClientId --password $ClientSecret"
+            Invoke-Executable "az login --service-principal --tenant $Tenant --username $ClientId --password $ClientSecret"
         }
         'ManagedIdentity' {
-            Invoke-CliCommand 'az login --identity'
+            Invoke-Executable 'az login --identity'
         }
         'DeviceCode' {
-            Invoke-CliCommand 'az login --use-device-code'
+            Invoke-Executable 'az login --use-device-code'
         }
         'Interactive' {
-            Invoke-CliCommand 'az login'
+            Invoke-Executable 'az login'
         }
     }
 

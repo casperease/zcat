@@ -57,18 +57,18 @@ function Install-Tool {
         # --force: winget may see a Store stub or stale alias and report "already installed"
         # even though no real installation exists. Force ensures it always installs.
         if ($config.WingetScope -eq 'user') {
-            Invoke-CliCommand "winget install --id $packageId --scope user --accept-source-agreements --accept-package-agreements --silent --force"
+            Invoke-Executable "winget install --id $packageId --scope user --accept-source-agreements --accept-package-agreements --silent --force"
         }
         else {
             Assert-IsAdministrator -ErrorText "Install-$Tool on Windows requires Administrator (winget machine-scope). Run as Administrator or install $Tool manually."
-            Invoke-CliCommand "winget install --id $packageId --accept-source-agreements --accept-package-agreements --silent --force"
+            Invoke-Executable "winget install --id $packageId --accept-source-agreements --accept-package-agreements --silent --force"
         }
     }
     elseif ($IsMacOS) {
         Assert-NotNullOrWhitespace $config.BrewFormula -ErrorText "$Tool has no BrewFormula — use Install-$Tool directly"
         Assert-Command brew
         $formula = $config.BrewFormula -f $Version
-        Invoke-CliCommand "brew install $formula"
+        Invoke-Executable "brew install $formula"
     }
     elseif ($IsLinux) {
         Assert-NotNullOrWhitespace $config.AptPackage -ErrorText "$Tool has no AptPackage — use Install-$Tool directly"
@@ -83,8 +83,8 @@ function Install-Tool {
         Assert-IsAdministrator -ErrorText "Install-$Tool on Linux requires root (apt-get). Run as root or install $Tool manually."
         Assert-Command apt-get
         $package = $config.AptPackage -f $Version
-        Invoke-CliCommand "sudo apt-get update -qq"
-        Invoke-CliCommand "sudo apt-get install -y $package"
+        Invoke-Executable "sudo apt-get update -qq"
+        Invoke-Executable "sudo apt-get install -y $package"
     }
     else {
         throw "Unsupported platform for tool installation"

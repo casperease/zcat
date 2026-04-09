@@ -4,7 +4,7 @@ Utility module — CLI execution, formatted output, repository navigation, and d
 
 ## What's in here
 
-**CLI execution** — `Invoke-CliCommand` wraps external tool invocation with exit code handling, output capture (`-PassThru`), dry-run support (`-DryRun`), and automatic logging of the exact command before execution.
+**CLI execution** — `Invoke-Executable` wraps external tool invocation with exit code handling, output capture (`-PassThru`), dry-run support (`-DryRun`), and automatic logging of the exact command before execution.
 
 **Repository navigation** — `Get-RepositoryRoot`, `Get-RepositoryFile`, `Get-RepositoryFolder` resolve paths relative to `$env:RepositoryRoot` so functions never depend on `$PWD`.
 

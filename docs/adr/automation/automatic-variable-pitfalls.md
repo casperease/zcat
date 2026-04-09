@@ -46,7 +46,7 @@ There is no reliable way to use `$?` in general-purpose code.
 **What to do instead:**
 
 - For **cmdlets and functions**: `-ErrorAction Stop` (set globally by the importer) so failures throw. Catch with `try`/`catch`. See [error-handling](error-handling.md).
-- For **native executables**: use `$LASTEXITCODE` (see below) or `Invoke-CliCommand` which handles the entire cycle.
+- For **native executables**: use `$LASTEXITCODE` (see below) or `Invoke-Executable` which handles the entire cycle.
 
 **Enforced by:** PSScriptAnalyzer custom rule `Measure-NoAutomaticVariableMisuse` (severity: Error).
 
@@ -57,27 +57,27 @@ There is no reliable way to use `$?` in general-purpose code.
 `$LASTEXITCODE` holds the exit code of the last native executable. Unlike `$?`, it **persists** until the next native executable runs.
 This means a stale `$LASTEXITCODE` from a previous call can leak across function boundaries and appear to belong to a later operation.
 
-**The safe pattern — `Invoke-CliCommand`:**
+**The safe pattern — `Invoke-Executable`:**
 
 ```powershell
-# Invoke-CliCommand encapsulates the entire cycle:
+# Invoke-Executable encapsulates the entire cycle:
 #   1. Reset-LastExitCode          ← clean slate
 #   2. Invoke-Expression $Command  ← run the native call
 #   3. Assert-LastExitCodeWasZero  ← check immediately
 #   4. Reset-LastExitCode          ← clean slate for next caller
 
-Invoke-CliCommand 'az account show --output json'
+Invoke-Executable 'az account show --output json'
 # At this point $LASTEXITCODE is cleared — no stale state can leak
 ```
 
 **When you need the exit code with `-NoAssert`** (e.g., for expected non-zero exits):
 
-`Invoke-CliCommand -PassThru` returns a `Zcat.CliResult` object with an `ExitCode` property.
+`Invoke-Executable -PassThru` returns a `Zcat.CliResult` object with an `ExitCode` property.
 This eliminates the need to touch `$LASTEXITCODE` directly:
 
 ```powershell
 # Correct — use the result object's ExitCode property
-$result = Invoke-CliCommand 'az account show --output json' -PassThru -NoAssert -Silent
+$result = Invoke-Executable 'az account show --output json' -PassThru -NoAssert -Silent
 if ($result.ExitCode -ne 0 -or -not $result.Output) {
     Write-Message 'Not logged in — nothing to do'
     return
@@ -107,8 +107,8 @@ Assert-Success   # passes even when az exited non-zero
 `$LASTEXITCODE` _is_ still set correctly by the native call, but code that checks `$?` (or an `Assert-Success` that checks `$?`) will never see the failure.
 
 ```powershell
-# Correct — use Invoke-CliCommand -PassThru, then parse the result
-$result = Invoke-CliCommand 'az account show --output json' -PassThru
+# Correct — use Invoke-Executable -PassThru, then parse the result
+$result = Invoke-Executable 'az account show --output json' -PassThru
 $myvar = $result.Output | ConvertFrom-Json
 ```
 
@@ -117,7 +117,7 @@ $myvar = $result.Output | ConvertFrom-Json
 - **Always reset before invoking.** Prevents a stale exit code from a prior call from leaking into your check.
 - **Always check (or assert) immediately after invoking.** No intervening statements between the native call and the exit code check.
 - **Always reset after checking.** Prevents your exit code from leaking to the next caller.
-- **Prefer `Invoke-CliCommand`.** It encapsulates all three steps. Only use raw `$LASTEXITCODE` when you need `-NoAssert` for expected failures.
+- **Prefer `Invoke-Executable`.** It encapsulates all three steps. Only use raw `$LASTEXITCODE` when you need `-NoAssert` for expected failures.
 
 ---
 
@@ -195,7 +195,7 @@ This is infrastructure code with a legitimate need to read the global error list
 | Variable         | Rule                                                            | Alternative                         |
 | ---------------- | --------------------------------------------------------------- | ----------------------------------- |
 | `$?`             | In general, dont use                                            | `-ErrorAction Stop` + `try`/`catch` |
-| `$LASTEXITCODE`  | Reset → invoke → assert → reset (use `Invoke-CliCommand`)       | Direct check only with `-NoAssert`  |
+| `$LASTEXITCODE`  | Reset → invoke → assert → reset (use `Invoke-Executable`)       | Direct check only with `-NoAssert`  |
 | `$Matches`       | Capture into a named local on the very next line after `-match` | —                                   |
 | `$_` / `$PSItem` | Capture into a named local before nesting pipelines             | —                                   |
 | `$Error`         | Never use for control flow                                      | `try`/`catch`                       |
@@ -203,6 +203,6 @@ This is infrastructure code with a legitimate need to read the global error list
 ## Consequences
 
 - Eliminates the "stale read" class of bugs where automatic variables reflect a different operation than the author intended.
-- `Invoke-CliCommand` becomes the standard entry point for native executables — callers never need to think about `$LASTEXITCODE` lifecycle.
+- `Invoke-Executable` becomes the standard entry point for native executables — callers never need to think about `$LASTEXITCODE` lifecycle.
 - The `$?` ban is enforced statically by PSScriptAnalyzer. Other variables are enforced by code review and this ADR.
 - Code that previously relied on `$?` must migrate to the error handling patterns in [error-handling](error-handling.md).

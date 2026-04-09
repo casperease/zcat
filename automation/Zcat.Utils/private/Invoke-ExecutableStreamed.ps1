@@ -3,7 +3,7 @@
     Runs a CLI command with live-streamed output, exit code handling, and
     optional structured output capture.
 .DESCRIPTION
-    Private implementation for Invoke-CliCommand (default mode).
+    Private implementation for Invoke-Executable (default mode).
 
     Uses a C# CliRunner class (assets/CliRunner.cs) that reads stdout/stderr
     char-by-char on background threads via Console.Write. Preserves \r
@@ -22,18 +22,22 @@
     Return a Zcat.CliResult object with Output, Errors, Full, ExitCode, and Raw.
 .PARAMETER NoAssert
     Skip the exit code assertion.
+.PARAMETER WorkingDirectory
+    The directory to run the command in.
 .PARAMETER Silent
     Suppress all console output. Output is still captured for -PassThru.
 .PARAMETER DryRun
     Return the command string without executing.
 #>
-function Invoke-CliCommandStreamed {
+function Invoke-ExecutableStreamed {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingInvokeExpression', '', Justification = 'By design — executes CLI commands')]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseOutputTypeCorrectly', '', Justification = 'Returns string in -DryRun, Zcat.CliResult in -PassThru')]
     [CmdletBinding()]
     param(
         [Parameter(Mandatory, Position = 0)]
         [string] $Command,
+        [Parameter(Mandatory)]
+        [string] $WorkingDirectory,
         [switch] $PassThru,
         [switch] $NoAssert,
         [switch] $Silent,
@@ -47,7 +51,7 @@ function Invoke-CliCommandStreamed {
     Reset-LastExitCode
 
     # CliRunner is loaded at module import time by _ModuleInit.ps1.
-    $runResult = [Zcat.CliRunner]::Run($Command, [bool]$Silent)
+    $runResult = [Zcat.CliRunner]::Run($Command, [bool]$Silent, $WorkingDirectory)
 
     # Set $LASTEXITCODE so Assert-LastExitCodeWasZero works
     $global:LASTEXITCODE = $runResult.ExitCode
@@ -71,20 +75,5 @@ function Invoke-CliCommandStreamed {
             ExitCode   = $runResult.ExitCode
             Raw        = @($stdText -split [Environment]::NewLine)
         }
-    }
-}
-
-# --- Module import-time check: detect stale CliRunner type ---
-# Runs when this .ps1 file is loaded as a NestedModule, before any function call.
-# .NET types survive module reimport — if the .cs file changed, the loaded type is stale.
-# Uses a global variable because module scope resets on reimport but .NET types don't.
-if (([System.Management.Automation.PSTypeName]'Zcat.CliRunner').Type) {
-    $csPath = Join-Path $PSScriptRoot '..' 'assets' 'CliRunner.cs'
-    if (Test-Path $csPath) {
-        $currentHash = (Get-FileHash $csPath -Algorithm SHA256).Hash
-        if ($global:__ZcatCliRunnerHash -and $global:__ZcatCliRunnerHash -ne $currentHash) {
-            throw "CliRunner.cs has changed since the Zcat.CliRunner type was loaded. Restart PowerShell to pick up changes."
-        }
-        $global:__ZcatCliRunnerHash = $currentHash
     }
 }

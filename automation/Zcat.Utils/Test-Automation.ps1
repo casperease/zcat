@@ -3,8 +3,9 @@
     Runs all Pester tests found across automation modules.
 .PARAMETER Level
     Maximum test level to run. Defaults to 1.
-    L0 = fast unit tests (< 400ms), L1 = unit tests (< 2s), L2 = integration tests (> 2s, may have deps).
-    Level 1 runs L0 + L1. Level 2 runs L0 + L1 + L2.
+    L0 = fast unit tests (< 400ms), L1 = unit tests (< 2s), L2 = integration tests (> 2s, may have deps),
+    L3 = system tests (real tools, skipped if tool unavailable).
+    Level 1 runs L0 + L1. Level 2 runs L0 + L1 + L2. Level 3 runs all.
 .PARAMETER Output
     Pester output verbosity level. Defaults to 'Normal'.
 .PARAMETER PassThru
@@ -19,7 +20,7 @@
 function Test-Automation {
     [CmdletBinding()]
     param(
-        [ValidateSet(0, 1, 2)]
+        [ValidateSet(0, 1, 2, 3)]
         [int] $Level = $(if (Test-IsRunningInPipeline) { 2 } else { 1 }),
 
         [ValidateSet('Minimal', 'Normal', 'Detailed', 'Diagnostic')]
@@ -58,6 +59,7 @@ function Test-Automation {
 
     # Build tag filter — exclude levels above the requested one
     $excludeTags = @()
+    if ($Level -lt 3) { $excludeTags += 'L3' }
     if ($Level -lt 2) { $excludeTags += 'L2' }
     if ($Level -lt 1) { $excludeTags += 'L1' }
 
@@ -78,8 +80,8 @@ function Test-Automation {
     }
 
     # Validate test durations against level limits
-    # L0 < 400ms, L1 < 2s (default for untagged), L2 < 120s
-    $limits = @{ 'L0' = 400; 'L1' = 2000; 'L2' = 120000 }
+    # L0 < 400ms, L1 < 2s (default for untagged), L2 < 120s, L3 < 30s
+    $limits = @{ 'L0' = 400; 'L1' = 2000; 'L2' = 120000; 'L3' = 30000 }
     $violations = @()
 
     foreach ($test in $result.Tests) {

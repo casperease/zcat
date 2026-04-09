@@ -45,7 +45,7 @@ The "why" and "how" behind the PowerShell automation layer.
 
 - **Liskov Substitution (L)** — LSP governs subtype hierarchies. This platform has no class hierarchies or subtype relationships.
 - **Interface Segregation (I)** — ISP targets fat interfaces. PowerShell functions don't implement interfaces. The public/private split handles surface area.
-- **Dependency Inversion (D)** — DIP requires a formal abstraction boundary. `Assert-Command` and `Invoke-CliCommand` provide light indirection, but not a formal abstraction layer.
+- **Dependency Inversion (D)** — DIP requires a formal abstraction boundary. `Assert-Command` and `Invoke-Executable` provide light indirection, but not a formal abstraction layer.
 
 ### DRY and KISS
 

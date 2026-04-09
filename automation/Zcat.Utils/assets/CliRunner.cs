@@ -1,9 +1,8 @@
-// C# process runner for Invoke-CliCommand (Stream mode).
+// C# process runner for Invoke-Executable (Stream mode).
 // Parses command strings, runs executables directly via CreateProcess/fork+exec
-// (no shell). Falls back to cmd/bash only for pipe commands.
-// Reads stdout/stderr char-by-char on background threads, writes to Console.Write.
+// (no shell). Reads stdout/stderr char-by-char on background threads, writes to Console.Write.
 //
-// Loaded once per session by Invoke-CliCommandStreamed via Add-Type.
+// Loaded once per session by Invoke-ExecutableStreamed via Add-Type.
 
 using System;
 using System.Collections.Generic;
@@ -24,21 +23,21 @@ namespace Zcat
         /// Runs a command string. Parses it into executable + arguments and runs
         /// directly (no shell). Throws if shell operators (|, &amp;&amp;, ||, ;) are detected.
         /// </summary>
-        public static CliRunner Run(string commandLine, bool silent)
+        public static CliRunner Run(string commandLine, bool silent, string workingDirectory = null)
         {
             var parsed = ParseCommand(commandLine);
 
             if (parsed.HasShellOperator)
             {
                 throw new InvalidOperationException(
-                    $"Invoke-CliCommand runs a single command — shell operators ({parsed.ShellOperator}) are not supported. " +
-                    "Break the command into separate Invoke-CliCommand calls, or use -Direct for shell expressions.");
+                    $"Invoke-Executable runs a single command — shell operators ({parsed.ShellOperator}) are not supported. " +
+                    "Break the command into separate Invoke-Executable calls, or use -Direct for shell expressions.");
             }
 
-            return RunDirect(parsed.Executable, parsed.Arguments, silent);
+            return RunDirect(parsed.Executable, parsed.Arguments, silent, workingDirectory);
         }
 
-        private static CliRunner RunDirect(string executable, List<string> arguments, bool silent)
+        private static CliRunner RunDirect(string executable, List<string> arguments, bool silent, string workingDirectory)
         {
             var runner = new CliRunner();
             var stdoutSb = new StringBuilder();
@@ -58,6 +57,11 @@ namespace Zcat
                 RedirectStandardError = true
             };
 
+            if (!string.IsNullOrEmpty(workingDirectory))
+            {
+                psi.WorkingDirectory = workingDirectory;
+            }
+
             // ArgumentList handles all platform-specific escaping automatically.
             foreach (var arg in arguments)
             {
@@ -74,7 +78,7 @@ namespace Zcat
 
             try
             {
-                if (!silent) Console.OutputEncoding = Encoding.UTF8;
+                Console.OutputEncoding = Encoding.UTF8;
 
                 using (var process = new Process { StartInfo = psi })
                 {

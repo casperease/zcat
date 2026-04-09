@@ -48,7 +48,7 @@ function Install-Java {
         if ($jdkDir) { $jdkDir.FullName } else { Split-Path (Split-Path $cmd.Source) }
     }
     elseif ($IsMacOS) {
-        $brewResult = Invoke-CliCommand "brew --prefix openjdk@$Version" -PassThru -NoAssert -Silent
+        $brewResult = Invoke-Executable "brew --prefix openjdk@$Version" -PassThru -NoAssert -Silent
         if ($brewResult.Output) { Join-Path $brewResult.Output 'libexec' 'openjdk.jdk' 'Contents' 'Home' }
         else { Split-Path (Split-Path $cmd.Source) }
     }

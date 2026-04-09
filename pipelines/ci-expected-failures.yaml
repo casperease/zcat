@@ -48,12 +48,12 @@ jobs:
             . './pipelines/Invoke-AdoScript.ps1' -Command $command
         continueOnError: true
 
-      # 1c: Invoke-CliCommand non-zero exit code throws
+      # 1c: Invoke-Executable non-zero exit code throws
       - task: PowerShell@2
         displayName: 'Trap: non-zero exit code'
         inputs:
           targetType: inline
-          script: . './pipelines/Invoke-AdoScript.ps1' -Command 'Invoke-CliCommand "bash -c exit\ 1" -Silent'
+          script: . './pipelines/Invoke-AdoScript.ps1' -Command 'Invoke-Executable "bash -c exit\ 1" -Silent'
           pwsh: true
         continueOnError: true
 

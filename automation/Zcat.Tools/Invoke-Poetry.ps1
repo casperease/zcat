@@ -34,5 +34,5 @@ function Invoke-Poetry {
         Assert-Tool 'Poetry'
     }
 
-    Invoke-CliCommand "poetry $Arguments" -PassThru:$PassThru -NoAssert:$NoAssert -Silent:$Silent -DryRun:$DryRun
+    Invoke-Executable "poetry $Arguments" -PassThru:$PassThru -NoAssert:$NoAssert -Silent:$Silent -DryRun:$DryRun
 }

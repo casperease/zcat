@@ -34,5 +34,5 @@ function Invoke-Terraform {
         Assert-Tool 'Terraform'
     }
 
-    Invoke-CliCommand "terraform $Arguments" -PassThru:$PassThru -NoAssert:$NoAssert -Silent:$Silent -DryRun:$DryRun
+    Invoke-Executable "terraform $Arguments" -PassThru:$PassThru -NoAssert:$NoAssert -Silent:$Silent -DryRun:$DryRun
 }

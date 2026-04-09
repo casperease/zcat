@@ -34,5 +34,5 @@ function Invoke-Npm {
         Assert-Tool 'NodeJs'
     }
 
-    Invoke-CliCommand "npm $Arguments" -PassThru:$PassThru -NoAssert:$NoAssert -Silent:$Silent -DryRun:$DryRun
+    Invoke-Executable "npm $Arguments" -PassThru:$PassThru -NoAssert:$NoAssert -Silent:$Silent -DryRun:$DryRun
 }

@@ -47,24 +47,24 @@ function Install-Terraform {
         $sourcePath = '/etc/apt/sources.list.d/hashicorp.list'
         if (-not (Test-Path $sourcePath)) {
             Write-Message 'Adding HashiCorp apt repository'
-            Invoke-CliCommand 'sudo apt-get update -qq'
-            Invoke-CliCommand 'sudo apt-get install -y gnupg software-properties-common'
+            Invoke-Executable 'sudo apt-get update -qq'
+            Invoke-Executable 'sudo apt-get install -y gnupg software-properties-common'
             $gpgKeyPath = '/usr/share/keyrings/hashicorp-archive-keyring.gpg'
             $gpgTmp = Join-Path ([IO.Path]::GetTempPath()) 'hashicorp.gpg'
             Invoke-WebRequest -Uri 'https://apt.releases.hashicorp.com/gpg' -OutFile $gpgTmp -UseBasicParsing
-            Invoke-CliCommand "sudo gpg --dearmor -o $gpgKeyPath $gpgTmp"
+            Invoke-Executable "sudo gpg --dearmor -o $gpgKeyPath $gpgTmp"
             Remove-Item $gpgTmp -Force -ErrorAction SilentlyContinue
 
-            $codename = (Invoke-CliCommand 'lsb_release -cs' -PassThru -Silent).Output.Trim()
+            $codename = (Invoke-Executable 'lsb_release -cs' -PassThru -Silent).Output.Trim()
             $repoLine = "deb [signed-by=$gpgKeyPath] https://apt.releases.hashicorp.com $codename main"
             $repoTmp = Join-Path ([IO.Path]::GetTempPath()) 'hashicorp.list'
             Set-Content -Path $repoTmp -Value $repoLine -Force
-            Invoke-CliCommand "sudo cp $repoTmp $sourcePath"
+            Invoke-Executable "sudo cp $repoTmp $sourcePath"
             Remove-Item $repoTmp -Force -ErrorAction SilentlyContinue
         }
 
-        Invoke-CliCommand 'sudo apt-get update -qq'
-        Invoke-CliCommand 'sudo apt-get install -y terraform'
+        Invoke-Executable 'sudo apt-get update -qq'
+        Invoke-Executable 'sudo apt-get install -y terraform'
         Assert-Command terraform -ErrorText 'Terraform was installed but is not on PATH. You may need to restart your shell.'
         Write-Information "Terraform $Version installed successfully"
         return

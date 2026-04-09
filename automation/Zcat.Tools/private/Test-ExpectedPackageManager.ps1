@@ -53,21 +53,21 @@ function Test-ExpectedPackageManager {
             return $WingetListCache -match [regex]::Escape($baseId)
         }
 
-        $result = Invoke-CliCommand "winget list --id $baseId --accept-source-agreements --disable-interactivity" -PassThru -NoAssert -Silent
+        $result = Invoke-Executable "winget list --id $baseId --accept-source-agreements --disable-interactivity" -PassThru -NoAssert -Silent
         return $result.Full -match [regex]::Escape($baseId)
     }
 
     if ($IsMacOS -and $Config.BrewFormula) {
         if (-not (Test-Command brew)) { return $false }
         $formula = ($Config.BrewFormula -replace '\{0\}', '').TrimEnd('@', '-')
-        $result = Invoke-CliCommand "brew list $formula" -PassThru -NoAssert -Silent
+        $result = Invoke-Executable "brew list $formula" -PassThru -NoAssert -Silent
         return $result.ExitCode -eq 0
     }
 
     if ($IsLinux -and $Config.AptPackage) {
         if (-not (Test-Command dpkg)) { return $false }
         $package = ($Config.AptPackage -replace '\{0\}', '').TrimEnd('-')
-        $result = Invoke-CliCommand "dpkg -s $package" -PassThru -NoAssert -Silent
+        $result = Invoke-Executable "dpkg -s $package" -PassThru -NoAssert -Silent
         return $result.ExitCode -eq 0
     }
 
@@ -75,7 +75,7 @@ function Test-ExpectedPackageManager {
     #    on Windows/Linux. On macOS, AzCli already matched brew above.
     if ($Config.PipPackage) {
         if (-not (Test-Command pip)) { return $false }
-        $result = Invoke-CliCommand "pip show $($Config.PipPackage)" -PassThru -NoAssert -Silent
+        $result = Invoke-Executable "pip show $($Config.PipPackage)" -PassThru -NoAssert -Silent
         return [bool]$result.Output
     }
 

@@ -38,6 +38,6 @@ function Install-Python {
     # -q suppresses the dependency list; runs after Install-Tool so it
     # only fires when Python is actually present on PATH.
     if (Test-Command pip) {
-        Invoke-CliCommand 'python -m pip install -q --upgrade pip'
+        Invoke-Executable 'python -m pip install -q --upgrade pip'
     }
 }

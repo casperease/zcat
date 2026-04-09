@@ -87,7 +87,7 @@ Developers must be able to test locally on Windows/MacOS everything that runs in
   Use `$env:RepositoryRoot`, `$PSScriptRoot`, `[IO.Path]::GetTempPath()`, or `Join-Path` from a known anchor.
 
 - **Never shell out to platform-specific binaries.** No `cmd /c`, no `/bin/sh -c`.
-  Use PowerShell native operations or the `Invoke-CliCommand` wrapper with tools that exist on both platforms.
+  Use PowerShell native operations or the `Invoke-Executable` wrapper with tools that exist on both platforms.
 
 - **Platform-specific logic uses `$IsWindows` / `$IsLinux` guards.**
   When platform-specific behavior is unavoidable (e.g., package manager selection in `Install-*` functions),

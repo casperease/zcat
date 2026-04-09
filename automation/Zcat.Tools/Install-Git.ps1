@@ -56,7 +56,7 @@ function Install-Git {
         # PortableGit .7z.exe is a self-extracting archive. The -o flag sets
         # the output directory and -y suppresses prompts.
         Write-Message "Extracting to '$installDir'"
-        Invoke-CliCommand "$exePath -o`"$installDir`" -y"
+        Invoke-Executable "$exePath -o`"$installDir`" -y"
         Remove-Item $exePath -Force
 
         Assert-PathExist $cmdDir
@@ -73,18 +73,18 @@ function Install-Git {
                 Write-Message 'Git is already installed'
                 return
             }
-            Invoke-CliCommand 'brew reinstall git'
+            Invoke-Executable 'brew reinstall git'
         }
         else {
-            Invoke-CliCommand 'brew install git'
+            Invoke-Executable 'brew install git'
         }
         Write-Message 'Git installed successfully via brew'
     }
     elseif ($IsLinux) {
         Assert-IsAdministrator -ErrorText 'Install-Git on Linux requires root (apt-get). Run as root or install Git manually.'
         Assert-Command apt-get
-        Invoke-CliCommand 'sudo apt-get update -qq'
-        Invoke-CliCommand 'sudo apt-get install -y git'
+        Invoke-Executable 'sudo apt-get update -qq'
+        Invoke-Executable 'sudo apt-get install -y git'
         Assert-Command git -ErrorText "Git was installed but 'git' is not on PATH."
         Write-Message 'Git installed successfully via apt-get'
     }

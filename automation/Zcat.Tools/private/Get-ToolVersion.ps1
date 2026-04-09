@@ -22,7 +22,7 @@ function Get-ToolVersion {
         [hashtable] $Config
     )
 
-    $result = Invoke-CliCommand $Config.VersionCommand -PassThru -NoAssert -Silent
+    $result = Invoke-Executable $Config.VersionCommand -PassThru -NoAssert -Silent
 
     if ($result.Full -match $Config.VersionPattern) {
         return $Matches['ver']

@@ -85,12 +85,16 @@ if ($isConsoleSession) {
     if (-not (Test-Path variable:global:__OriginalPrompt)) {
         $global:__OriginalPrompt = (Get-Command prompt).ScriptBlock
     }
+    $global:__LastError = if ($global:Error.Count -gt 0) { $global:Error[0] } else { $null }
     function global:prompt {
-        # Prompt runs immediately after every command — $? is always fresh here.
-        [Diagnostics.CodeAnalysis.SuppressMessageAttribute('Measure-NoAutomaticVariableMisuse', '')]
+        # Prompt runs immediately after every command.
         param()
         # The prompt must never throw — a crashing prompt destroys the console session.
-        if (-not $? -and $global:Error.Count -gt 0) {
+        # Detect new errors by comparing the latest error object to the previous snapshot.
+        # Cannot use $global:Error.Count — it caps at $MaximumErrorCount (default 256).
+        # Do NOT use $? — it is reset by any statement (see ADR: automatic-variable-pitfalls).
+        $latestError = if ($global:Error.Count -gt 0) { $global:Error[0] } else { $null }
+        if ($latestError -and -not [object]::ReferenceEquals($latestError, $global:__LastError)) {
             try {
                 $err = $global:Error[0]
                 $record = if ($err -is [System.Management.Automation.ErrorRecord]) { $err } else { $null }
@@ -139,6 +143,7 @@ if ($isConsoleSession) {
                 try { Write-Host $global:Error[0].Message -ForegroundColor Red } catch { }
             }
         }
+        $global:__LastError = if ($global:Error.Count -gt 0) { $global:Error[0] } else { $null }
         & $global:__OriginalPrompt
     }
 

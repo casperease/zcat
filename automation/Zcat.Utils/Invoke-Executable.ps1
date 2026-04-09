@@ -25,7 +25,7 @@
       .ExitCode — raw exit code (int)
       .Raw      — unprocessed output array
 
-    -PassThru with -Direct throws — Direct mode does not capture output.
+    -PassThru and -Direct are mutually exclusive (separate parameter sets).
 .PARAMETER Command
     The command string to execute.
 .PARAMETER Direct
@@ -39,25 +39,29 @@
     result object when combined with -PassThru.
 .PARAMETER Silent
     Suppress the command log line and all console output.
+.PARAMETER WorkingDirectory
+    The directory to run the command in. Defaults to the repository root
+    ($env:RepositoryRoot). Callers that need a specific directory should
+    pass it explicitly rather than relying on $PWD.
 .PARAMETER DryRun
     Return the command string without executing. Used for testing.
 .EXAMPLE
-    Invoke-CliCommand 'python --version'
+    Invoke-Executable 'python --version'
 .EXAMPLE
-    Invoke-CliCommand 'winget install --id Python.Python.3.11' -Direct
+    Invoke-Executable 'winget install --id Python.Python.3.11' -Direct
 .EXAMPLE
-    $result = Invoke-CliCommand 'az account show --output json' -PassThru
+    $result = Invoke-Executable 'az account show --output json' -PassThru
     $result.Output | ConvertFrom-Json
 .EXAMPLE
-    $result = Invoke-CliCommand 'terraform apply' -PassThru
+    $result = Invoke-Executable 'terraform apply' -PassThru
     $result.ExitCode
 .EXAMPLE
-    Invoke-CliCommand 'python --version' -DryRun
+    Invoke-Executable 'python --version' -DryRun
 #>
 # Note: uses -DryRun instead of ShouldProcess/-WhatIf because ShouldProcess
 # writes to the host (not capturable) and we need the command string returned
 # via Write-Output for testability. -Confirm is not needed for CLI commands.
-function Invoke-CliCommand {
+function Invoke-Executable {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingInvokeExpression', '', Justification = 'By design — executes CLI commands via private helpers')]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseOutputTypeCorrectly', '', Justification = 'Returns string in -DryRun, Zcat.CliResult in -PassThru')]
     [CmdletBinding(DefaultParameterSetName = 'Stream')]
@@ -73,26 +77,30 @@ function Invoke-CliCommand {
 
         [switch] $NoAssert,
         [switch] $Silent,
+        [string] $WorkingDirectory = (Get-RepositoryRoot),
         [switch] $DryRun
     )
 
-    # Log the command from this function so Write-Message shows [Invoke-CliCommand].
+    Assert-PathExist $WorkingDirectory -PathType Container
+
+    # Log the command from this function so Write-Message shows [Invoke-Executable].
     if (-not $Silent -and -not $DryRun) {
         Write-Message $Command
     }
 
     $params = @{
-        Command  = $Command
-        PassThru = $PassThru
-        NoAssert = $NoAssert
-        Silent   = $Silent
-        DryRun   = $DryRun
+        Command          = $Command
+        WorkingDirectory = $WorkingDirectory
+        PassThru         = $PassThru
+        NoAssert         = $NoAssert
+        Silent           = $Silent
+        DryRun           = $DryRun
     }
 
     if ($Direct) {
-        Invoke-CliCommandDirect @params
+        Invoke-ExecutableDirect @params
     }
     else {
-        Invoke-CliCommandStreamed @params
+        Invoke-ExecutableStreamed @params
     }
 }

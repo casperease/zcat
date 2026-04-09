@@ -23,7 +23,7 @@ Good output tells a story: what is happening, what happened, and what went wrong
 ```text
 [importer.ps1] Loaded in 0.5 seconds
 [Install-Poetry] poetry install --no-root
-[Invoke-CliCommand] poetry install --no-root
+[Invoke-Executable] poetry install --no-root
 Installing dependencies from lock file
 [Invoke-Python] python deploy.py --env prod
 Deployed 3 services
@@ -154,7 +154,7 @@ Write-Host ''   # newline after dots
 This tells the user the operation is alive without any of the overhead.
 The dots appear in CI logs, in terminals, and in redirected output. No special handling needed.
 
-**Timestamps are opt-in.** `Write-Message` includes a caller name prefix by default (`[Invoke-CliCommand] poetry install`).
+**Timestamps are opt-in.** `Write-Message` includes a caller name prefix by default (`[Invoke-Executable] poetry install`).
 Timestamps can be enabled via `$env:ZCAT_MESSAGE_TIMESTAMPS` for local debugging.
 CI platforms (ADO, GitHub Actions) already timestamp every log line natively, so this is never needed there.
 
@@ -167,11 +167,11 @@ Functions use the correct output stream, log commands before execution, report o
 
 - **The Writer module** — provides all output functions: `Write-Message`, `Write-Object`, `Write-Header`, `Write-Exception`,
   and others. These are the building blocks for uniform console output. Use them instead of raw `Write-Host` or `Write-Information`.
-- **`Write-Message`** — the principal communication tool. Every message includes the calling function name automatically (`[Invoke-CliCommand] poetry install`),
+- **`Write-Message`** — the principal communication tool. Every message includes the calling function name automatically (`[Invoke-Executable] poetry install`),
   so the user always knows which function produced the output.
   Timestamps can be enabled via `$env:ZCAT_MESSAGE_TIMESTAMPS` for local debugging — CI platforms (ADO, GitHub Actions) already timestamp every log line natively.
   Console output is suppressed during Pester runs so test output stays clean.
-- **`Invoke-CliCommand`** — logs the exact command via `Write-Message` before execution. All `Invoke-*` wrappers inherit this.
+- **`Invoke-Executable`** — logs the exact command via `Write-Message` before execution. All `Invoke-*` wrappers inherit this.
 - **Code review** — output quality is a review concern, same as logic correctness. A function that spams the console or swallows errors is a bug.
 
 ## Consequences

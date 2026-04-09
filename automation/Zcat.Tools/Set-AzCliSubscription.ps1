@@ -21,7 +21,7 @@ function Set-AzCliSubscription {
 
     # Idempotent: skip if already on the requested subscription
     # -NoAssert: non-zero exit means "not logged in" — falls through to az account set
-    $result = Invoke-CliCommand 'az account show --output json' -PassThru -NoAssert -Silent
+    $result = Invoke-Executable 'az account show --output json' -PassThru -NoAssert -Silent
     if ($result.ExitCode -eq 0 -and $result.Output) {
         $account = $result.Output | ConvertFrom-Json
         if ($account.id -eq $Subscription -or $account.name -eq $Subscription) {
@@ -31,6 +31,6 @@ function Set-AzCliSubscription {
     }
 
     Write-Verbose "Switching to subscription '$Subscription'"
-    Invoke-CliCommand "az account set --subscription $Subscription"
+    Invoke-Executable "az account set --subscription $Subscription"
     Write-Message "Active subscription: $Subscription"
 }

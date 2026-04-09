@@ -28,7 +28,7 @@ All functions must work correctly regardless of the caller's `$PWD`.
   ```powershell
   Push-Location $targetPath
   try {
-      Invoke-CliCommand "dotnet build"
+      Invoke-Executable "dotnet build"
   }
   finally {
       Pop-Location

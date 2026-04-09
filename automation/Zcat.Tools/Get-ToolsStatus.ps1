@@ -26,7 +26,7 @@ function Get-ToolsStatus {
     # Single winget list call instead of one per tool (~3s saved per winget tool).
     $wingetCache = $null
     if ($IsWindows -and (Test-Command winget)) {
-        $wingetResult = Invoke-CliCommand 'winget list --accept-source-agreements --disable-interactivity' -PassThru -NoAssert -Silent
+        $wingetResult = Invoke-Executable 'winget list --accept-source-agreements --disable-interactivity' -PassThru -NoAssert -Silent
         $wingetCache = $wingetResult.Full
     }
 

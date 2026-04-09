@@ -5,7 +5,7 @@
 PowerShell automation code is fundamentally about side effects — creating resources, calling APIs, installing tools, writing files.
 This makes it hard to test with traditional unit testing approaches:
 
-- **Mocking is fragile and misleading.** You can mock `Invoke-CliCommand` to return a canned string,
+- **Mocking is fragile and misleading.** You can mock `Invoke-Executable` to return a canned string,
 but that tells you nothing about whether the real CLI will behave the same way. Mock-heavy tests pass in CI and fail in production because the mock did not replicate the real tool's exit codes,
 stderr behavior, or edge cases. We learned this the hard way.
 
@@ -41,7 +41,7 @@ function Invoke-Poetry {
     Assert-Command poetry                           # tool exists
     Assert-ToolVersion -Tool 'Poetry'               # correct version
 
-    $result = Invoke-CliCommand "poetry $Arguments" -PassThru
+    $result = Invoke-Executable "poetry $Arguments" -PassThru
     Assert-NotNullOrWhitespace $result              # got output
 
     $result
@@ -85,7 +85,7 @@ Every assumption about inputs, state, and external results must be asserted at t
 - **Assert inputs at function entry.** Use `Assert-NotNullOrWhitespace`, `Assert-True`, `Assert-PathExist`, `Assert-TypeIs`,
 and other `Assert-*` functions to validate everything that `[Parameter]` attributes cannot express.
 
-- **Assert after every external call.** After `Invoke-CliCommand`, `Get-Content`, API calls,
+- **Assert after every external call.** After `Invoke-Executable`, `Get-Content`, API calls,
 or any operation that talks to the outside world, assert the result meets expectations before passing it downstream.
 
 - **Assert preconditions, not just inputs.** `Assert-Tool` verifies that a tool is present and at the expected version before doing work.

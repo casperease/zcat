@@ -11,6 +11,8 @@
     Return a Zcat.CliResult object with Output, Errors, Full, and ExitCode.
 .PARAMETER NoAssert
     Skip exit code assertion.
+.PARAMETER Silent
+    Suppress the command log line and all console output.
 .PARAMETER DryRun
     Return the command string without executing. Used for testing.
 .EXAMPLE
@@ -25,6 +27,7 @@ function Invoke-Pip {
         [string] $Arguments,
         [switch] $PassThru,
         [switch] $NoAssert,
+        [switch] $Silent,
         [switch] $DryRun
     )
 
@@ -34,5 +37,5 @@ function Invoke-Pip {
         Assert-Tool 'Python'
     }
 
-    Invoke-CliCommand "python -m pip $Arguments" -PassThru:$PassThru -NoAssert:$NoAssert -DryRun:$DryRun
+    Invoke-Executable "python -m pip $Arguments" -PassThru:$PassThru -NoAssert:$NoAssert -Silent:$Silent -DryRun:$DryRun
 }

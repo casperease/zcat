@@ -34,5 +34,5 @@ function Invoke-Java {
         Assert-Tool 'Java'
     }
 
-    Invoke-CliCommand "java $Arguments" -PassThru:$PassThru -NoAssert:$NoAssert -Silent:$Silent -DryRun:$DryRun
+    Invoke-Executable "java $Arguments" -PassThru:$PassThru -NoAssert:$NoAssert -Silent:$Silent -DryRun:$DryRun
 }

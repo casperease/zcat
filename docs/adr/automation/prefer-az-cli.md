@@ -67,7 +67,7 @@ Use Az CLI (`az`) for all Azure operations by default. Az PowerShell modules are
 
 ### Rules
 
-- **Default to `az` for all Azure operations.** Wrap calls in `Invoke-CliCommand` with `ConvertFrom-Json` to parse the output.
+- **Default to `az` for all Azure operations.** Wrap calls in `Invoke-Executable` with `ConvertFrom-Json` to parse the output.
 
 - **Assert `az` availability.** Use `Assert-Tool 'AzCli'` at the start of functions that call `az`.
 
