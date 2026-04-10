@@ -208,6 +208,44 @@ that the caller has to know about by reading the implementation.
 - **Never store secrets in `$env:`.** Use secret managers, `SecureString`, or secure parameter passing.
   Environment variables are visible to child processes, process inspection tools, and crash dumps.
 
+## On twelve-factor app configuration
+
+The twelve-factor app methodology recommends storing configuration in environment variables that are "granular controls, each fully orthogonal to other env vars" and "never grouped together as environments."
+
+This is sound advice for its original domain: stateless web applications with a handful of independent settings (a database URL, an API key, a log level).
+
+Each knob is truly independent — changing the log level has no relationship to the database host.
+
+Infrastructure platform configuration is a fundamentally different domain.
+
+In a multi-customer, multi-environment system, configuration values form a dependency graph, not a flat set of independent knobs.
+
+A resource group name derives from the customer shortname, the environment, and the type.
+
+The subscription depends on the environment. The service connection depends on the subscription.
+
+These values are not orthogonal — they are computed from a small set of dimensions.
+
+Applying twelve-factor's flat env var advice to this domain produces hundreds of individually managed variables with no visible relationships, no consistency validation, and rampant duplication (the customer shortname appears in dozens of variables).
+
+Adding a new customer means touching dozens of places and hoping they all agree.
+
+No one can look at the configuration and understand its structure.
+
+The correct approach for infrastructure platforms is to separate **selection criteria** from **configuration**.
+
+Selection criteria are the dimensions that determine _which_ configuration applies: customer, environment, environment type.
+
+They are control signals — in a pipeline they control the path of flow, in a function they determine what to look up.
+
+This is what `config/meta.yml` and `Get-MetaConfiguration` provide: the selection dimensions (customers, environments, types), validated for referential integrity on load. They are not the configuration system itself — they are the axes by which configuration is selected.
+
+The actual configuration system (resource names, connection strings, feature flags) is a separate concern that consumes these dimensions.
+
+This does not contradict twelve-factor's underlying principle — "don't bake environment-specific values into code." It recognizes that twelve-factor's implementation advice (flat independent env vars) breaks down when configuration values depend on each other and are selected by structured, interrelated dimensions.
+
+Environment variables remain the right answer when your config is genuinely a flat set of independent knobs.
+
 ## Consequences
 
 - Function signatures document their inputs. Callers do not need to set hidden environment variables before calling a function.

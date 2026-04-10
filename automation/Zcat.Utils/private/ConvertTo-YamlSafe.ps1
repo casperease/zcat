@@ -22,28 +22,57 @@ function ConvertTo-YamlSafe {
 
     if ($null -eq $Value) { return $null }
     if ($Value -is [string] -or $Value -is [ValueType]) { return $Value }
-    if ($Depth -ge $MaxDepth) { return "$Value" }
+    if ($Depth -ge $MaxDepth) { try { return "$Value" } catch { return '[not rendered]' } }
 
     if ($Value -is [System.Collections.IDictionary]) {
         $result = [ordered]@{}
         foreach ($key in $Value.Keys) {
-            $result[$key] = ConvertTo-YamlSafe -Value $Value[$key] -MaxDepth $MaxDepth -Depth ($Depth + 1)
+            $result[$key] = try {
+                ConvertTo-YamlSafe -Value $Value[$key] -MaxDepth $MaxDepth -Depth ($Depth + 1)
+            }
+            catch {
+                '[not rendered]'
+            }
         }
         return $result
     }
 
     if ($Value -is [System.Collections.IEnumerable]) {
-        $list = foreach ($item in $Value) {
-            ConvertTo-YamlSafe -Value $item -MaxDepth $MaxDepth -Depth ($Depth + 1)
+        $list = try {
+            foreach ($item in $Value) {
+                try {
+                    ConvertTo-YamlSafe -Value $item -MaxDepth $MaxDepth -Depth ($Depth + 1)
+                }
+                catch {
+                    '[not rendered]'
+                }
+            }
+        }
+        catch {
+            return '[not rendered]'
         }
         return @($list)
     }
 
     # PSCustomObject or other complex types
     $bag = [ordered]@{}
-    foreach ($p in $Value.PSObject.Properties) {
-        $v = try { $p.Value } catch { $null }
-        $bag[$p.Name] = ConvertTo-YamlSafe -Value $v -MaxDepth $MaxDepth -Depth ($Depth + 1)
+    $properties = try { @($Value.PSObject.Properties) } catch { $null }
+    if ($null -eq $properties) { return '[not rendered]' }
+
+    foreach ($p in $properties) {
+        $name = try { $p.Name } catch { continue }
+        $v = if ($p -is [System.Management.Automation.PSScriptProperty] -and $null -ne $p.GetterScript) {
+            try { $p.GetterScript.InvokeReturnAsIs() } catch { '[not rendered]' }
+        }
+        else {
+            try { $p.Value } catch { '[not rendered]' }
+        }
+        $bag[$name] = try {
+            ConvertTo-YamlSafe -Value $v -MaxDepth $MaxDepth -Depth ($Depth + 1)
+        }
+        catch {
+            '[not rendered]'
+        }
     }
     return $bag
 }

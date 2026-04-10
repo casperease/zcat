@@ -77,20 +77,38 @@ function Write-Object {
         }
         elseif ($Object -is [System.Collections.IDictionary]) {
             # Hashtable, OrderedDictionary — stabilize key order (sort hashtables, preserve ordered), then YAML
-            $ordered = ConvertTo-SortedDictionary $Object
-            Write-InformationColored ($ordered | ConvertTo-Yaml).TrimEnd() -ForegroundColor $ForegroundColor
+            $yaml = try {
+                $ordered = ConvertTo-SortedDictionary $Object
+                ($ordered | ConvertTo-Yaml).TrimEnd()
+            }
+            catch {
+                '[not rendered]'
+            }
+            Write-InformationColored $yaml -ForegroundColor $ForegroundColor
 
         }
         elseif ($Object -is [System.Collections.IEnumerable] -and $Object -isnot [string]) {
             # Arrays and collections
-            $items = @($Object)
+            $items = try { @($Object) } catch { $null }
+
+            if ($null -eq $items) {
+                Write-InformationColored '[not rendered]' -ForegroundColor $ForegroundColor
+                return
+            }
+
             $hasComplex = $items | Where-Object {
                 $_ -isnot [string] -and $_ -isnot [ValueType]
             } | Select-Object -First 1
 
             if ($hasComplex) {
-                $safe = $items | ForEach-Object { ConvertTo-YamlSafe $_ -MaxDepth $Depth }
-                Write-InformationColored ($safe | ConvertTo-Yaml).TrimEnd() -ForegroundColor $ForegroundColor
+                $yaml = try {
+                    $safe = $items | ForEach-Object { ConvertTo-YamlSafe $_ -MaxDepth $Depth }
+                    ($safe | ConvertTo-Yaml).TrimEnd()
+                }
+                catch {
+                    '[not rendered]'
+                }
+                Write-InformationColored $yaml -ForegroundColor $ForegroundColor
             }
             else {
                 foreach ($item in $items) {
@@ -101,8 +119,14 @@ function Write-Object {
         }
         else {
             # PSCustomObject, complex .NET objects — recursively convert for clean YAML
-            $safe = ConvertTo-YamlSafe $Object -MaxDepth $Depth
-            Write-InformationColored ($safe | ConvertTo-Yaml).TrimEnd() -ForegroundColor $ForegroundColor
+            $yaml = try {
+                $safe = ConvertTo-YamlSafe $Object -MaxDepth $Depth
+                ($safe | ConvertTo-Yaml).TrimEnd()
+            }
+            catch {
+                '[not rendered]'
+            }
+            Write-InformationColored $yaml -ForegroundColor $ForegroundColor
         }
     }
 }

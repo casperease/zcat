@@ -115,6 +115,33 @@ Describe 'ConvertTo-YamlSafe' {
         $result['A']['B'] | Should -BeOfType [string]
     }
 
+    It 'returns not-rendered for property that throws on access' {
+        $obj = [PSCustomObject]@{ Good = 'ok' }
+        $obj | Add-Member -MemberType ScriptProperty -Name Bad -Value { throw 'nope' }
+
+        $result = & $mod { ConvertTo-YamlSafe -Value $args[0] } $obj
+
+        $result['Good'] | Should -Be 'ok'
+        $result['Bad'] | Should -Be '[not rendered]'
+    }
+
+    It 'returns not-rendered string when ToString throws at max depth' {
+        $obj = [PSCustomObject]@{ X = 1 }
+        $obj | Add-Member -MemberType ScriptMethod -Name ToString -Value { throw 'nope' } -Force
+
+        $result = & $mod { ConvertTo-YamlSafe -Value $args[0] -MaxDepth 0 } $obj
+
+        $result | Should -Be '[not rendered]'
+    }
+
+    It 'handles ErrorRecord without throwing' {
+        $err = try { throw 'boom' } catch { $_ }
+
+        $result = & $mod { ConvertTo-YamlSafe -Value $args[0] } $err
+
+        $result | Should -BeOfType [System.Collections.Specialized.OrderedDictionary]
+    }
+
     It 'produces clean YAML without @{ artifacts' {
         $obj = [PSCustomObject]@{
             Name = 'svc'

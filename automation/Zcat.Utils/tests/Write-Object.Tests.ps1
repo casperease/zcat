@@ -58,4 +58,28 @@ Describe 'Write-Object' {
         'test' | Write-Object -InformationVariable iv -InformationAction SilentlyContinue 6>&1 | Out-Null
         $iv | Should -Not -BeNullOrEmpty
     }
+
+    It 'renders ErrorRecord without throwing' {
+        $err = try { throw 'boom' } catch { $_ }
+        Write-Object $err -InformationVariable iv -InformationAction SilentlyContinue 6>&1 | Out-Null
+        $text = ($iv | ForEach-Object { StripAnsi $_.MessageData.Message }) -join "`n"
+        $text | Should -Match 'ErrorRecord'
+    }
+
+    It 'renders object with throwing property using not-rendered marker' {
+        $obj = [PSCustomObject]@{ Good = 'ok' }
+        $obj | Add-Member -MemberType ScriptProperty -Name Bad -Value { throw 'nope' }
+        Write-Object $obj -InformationVariable iv -InformationAction SilentlyContinue 6>&1 | Out-Null
+        $text = ($iv | ForEach-Object { StripAnsi $_.MessageData.Message }) -join "`n"
+        $text | Should -Match 'Good: ok'
+        $text | Should -Match '\[not rendered\]'
+    }
+
+    It 'renders array containing ErrorRecords without throwing' {
+        $err = try { throw 'boom' } catch { $_ }
+        $arr = @([PSCustomObject]@{ Name = 'a' }, $err)
+        Write-Object $arr -InformationVariable iv -InformationAction SilentlyContinue 6>&1 | Out-Null
+        $text = ($iv | ForEach-Object { StripAnsi $_.MessageData.Message }) -join "`n"
+        $text | Should -Match '\[Array\] Count: 2'
+    }
 }
