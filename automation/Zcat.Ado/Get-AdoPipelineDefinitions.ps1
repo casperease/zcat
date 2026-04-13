@@ -40,18 +40,13 @@ function Get-AdoPipelineDefinitions {
 
     Write-Message "Listing pipeline definitions from: $Organization/$Project"
 
-    $summaries = Invoke-AdoRestMethod -Uri "$apiBase/build/definitions?api-version=7.1&`$top=10000"
-    Assert-NotNull $summaries -ErrorText 'Build Definitions API returned null'
+    $definitions = Invoke-AdoRestMethod -Uri "$apiBase/build/definitions?api-version=7.1&includeAllProperties=true&`$top=10000"
+    Assert-NotNull $definitions -ErrorText 'Build Definitions API returned null'
 
-    $count = ($summaries | Measure-Object).Count
-    Write-Message "Found $count pipeline definitions, fetching details"
+    $count = ($definitions | Measure-Object).Count
+    Write-Message "Found $count pipeline definitions"
 
-    $headers = Get-AdoAuthorizationHeader
-
-    $summaries | ForEach-Object -ThrottleLimit 16 -Parallel {
-        $s = $_
-        $d = Invoke-RestMethod -Uri "$using:apiBase/build/definitions/$($s.id)?api-version=7.1" -Headers $using:headers
-
+    foreach ($d in $definitions) {
         $yamlPath = $d.process.yamlFilename
         if ($yamlPath) {
             $yamlPath = $yamlPath.TrimStart('/').TrimStart('.\') -replace '\\', '/'
