@@ -40,6 +40,9 @@ Write-Verbose "Loading resolver from: $resolverModule"
 Import-Module $resolverModule -Scope Global -Force
 if ($DiagnoseLoadTime) { Write-LoadTime 'Resolver loaded' }
 
+# Custom error view — shows ScriptStackTrace for unhandled errors
+Update-FormatData -PrependPath (Join-Path $PSScriptRoot "$automationFolder/.resolver/ErrorView.format.ps1xml")
+
 # Load vendored dependencies first
 $vendorRoot = Join-Path $PSScriptRoot "$automationFolder/$vendorFolder"
 Write-Verbose "Loading vendor modules from: $vendorRoot"
@@ -76,77 +79,9 @@ if ($IsWindows) {
 # Strict mode
 Set-StrictMode -Version Latest
 
-# Console session: prompt hook and load timer.
+# Console session: load timer.
 # In scripts, authors add `trap { Write-Exception $_; break }` after the importer.
 if ($isConsoleSession) {
-    # Wrap the existing prompt with error display logic. Preserves custom prompts
-    # (Oh My Posh, Starship, user-defined) while adding stack traces for errors
-    # from our modules.
-    if (-not (Test-Path variable:global:__OriginalPrompt)) {
-        $global:__OriginalPrompt = (Get-Command prompt).ScriptBlock
-    }
-    $global:__LastError = if ($global:Error.Count -gt 0) { $global:Error[0] } else { $null }
-    function global:prompt {
-        # Prompt runs immediately after every command.
-        param()
-        # The prompt must never throw — a crashing prompt destroys the console session.
-        # Detect new errors by comparing the latest error object to the previous snapshot.
-        # Cannot use $global:Error.Count — it caps at $MaximumErrorCount (default 256).
-        # Do NOT use $? — it is reset by any statement (see ADR: automatic-variable-pitfalls).
-        $latestError = if ($global:Error.Count -gt 0) { $global:Error[0] } else { $null }
-        if ($latestError -and -not [object]::ReferenceEquals($latestError, $global:__LastError)) {
-            try {
-                $err = $global:Error[0]
-                $record = if ($err -is [System.Management.Automation.ErrorRecord]) { $err } else { $null }
-                $trace = if ($record -and $record.psobject.Properties['ScriptStackTrace']) { $record.ScriptStackTrace } else { '' }
-
-                $repoPattern = [regex]::Escape($env:RepositoryRoot)
-
-                # Check if the error originated in our code — via stack trace OR InvocationInfo
-                $isOurError = ($trace -and $trace -match $repoPattern) -or
-                    ($record.InvocationInfo -and $record.InvocationInfo.ScriptName -and
-                     $record.InvocationInfo.ScriptName -match $repoPattern)
-                $isPesterExpected = $trace -and $trace -match 'Should-Throw,.+Pester\.psm1'
-
-                if ($isOurError -and -not $isPesterExpected) {
-                    Write-Host ('─' * 60) -ForegroundColor DarkGray
-
-                    # Show error message first when trace is missing or minimal
-                    if (-not $trace -or $trace -notmatch $repoPattern) {
-                        $scriptName = $record.InvocationInfo.ScriptName
-                        $lineNumber = $record.InvocationInfo.ScriptLineNumber
-                        $message = $record.Exception.Message
-                        Write-Host "$message" -ForegroundColor Red
-                        if ($scriptName) {
-                            Write-Host "at ${scriptName}:${lineNumber}" -ForegroundColor Red
-                        }
-                    }
-                    else {
-                        $traceLines = $trace -split "`n"
-                        $formatted = $traceLines | ForEach-Object {
-                            if ($_ -match 'at <ScriptBlock>, <No file>: line \d+') {
-                                $lastCmd = (Get-History -Count 1).CommandLine
-                                if ($lastCmd) {
-                                    $lastCmd = ($lastCmd -replace '[\r\n]+', ' ').Trim()
-                                    if ($lastCmd.Length -gt 30) { $lastCmd = $lastCmd.Substring(0, 30) + '...' }
-                                    "at $lastCmd"
-                                }
-                                else { 'at <prompt>' }
-                            }
-                            else { $_ }
-                        }
-                        Write-Host ($formatted -join "`n") -ForegroundColor Red
-                    }
-                }
-            }
-            catch {
-                try { Write-Host $global:Error[0].Message -ForegroundColor Red } catch { }
-            }
-        }
-        $global:__LastError = if ($global:Error.Count -gt 0) { $global:Error[0] } else { $null }
-        & $global:__OriginalPrompt
-    }
-
     if (Get-Command Write-Message -ErrorAction Ignore) {
         Write-Message "Loaded in $([math]::Round($sw.Elapsed.TotalSeconds, 1)) seconds"
     }

@@ -1,19 +1,18 @@
 BeforeAll {
-    # Build an isolated sandbox with just importer + resolver
+    # Build an isolated sandbox with importer + resolver + vendor (the bootstrap package)
     $sandbox = Join-Path ([System.IO.Path]::GetTempPath()) "resolver-test-$([guid]::NewGuid().ToString('N'))"
     $sandboxAuto = Join-Path $sandbox 'automation'
     New-Item -Path $sandboxAuto -ItemType Directory -Force | Out-Null
 
     Copy-Item -Path (Join-Path $env:RepositoryRoot 'importer.ps1') -Destination $sandbox
-    $sandboxResolver = Join-Path $sandboxAuto '.resolver'
-    New-Item -Path $sandboxResolver -ItemType Directory -Force | Out-Null
-    Copy-Item -Path (Join-Path $env:RepositoryRoot 'automation/.resolver/Resolver.psm1') -Destination $sandboxResolver
+    Copy-Item -Path (Join-Path $env:RepositoryRoot 'automation/.resolver') -Destination (Join-Path $sandboxAuto '.resolver') -Recurse
+    Copy-Item -Path (Join-Path $env:RepositoryRoot 'automation/.vendor') -Destination (Join-Path $sandboxAuto '.vendor') -Recurse
 
     function Invoke-Sandbox {
         # Runs importer in a child pwsh process and returns loaded module info
         $script = @"
             . '$sandbox/importer.ps1'
-            Get-Module | Where-Object { `$_.Path -like '$sandboxAuto*' -and `$_.Name -ne 'Resolver' } |
+            Get-Module | Where-Object { `$_.Path -like '$sandboxAuto*' -and `$_.Name -ne 'Resolver' -and `$_.Path -notlike '*/.vendor/*' -and `$_.Path -notlike '*\.vendor\*' } |
                 ForEach-Object {
                     [PSCustomObject]@{
                         Name      = `$_.Name

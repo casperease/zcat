@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Configuration>
+  <ViewDefinitions>
+    <View>
+      <Name>ErrorInstance</Name>
+      <OutOfBand />
+      <ViewSelectedBy>
+        <TypeName>System.Management.Automation.ErrorRecord</TypeName>
+      </ViewSelectedBy>
+      <CustomControl>
+        <CustomEntries>
+          <CustomEntry>
+            <CustomItem>
+              <ExpressionBinding>
+                <ScriptBlock>
+                  <![CDATA[
+                    $record = $_
+
+                    # Native command stderr lines — just emit the message
+                    if ($record.FullyQualifiedErrorId -eq 'NativeCommandErrorMessage') {
+                        return $record.Exception.Message
+                    }
+
+                    # Error message
+                    $message = if ($record.ErrorDetails -and $record.ErrorDetails.Message) {
+                        $record.ErrorDetails.Message
+                    } else {
+                        $record.Exception.Message
+                    }
+
+                    # Position message (the "At line:X char:Y" snippet with code context)
+                    $positionMessage = ''
+                    if ($record.InvocationInfo) {
+                        $posMsg = $record.InvocationInfo.PositionMessage
+                        if ($posMsg) {
+                            $positionMessage = "`n" + $posMsg
+                        }
+                    }
+
+                    # Script stack trace
+                    $stackTrace = ''
+                    $trace = $record.ScriptStackTrace
+                    if ($trace) {
+                        $stackTrace = "`n" + $trace
+                    }
+
+                    $PSStyle.Formatting.Error + $message + $positionMessage + $stackTrace + $PSStyle.Reset + "`n "
+                  ]]>
+                </ScriptBlock>
+              </ExpressionBinding>
+            </CustomItem>
+          </CustomEntry>
+        </CustomEntries>
+      </CustomControl>
+    </View>
+  </ViewDefinitions>
+</Configuration>

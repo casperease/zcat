@@ -68,7 +68,12 @@ function Get-AdoYamlFiles {
                 $parseError = 'File is empty'
             }
             else {
-                $yaml = ConvertFrom-Yaml -Yaml $content -Ordered
+                # ADO template expressions (${{ if }}, ${{ each }}, ${{ parameters.x }})
+                # are not valid YAML. Neutralize them so the parser can extract top-level keys.
+                # Each replacement must be unique to avoid duplicate-key errors.
+                $n = @{ i = 0 }
+                $sanitized = [regex]::Replace($content, '\$\{\{.+?\}\}', { $n.i++; "__ado_expr_$($n.i)__" })
+                $yaml = $sanitized | ConvertFrom-Yaml -Ordered
             }
         }
         catch {
