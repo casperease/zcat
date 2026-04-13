@@ -68,7 +68,7 @@ function Get-AdoYamlFiles {
                 $parseError = 'File is empty'
             }
             else {
-                $yaml = $content | ConvertFrom-Yaml -Ordered
+                $yaml = ConvertFrom-Yaml -Yaml $content -Ordered
             }
         }
         catch {
