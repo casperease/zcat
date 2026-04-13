@@ -44,7 +44,19 @@ function Get-AdoPipelineDefinitions {
     Assert-NotNull $definitions -ErrorText 'Build Definitions API returned null'
 
     $count = ($definitions | Measure-Object).Count
-    Write-Message "Found $count pipeline definitions"
+
+    # includeAllProperties should return process.yamlFilename inline.
+    # Older ADO Server versions may ignore this — fall back to per-definition fetches.
+    $hasProcessDetails = $definitions | Where-Object { $_.process.yamlFilename } | Select-Object -First 1
+    if (-not $hasProcessDetails -and $count -gt 0) {
+        Write-Message "Found $count pipeline definitions, fetching details individually"
+        $definitions = foreach ($s in $definitions) {
+            Invoke-AdoRestMethod -Uri "$apiBase/build/definitions/$($s.id)?api-version=7.1" -UnwrapValue $false
+        }
+    }
+    else {
+        Write-Message "Found $count pipeline definitions"
+    }
 
     foreach ($d in $definitions) {
         $yamlPath = $d.process.yamlFilename

@@ -42,22 +42,6 @@ function Get-AdoYamlInventory {
 
     $files = Get-AdoYamlFiles @scanParams
 
-    # Compute the path prefix between the git root and the scan root.
-    # ADO YamlPaths are relative to the repo root, but Get-AdoYamlFiles
-    # returns RelativePaths relative to the scan root. When the scan root
-    # is a subdirectory (e.g., -Path ..\infra\azure-pipelines), we need
-    # to prepend the offset so paths align for cross-referencing.
-    $scanRoot = if ($Path) { (Resolve-Path $Path).Path } else { Get-RepositoryRoot }
-    $pathPrefix = ''
-    $gitRoot = Invoke-Executable "git -C ""$scanRoot"" rev-parse --show-toplevel" -PassThru -NoAssert -Silent
-    if ($gitRoot.ExitCode -eq 0 -and $gitRoot.Output) {
-        $resolvedGitRoot = (Resolve-Path $gitRoot.Output.Trim()).Path
-        if ($scanRoot -ne $resolvedGitRoot) {
-            $pathPrefix = $scanRoot.Substring($resolvedGitRoot.Length).TrimStart([IO.Path]::DirectorySeparatorChar, '/') -replace '\\', '/'
-            if ($pathPrefix) { $pathPrefix += '/' }
-        }
-    }
-
     $defParams = @{}
     if ($Project) { $defParams.Project = $Project }
     if ($Organization) { $defParams.Organization = $Organization }
@@ -69,6 +53,22 @@ function Get-AdoYamlInventory {
         if ($d.YamlPath) {
             $registeredByPath[$d.YamlPath] = $d
         }
+    }
+
+    # ADO YamlPaths are relative to the repo root, but RelativePaths are
+    # relative to the scan root. When scanning a subdirectory (e.g.,
+    # -Path ..\infra\azure-pipelines), there is a prefix mismatch.
+    # Detect it from the data: find a local file whose RelativePath is a
+    # suffix of an ADO YamlPath and extract the prefix.
+    $pathPrefix = ''
+    foreach ($f in $files) {
+        foreach ($d in $definitions) {
+            if ($d.YamlPath -and $d.YamlPath.EndsWith("/$($f.RelativePath)")) {
+                $pathPrefix = $d.YamlPath.Substring(0, $d.YamlPath.Length - $f.RelativePath.Length)
+                break
+            }
+        }
+        if ($pathPrefix) { break }
     }
 
     foreach ($file in $files) {
