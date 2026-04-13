@@ -46,8 +46,11 @@ function Get-AdoPipelineDefinitions {
     $count = ($summaries | Measure-Object).Count
     Write-Message "Found $count pipeline definitions, fetching details"
 
-    foreach ($s in $summaries) {
-        $d = Invoke-AdoRestMethod -Uri "$apiBase/build/definitions/$($s.id)?api-version=7.1" -UnwrapValue $false
+    $headers = Get-AdoAuthorizationHeader
+
+    $summaries | ForEach-Object -ThrottleLimit 16 -Parallel {
+        $s = $_
+        $d = Invoke-RestMethod -Uri "$using:apiBase/build/definitions/$($s.id)?api-version=7.1" -Headers $using:headers
 
         $yamlPath = $d.process.yamlFilename
         if ($yamlPath) {
