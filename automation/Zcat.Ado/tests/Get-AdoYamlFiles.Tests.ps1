@@ -162,7 +162,8 @@ Describe 'Get-AdoYamlFiles' {
             $first = $results | Select-Object -First 1
             $first.PSObject.Properties.Name | Should -Contain 'Path'
             $first.PSObject.Properties.Name | Should -Contain 'RelativePath'
-            $first.PSObject.Properties.Name | Should -Contain 'Directory'
+            $first.PSObject.Properties.Name | Should -Contain 'Root'
+            $first.PSObject.Properties.Name | Should -Contain 'RelativeDirectory'
             $first.PSObject.Properties.Name | Should -Contain 'Classification'
             $first.PSObject.Properties.Name | Should -Contain 'TemplateType'
             $first.PSObject.Properties.Name | Should -Contain 'TopLevelKeys'

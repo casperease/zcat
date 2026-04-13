@@ -81,16 +81,18 @@ function Get-AdoYamlInventory {
         }
 
         [PSCustomObject]@{
-            Path           = $file.Path
-            RelativePath   = $file.RelativePath
-            Directory      = $file.Directory
-            Classification = $classification
-            TemplateType   = $file.TemplateType
-            IsRegistered   = $isRegistered
-            PipelineName   = $registered.Name
-            PipelineId     = $registered.Id
-            TopLevelKeys   = $file.TopLevelKeys
-            ParseError     = $file.ParseError
+            Root              = $file.Root
+            Path              = $file.Path
+            RelativePath      = $file.RelativePath
+            RelativeDirectory = $file.RelativeDirectory
+            Classification    = $classification
+            TemplateType      = $file.TemplateType
+            IsRegistered      = $isRegistered
+            PipelineName      = $registered.Name
+            PipelineId        = $registered.Id
+            PipelineDirectory = $registered.Folder
+            TopLevelKeys      = $file.TopLevelKeys
+            ParseError        = $file.ParseError
         }
     }
 }

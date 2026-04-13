@@ -54,8 +54,8 @@ function Get-AdoYamlFiles {
 
     foreach ($file in $filteredFiles) {
         $relativePath = $file.FullName.Substring($scanRoot.Length).TrimStart([IO.Path]::DirectorySeparatorChar, '/') -replace '\\', '/'
-        $directory = Split-Path $relativePath -Parent
-        if ($directory) { $directory = $directory -replace '\\', '/' }
+        $relativeDirectory = Split-Path $relativePath -Parent
+        if ($relativeDirectory) { $relativeDirectory = $relativeDirectory -replace '\\', '/' }
 
         $yaml = $null
         $parseError = $null
@@ -87,11 +87,12 @@ function Get-AdoYamlFiles {
         $result = Resolve-AdoYamlClassification -Yaml $yaml
 
         [PSCustomObject]@{
-            Path           = $file.FullName
-            RelativePath   = $relativePath
-            Directory      = $directory
-            Classification = $result.Classification
-            TemplateType   = $result.TemplateType
+            Root              = $scanRoot
+            Path              = $file.FullName
+            RelativePath      = $relativePath
+            RelativeDirectory = $relativeDirectory
+            Classification    = $result.Classification
+            TemplateType      = $result.TemplateType
             TopLevelKeys   = $topLevelKeys
             ParseError     = $parseError
         }
