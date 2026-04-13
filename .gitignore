@@ -9,3 +9,4 @@ out/*
 automation/**/*.psd1
 !automation/.vendor/**/*.psd1
 bash.exe.stackdump
+automation/Zcat.Adp
