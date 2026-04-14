@@ -8,7 +8,7 @@ Describe 'Invoke-Executable' {
         $script:multiLineCmd = if ($IsWindows) { 'cmd /c "echo line1 & echo line2"' } else { 'bash -c "echo line1; echo line2"' }
         $script:stderrCmd = if ($IsWindows) { 'cmd /c "echo errtext 1>&2"' } else { 'bash -c "echo errtext >&2"' }
         $script:bothCmd = if ($IsWindows) { 'cmd /c "echo out & echo err 1>&2"' } else { 'bash -c "echo out; echo err >&2"' }
-        $script:cwdCmd = if ($IsWindows) { 'cmd /c cd' } else { 'pwd' }
+        $script:cwdCmd = if ($IsWindows) { 'cmd /c cd' } else { 'bash -c pwd' }
         $script:silentSuccessCmd = if ($IsWindows) { 'cmd /c exit 0' } else { 'bash -c "exit 0"' }
     }
 
