@@ -5,7 +5,7 @@
 Azure DevOps pipelines communicate between steps and jobs through pipeline variables.
 The mechanism is a logging command written to stdout:
 
-```
+```text
 ##vso[task.setvariable variable=MyVar;isOutput=true]MyValue
 ```
 
@@ -53,6 +53,7 @@ function Set-AdoPipelineVariable {
 ```
 
 Behavior:
+
 - Sanitizes the variable name: replaces `.`, `-`, `'` with `_` to match ADO's downstream resolution.
 - Emits the `##vso[task.setvariable]` command with correct flags.
 - Logs the variable name and value via `Write-Message` (unless `$IsSecret`, in which case the value is omitted).

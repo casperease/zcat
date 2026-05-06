@@ -37,15 +37,15 @@ Get-AdoYamlFiles -Path 'C:\repos\big-mono' -Exclude @('.git', 'node_modules', 'v
 
 Each result includes:
 
-| Property | Description |
-|---|---|
-| `Path` | Absolute file path |
-| `RelativePath` | Repo-relative path (forward slashes) |
-| `Directory` | Parent folder relative path |
-| `Classification` | `Pipeline`, `Template`, or `Unknown` |
-| `TemplateType` | `Stages`, `Jobs`, `Steps`, `Variables`, or `$null` |
-| `TopLevelKeys` | Root YAML keys (useful for debugging `Unknown` files) |
-| `ParseError` | Error message if YAML parsing failed, `$null` otherwise |
+| Property         | Description                                             |
+| ---------------- | ------------------------------------------------------- |
+| `Path`           | Absolute file path                                      |
+| `RelativePath`   | Repo-relative path (forward slashes)                    |
+| `Directory`      | Parent folder relative path                             |
+| `Classification` | `Pipeline`, `Template`, or `Unknown`                    |
+| `TemplateType`   | `Stages`, `Jobs`, `Steps`, `Variables`, or `$null`      |
+| `TopLevelKeys`   | Root YAML keys (useful for debugging `Unknown` files)   |
+| `ParseError`     | Error message if YAML parsing failed, `$null` otherwise |
 
 Templates are sub-classified by their body key — a file with `parameters:` + `steps:` gets `TemplateType = 'Steps'`.
 
@@ -63,16 +63,16 @@ Get-AdoPipelineDefinitions | Where-Object RepositoryName -eq 'big-mono'
 
 Each result includes:
 
-| Property | Description |
-|---|---|
-| `Id` | Pipeline definition ID |
-| `Name` | Display name in ADO |
-| `Folder` | ADO folder path |
-| `YamlPath` | Repo-relative YAML path (matches `RelativePath` from scan) |
-| `FileName` | YAML file name |
-| `RepositoryName` | Source repository name |
-| `Revision` | Definition revision |
-| `Url` | ADO web URL |
+| Property         | Description                                                |
+| ---------------- | ---------------------------------------------------------- |
+| `Id`             | Pipeline definition ID                                     |
+| `Name`           | Display name in ADO                                        |
+| `Folder`         | ADO folder path                                            |
+| `YamlPath`       | Repo-relative YAML path (matches `RelativePath` from scan) |
+| `FileName`       | YAML file name                                             |
+| `RepositoryName` | Source repository name                                     |
+| `Revision`       | Definition revision                                        |
+| `Url`            | ADO web URL                                                |
 
 ### Cross-referencing scan results with registered pipelines
 

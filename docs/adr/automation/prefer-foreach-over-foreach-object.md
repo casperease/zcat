@@ -13,11 +13,11 @@ They look interchangeable. They are not.
 
 The `ForEach-Object` body is a **scriptblock**, not a loop body. The keywords `return`, `break`, and `continue` behave completely differently inside a scriptblock than inside a loop:
 
-| Keyword | In `foreach` (expected) | In `ForEach-Object` (surprise) |
-|---|---|---|
-| `return` | Returns from the enclosing function | Exits the current scriptblock iteration only — like `continue` in a loop. The pipeline keeps running. The enclosing function does **not** return. |
-| `break` | Exits the `foreach` loop | Breaks the nearest **enclosing loop or switch**. If there is no enclosing loop, **terminates the entire script**. Does not "break out of ForEach-Object." |
-| `continue` | Skips to the next iteration | Acts on the nearest **enclosing loop**. If there is no enclosing loop, behaves like `break` — terminates the script. Does not "skip to the next pipeline item." |
+| Keyword    | In `foreach` (expected)             | In `ForEach-Object` (surprise)                                                                                                                                  |
+| ---------- | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `return`   | Returns from the enclosing function | Exits the current scriptblock iteration only — like `continue` in a loop. The pipeline keeps running. The enclosing function does **not** return.               |
+| `break`    | Exits the `foreach` loop            | Breaks the nearest **enclosing loop or switch**. If there is no enclosing loop, **terminates the entire script**. Does not "break out of ForEach-Object."       |
+| `continue` | Skips to the next iteration         | Acts on the nearest **enclosing loop**. If there is no enclosing loop, behaves like `break` — terminates the script. Does not "skip to the next pipeline item." |
 
 These are not edge cases — they are the designed semantics of scriptblocks. But they violate the expectations of anyone who reads `ForEach-Object` as "a loop."
 
@@ -98,19 +98,22 @@ The performance difference is measurable — typically 3-10x for tight loops. Fo
 `ForEach-Object` is the right choice when:
 
 1. **Simple property access in a pipeline chain:**
-   ```powershell
-   $names = Get-ChildItem | ForEach-Object Name
-   ```
+
+    ```powershell
+    $names = Get-ChildItem | ForEach-Object Name
+    ```
 
 2. **One-expression transforms in a pipeline:**
-   ```powershell
-   $paths = $items | Where-Object { $_.Enabled } | ForEach-Object { $_.Path }
-   ```
+
+    ```powershell
+    $paths = $items | Where-Object { $_.Enabled } | ForEach-Object { $_.Path }
+    ```
 
 3. **Formatting for display:**
-   ```powershell
-   $summary = $results | ForEach-Object { "$($_.Name): $($_.Status)" }
-   ```
+
+    ```powershell
+    $summary = $results | ForEach-Object { "$($_.Name): $($_.Status)" }
+    ```
 
 The common pattern: the body is a **single expression** with **no control flow**. If the body needs `if`, `return`, `break`, `continue`, `try`/`catch`, or is more than one statement — use `foreach`.
 
@@ -119,27 +122,29 @@ The common pattern: the body is a **single expression** with **no control flow**
 PowerShell 7+ adds `ForEach-Object -Parallel`, which runs scriptblocks in separate runspaces. This introduces additional pitfalls beyond the control flow issues:
 
 - **No access to outer variables.** Each runspace gets its own scope. Outer variables must be passed explicitly via `$using:varName`. Forgetting `$using:` produces `$null` — no error, no warning.
-  ```powershell
-  # BROKEN — $config is $null in each runspace
-  $config = Get-Config
-  $items | ForEach-Object -Parallel {
-      Install-Thing -Config $config       # $null — silent failure
-  }
 
-  # Correct
-  $config = Get-Config
-  $items | ForEach-Object -Parallel {
-      Install-Thing -Config $using:config
-  }
-  ```
+    ```powershell
+    # BROKEN — $config is $null in each runspace
+    $config = Get-Config
+    $items | ForEach-Object -Parallel {
+        Install-Thing -Config $config       # $null — silent failure
+    }
+
+    # Correct
+    $config = Get-Config
+    $items | ForEach-Object -Parallel {
+        Install-Thing -Config $using:config
+    }
+    ```
 
 - **No access to module functions.** Functions imported by the module system are not available in parallel runspaces. You must re-import or pass scriptblocks explicitly.
-  ```powershell
-  # BROKEN — Write-Message is not defined in the parallel runspace
-  $items | ForEach-Object -Parallel {
-      Write-Message "Processing $_"       # throws: command not found
-  }
-  ```
+
+    ```powershell
+    # BROKEN — Write-Message is not defined in the parallel runspace
+    $items | ForEach-Object -Parallel {
+        Write-Message "Processing $_"       # throws: command not found
+    }
+    ```
 
 - **No shared mutable state.** Each runspace has its own copy of variables. Mutating a `$using:` variable in one runspace does not affect others or the caller. Use thread-safe collections (`[System.Collections.Concurrent.ConcurrentBag[object]]`) if you need to aggregate results beyond pipeline output.
 

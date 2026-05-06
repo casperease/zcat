@@ -6,7 +6,7 @@
 
       Curved (default):
         ╭──────────────╮       ╭──────────────╮
-        │ Message       │
+        │ Message      │
         ╰──────────────╯
 
       Stars:

@@ -11,9 +11,9 @@ The tempting approach is to inline PowerShell directly in each YAML step:
 
 ```yaml
 - pwsh: |
-    . ./importer.ps1
-    Install-DevBoxTools
-    Test-Automation
+      . ./importer.ps1
+      Install-DevBoxTools
+      Test-Automation
 ```
 
 This works but scales poorly. Every step reimports the module system from scratch, duplicates the importer invocation,
@@ -82,17 +82,17 @@ credential exposure:
 
 ```yaml
 parameters:
-  - name: RunCommand        # The command to execute
-  - name: Mode              # none | azcli | azps — selects the task type
-  - name: ExposeAccessToken # Maps SYSTEM_ACCESSTOKEN when true
-  - name: ServiceConnection # Required when Mode is azcli or azps
+    - name: RunCommand # The command to execute
+    - name: Mode # none | azcli | azps — selects the task type
+    - name: ExposeAccessToken # Maps SYSTEM_ACCESSTOKEN when true
+    - name: ServiceConnection # Required when Mode is azcli or azps
 ```
 
-| Mode | Task | Credentials in env vars? |
-|------|------|--------------------------|
-| `none` | `PowerShell@2` | None |
-| `azcli` | `AzureCLI@2` | None — az CLI auth is task-internal |
-| `azps` | `AzurePowerShell@5` | None — Az module auth is task-internal |
+| Mode    | Task                | Credentials in env vars?               |
+| ------- | ------------------- | -------------------------------------- |
+| `none`  | `PowerShell@2`      | None                                   |
+| `azcli` | `AzureCLI@2`        | None — az CLI auth is task-internal    |
+| `azps`  | `AzurePowerShell@5` | None — Az module auth is task-internal |
 
 `ExposeAccessToken` is orthogonal — adds `SYSTEM_ACCESSTOKEN` on any mode.
 
@@ -102,24 +102,24 @@ parameters:
 # Plain command — no auth
 - template: /pipelines/steps/invoke-automation.yaml
   parameters:
-    RunCommand: 'Test-Automation'
+      RunCommand: "Test-Automation"
 
 # Azure CLI + system token
 - template: /pipelines/steps/invoke-automation.yaml
   parameters:
-    RunCommand: 'Deploy-Infrastructure'
-    Mode: azcli
-    ExposeAccessToken: true
-    ServiceConnection: 'sc-my-subscription'
+      RunCommand: "Deploy-Infrastructure"
+      Mode: azcli
+      ExposeAccessToken: true
+      ServiceConnection: "sc-my-subscription"
 
 # Multiline command (YAML pipe operator)
 - template: /pipelines/steps/invoke-automation.yaml
   parameters:
-    RunCommand: |
-      $config = Get-MetaConfiguration
-      Deploy-Infrastructure -Config $config
-    Mode: azcli
-    ServiceConnection: 'sc-my-subscription'
+      RunCommand: |
+          $config = Get-MetaConfiguration
+          Deploy-Infrastructure -Config $config
+      Mode: azcli
+      ServiceConnection: "sc-my-subscription"
 ```
 
 The `displayName` mirrors the command, so the ADO UI shows exactly what ran — no "Run PowerShell script" labels.

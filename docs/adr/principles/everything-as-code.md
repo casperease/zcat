@@ -57,7 +57,7 @@ rather than to everything required to reproduce testing and production environme
 
 ## How to apply
 
-When evaluating where a value, definition, or process should live, ask: *can this be diffed, reviewed, and rolled back?*
+When evaluating where a value, definition, or process should live, ask: _can this be diffed, reviewed, and rolled back?_
 If not, it must move into version control. Prefer tools and platforms that store their configuration as files in a repository
 over those that store it in databases, UIs, or proprietary formats.
 
